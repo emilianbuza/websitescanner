@@ -4,6 +4,8 @@ import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 
 const app = express();
+app.set('trust proxy', 1); // Render/Heroku/Proxy vor App
+
 const PORT = process.env.PORT || 3000;
 const VERSION = process.env.GIT_SHA || '2.0.0';
 
@@ -1137,3 +1139,4 @@ app.listen(PORT, () => {
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔍 Scanner UI: http://localhost:${PORT}/`);
 });
+
