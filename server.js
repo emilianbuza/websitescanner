@@ -195,14 +195,36 @@ class UltimateWebsiteScanner {
     });
 
     // Enhanced network monitoring
-    page.on('requestfinished', request => {
-      scanData.requestLog.push({
-        url: request.url(),
-        method: request.method(),
-        resourceType: request.resourceType(),
-        status: request.response()?.status() || 0
-      });
+    page.on('requestfinished', async request => {
+  try {
+    const response = await request.response(); // PW 1.46: async!
+    const status = response ? response.status() : 0;
+
+    const rt = typeof request.resourceType === 'function'
+      ? request.resourceType()
+      : (request.resourceType || 'unknown');
+
+    scanData.requestLog.push({
+      url: request.url(),
+      method: request.method(),
+      resourceType: rt,
+      status
     });
+  } catch (e) {
+    // Fallback, falls etwas im Handler schiefgeht
+    const rt = typeof request.resourceType === 'function'
+      ? request.resourceType()
+      : (request.resourceType || 'unknown');
+
+    scanData.requestLog.push({
+      url: request.url(),
+      method: request.method(),
+      resourceType: rt,
+      status: 0,
+      note: 'requestfinished handler error: ' + String(e)
+    });
+  }
+});
 
     page.on('requestfailed', request => {
       const failure = request.failure();
@@ -1139,4 +1161,5 @@ app.listen(PORT, () => {
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔍 Scanner UI: http://localhost:${PORT}/`);
 });
+
 
