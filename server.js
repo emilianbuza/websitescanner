@@ -239,36 +239,41 @@ class UltimateWebsiteScanner {
       });
     });
 
-    page.on('response', response => {
-      if (response.status() >= 400) {
-        scanData.networkIssues.push({
-          url: response.url(),
-          status: response.status(),
-          priority: this.classifyNetworkPriority(response.url()),
-          translation: this.translateNetworkIssue(response.url(), response.status().toString()),
-          techFix: this.suggestFixForUrl(response.url(), response.status().toString()),
-          consentMode
-        });
-      }
+page.on('response', response => {
+  if (response.status() >= 400) {
+    scanData.networkIssues.push({
+      url: response.url(),
+      status: response.status(),
+      priority: this.classifyNetworkPriority(response.url()),
+      translation: this.translateNetworkIssue(response.url(), String(response.status())),
+      techFix: this.suggestFixForUrl(response.url(), String(response.status())),
+      consentMode
     });
+  }
+});
 
-    try {
-      // Navigate with enhanced stability
-      await page.goto(url, { 
-        waitUntil: 'networkidle',
-        timeout: 60000 
-      });
+try {
+  // 1) Laden bis DOM bereit ist (keine langen networkidle-Wartezeiten)
+  await page.goto(url, {
+    waitUntil: 'domcontentloaded',
+    timeout: 20000
+  });
 
-      // Handle consent based on mode
-      if (consentMode === 'accept') {
-        await this.handleConsent(page, 'accept');
-      } else if (consentMode === 'reject') {
-        await this.handleConsent(page, 'reject');
-      }
+  // 2) Consent je nach Modus klicken (damit danach die richtigen Tags laden)
+  if (consentMode === 'accept') {
+    await this.handleConsent(page, 'accept');
+  } else if (consentMode === 'reject') {
+    await this.handleConsent(page, 'reject');
+  }
 
-      // Enhanced loading with lazy-load trigger
-      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-      await page.waitForTimeout(3000); // Allow marketing tags to load
+  // 3) Kurze, deterministische Nachladephase für Tags
+  await page.evaluate(() => { window.scrollTo(0, document.body.scrollHeight); });
+  await Promise.race([
+    page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {}),
+    page.waitForTimeout(1500)
+  ]);
+
+
 
       // Robust marketing tag detection
       scanData.marketingTags = await this.checkMarketingTagsDeep(page, scanData.requestLog);
@@ -1161,5 +1166,6 @@ app.listen(PORT, () => {
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔍 Scanner UI: http://localhost:${PORT}/`);
 });
+
 
 
