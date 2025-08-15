@@ -12,9 +12,9 @@
     "playwright": "^1.46.0",
     "express-rate-limit": "^7.1.5",
     "cors": "^2.8.5",
-    "puppeteer-to-pdf": "^2.1.0"
   },
   "engines": {
-    "node": "18.x"
+    "node": "20.x"
   }
+
 }
