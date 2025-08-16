@@ -896,49 +896,46 @@ app.get('/', (req, res) => {
 </head>
 <body>
   <div class="container">
-    <div class="header" style="text-align:center; padding:60px 20px;">
-      <h1 style="font-size:2.2em; font-weight:700; margin-bottom:20px; line-height:1.3;">
-        🔍 Finde sofort heraus, ob deine Website wirklich funktioniert – auch wenn du kein Programmierer bist
-      </h1>
-      <p style="font-size:1.1em; max-width:800px; margin:0 auto 15px;">
-        Unser Scanner prüft deine Website in Sekunden und zeigt dir:
-      </p>
-      <ul style="text-align:left; display:inline-block; font-size:1em; line-height:1.6; margin:0 auto 20px; padding-left:20px; max-width:600px; color:#333;">
-        <li>ob dein Cookie-Banner rechtssicher arbeitet,</li>
-        <li>ob Google Analytics, Google Ads & Co. korrekt laufen,</li>
-        <li>welche Fehler dein Tracking blockieren – und wie du sie beheben kannst.</li>
-      </ul>
-      <p style="font-size:1em; max-width:800px; margin:0 auto 30px;">
-        So erkennst du sofort, wo Budget und Daten verloren gehen – klar erklärt, ohne Fachchinesisch.
-      </p>
-      <button class="scan-button">✅ Jetzt kostenlos testen</button>
-    </div>
+<div class="header" style="text-align:center; padding:60px 20px; background:#123456; color:#fff;">
+  <h1 style="font-size:2.2em; font-weight:700; margin-bottom:20px; line-height:1.3;">
+    🔍 Finde sofort heraus, ob deine Website wirklich funktioniert – auch wenn du kein Programmierer bist
+  </h1>
+  <p style="font-size:1.1em; max-width:800px; margin:0 auto 15px;">
+    Unser Scanner prüft deine Website in Sekunden und zeigt dir:
+  </p>
+  <ul style="text-align:left; display:inline-block; font-size:1em; line-height:1.6; margin:0 auto 20px; padding-left:20px; max-width:600px; color:#fff;">
+    <li>ob dein Cookie-Banner rechtssicher arbeitet,</li>
+    <li>ob Google Analytics, Google Ads & Co. korrekt laufen,</li>
+    <li>welche Fehler dein Tracking blockieren – und wie du sie beheben kannst.</li>
+  </ul>
+  <p style="font-size:1em; max-width:800px; margin:0 auto 30px;">
+    So erkennst du sofort, wo Budget und Daten verloren gehen – klar erklärt, ohne Fachchinesisch.
+  </p>
 
-    <div class="features" style="margin-top:40px;">
-      <div class="feature">
-        <div class="feature-icon">🍪</div>
-        <h3>Cookie-Banner-Test</h3>
-        <p>Prüft, ob dein Cookie-Banner wirklich funktioniert:
-        Was passiert ohne Zustimmung, mit Zustimmung und wenn man ablehnt?</p>
-      </div>
-      <div class="feature">
-        <div class="feature-icon">🔒</div>
-        <h3>Sicherheits-Check (CSP)</h3>
-        <p>Findet heraus, ob deine Sicherheitseinstellungen wichtige Marketing-Skripte blockieren –
-        z. B. Google Analytics oder Ads.</p>
-      </div>
-      <div class="feature">
-        <div class="feature-icon">📊</div>
-        <h3>DSGVO-Konformität</h3>
-        <p>Zeigt dir, ob Google Analytics, Google Ads, Meta Pixel & Co. korrekt laufen oder blockiert werden.</p>
-      </div>
-      <div class="feature">
-        <div class="feature-icon">💰</div>
-        <h3>Marketing-Performance</h3>
-        <p>Verständlich erklärt: Welche Fehler kosten dich Daten, Reichweite und Umsatz –
-        und wie du sie beheben kannst.</p>
-      </div>
-    </div>   
+  <!-- Features direkt hier -->
+  <div class="features" style="margin-top:40px;">
+    <div class="feature">
+      <div class="feature-icon">🍪</div>
+      <h3>Cookie-Banner-Test</h3>
+      <p>Prüft, ob dein Cookie-Banner wirklich funktioniert: Was passiert ohne Zustimmung, mit Zustimmung und wenn man ablehnt?</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🔒</div>
+      <h3>Sicherheits-Check (CSP)</h3>
+      <p>Findet heraus, ob deine Sicherheitseinstellungen wichtige Marketing-Skripte blockieren – z. B. Google Analytics oder Ads.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">📊</div>
+      <h3>DSGVO-Konformität</h3>
+      <p>Zeigt dir, ob Google Analytics, Google Ads, Meta Pixel & Co. korrekt laufen oder blockiert werden.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">💰</div>
+      <h3>Marketing-Performance</h3>
+      <p>Verständlich erklärt: Welche Fehler kosten dich Daten, Reichweite und Umsatz – und wie du sie beheben kannst.</p>
+    </div>
+  </div>
+</div> <!-- /header -->
         <div class="form-section">
             <form id="scanForm">
                 <div class="input-group">
@@ -1186,6 +1183,7 @@ app.listen(PORT, () => {
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔍 Scanner UI: http://localhost:${PORT}/`);
 });
+
 
 
 
