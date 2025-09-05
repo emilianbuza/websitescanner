@@ -1,12 +1,13 @@
 {
   "name": "website-scanner-ultimate",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "type": "module",
   "scripts": {
     "start": "node server.js",
     "start:prod": "NODE_ENV=production node server.js",
-    "dev": "node --watch server.js",
-    "postinstall": "npx playwright install --with-deps chromium"
+    "dev": "node --watch server.js"
+    /* WICHTIG: KEIN postinstall hier, Render führt bereits
+       `npm install && npx playwright install chromium` aus */
   },
   "dependencies": {
     "cors": "^2.8.5",
