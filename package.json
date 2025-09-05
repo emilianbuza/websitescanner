@@ -6,8 +6,6 @@
     "start": "node server.js",
     "start:prod": "NODE_ENV=production node server.js",
     "dev": "node --watch server.js"
-    /* WICHTIG: KEIN postinstall hier, Render führt bereits
-       `npm install && npx playwright install chromium` aus */
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -17,6 +15,6 @@
     "playwright": "^1.46.0"
   },
   "engines": {
-    "node": ">=18"
+    "node": "20.x"
   }
 }
