@@ -1025,14 +1025,6 @@ app.get('/', (req, res) => {
             <div class="url-validation" id="urlValidation"></div>
           </div>
         </div>
-        
-        <div class="quick-demo">
-          <p><strong>Schnelltest:</strong></p>
-          <button type="button" class="demo-button" data-url="https://example.com">Example.com</button>
-          <button type="button" class="demo-button" data-url="https://google.com">Google.com</button>
-          <button type="button" class="demo-button" data-url="https://facebook.com">Facebook.com</button>
-        </div>
-        
         <button type="submit" class="scan-button" id="scanBtn">
           🔍 Vollständigen 3-Session-Scan starten
         </button>
@@ -1511,4 +1503,5 @@ app.listen(PORT, () => {
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔍 Scanner UI: http://localhost:${PORT}/`);
 });
+
 
