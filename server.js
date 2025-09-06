@@ -1059,7 +1059,7 @@ app.get('/', (req, res) => {
     <div class="results" id="results"></div>
     
     <div class="footer">
-      <p>Powered by Playwright Browser Automation • Version ${VERSION}</p>
+      <p>Powered by ReguKit Compliance Software</p>
       <p><small>Sichere Analyse ohne Datenspeicherung • Made in Germany</small></p>
     </div>
   </div>
@@ -1511,3 +1511,4 @@ app.listen(PORT, () => {
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔍 Scanner UI: http://localhost:${PORT}/`);
 });
+
