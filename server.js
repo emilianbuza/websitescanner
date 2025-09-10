@@ -803,6 +803,49 @@ app.post('/scan', async (req, res) => {
     res.status(500).json({ error: 'Scan failed', details: error.message, timestamp: new Date().toISOString() });
   }
 });
+// NEU: Einfacher Manager-Report im Klartext-Format (zusätzlich zu deinem bestehenden /scan)
+app.post('/scan-v2', async (req, res) => {
+  const { url } = req.body || {};
+  if (!url) return res.status(400).json({ error: 'Missing URL' });
+
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({ viewport: { width: 1366, height: 900 }, ignoreHTTPSErrors: true });
+  const page = await context.newPage();
+
+  const findings = [];
+  try {
+    // 1) Ohne Consent
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    const s1 = await collectAllForCurrentState(page, context, { sessionLabel: 'ohne-consent' });
+    findings.push(...s1.findings);
+
+    // 2) Mit Accept (hier nur Reload – dein bestehender /scan macht ja die komplexe Consent-Logik)
+    await page.reload({ waitUntil: 'domcontentloaded', timeout: 45000 });
+    const s2 = await collectAllForCurrentState(page, context, { sessionLabel: 'accept' });
+    findings.push(...s2.findings);
+
+    // 3) Mit Reject (ebenfalls Reload)
+    await page.reload({ waitUntil: 'domcontentloaded', timeout: 45000 });
+    const s3 = await collectAllForCurrentState(page, context, { sessionLabel: 'reject' });
+    findings.push(...s3.findings);
+
+    // Manager-freundliche Textblöcke erzeugen
+    const report = findings.map(f => formatReport(f));
+
+    res.json({
+      ok: true,
+      scannedUrl: url,
+      sessions: ['ohne-consent', 'accept', 'reject'],
+      totalFindings: findings.length,
+      report
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e) });
+  } finally {
+    await browser.close();
+  }
+});
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', version: VERSION, timestamp: new Date().toISOString(), uptime: process.uptime() });
 });
@@ -1049,4 +1092,5 @@ const graceful = (sig) => async () => {
 };
 process.on('SIGINT', graceful('SIGINT'));
 process.on('SIGTERM', graceful('SIGTERM'));
+
 
