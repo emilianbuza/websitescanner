@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>ReguKit Scanner – UI</title>
+<title>💸 Verschwendest du heimlich Werbebudget? | Website Scanner</title>
 <style>
   :root{
     --bg:#ffffff; --panel:#f9fafb; --ink:#111827; --muted:#374151;
@@ -11,8 +11,56 @@
     --chip:#f3f4f6; --border:#d1d5db;
   }
   *{box-sizing:border-box} html,body{height:100%}
-  body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
   a{color:inherit;text-decoration:none}
+  
+  /* Hero Section */
+  .hero-section{background:linear-gradient(135deg,#f0f7ff 0%,#e0f2fe 100%);padding:80px 0;text-align:center;margin-bottom:30px}
+  .hero-section h1{font-size:3.5rem;font-weight:800;margin:0 0 20px 0;color:#1f2937}
+  .hero-section .subtitle{font-size:1.4rem;color:#4b5563;margin-bottom:40px;max-width:800px;margin-left:auto;margin-right:auto}
+  .cta-enhanced{max-width:600px;margin:0 auto 40px auto;background:white;padding:25px;border-radius:12px;box-shadow:0 8px 16px rgba(0,0,0,0.1)}
+  .cta-enhanced input{width:100%;padding:16px 20px;border:2px solid #e5e7eb;border-radius:8px;font-size:1.1rem;margin-bottom:15px}
+  .cta-enhanced input:focus{outline:none;border-color:var(--brand)}
+  .cta-enhanced button{width:100%;background:var(--brand);color:white;border:none;padding:16px 24px;border-radius:8px;font-size:1.1rem;font-weight:600;cursor:pointer}
+  .cta-enhanced button:hover{background:#6d28d9}
+  .trust-signals{display:flex;justify-content:center;gap:20px;margin-top:15px;font-size:0.9rem;color:#059669}
+  .trust-signals span{display:flex;align-items:center;gap:5px}
+  
+  /* Example Problems */
+  .example-findings{margin:60px 0;padding:0 20px}
+  .example-findings h3{text-align:center;font-size:1.8rem;margin-bottom:30px;color:#1f2937}
+  .problem-examples{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;max-width:1200px;margin:0 auto}
+  .problem{background:white;border-left:4px solid #ef4444;padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+  .problem-icon{font-size:1.2rem;margin-bottom:10px}
+  .problem-title{font-weight:600;color:#1f2937;margin-bottom:8px}
+  .problem-impact{color:#6b7280;font-size:0.9rem}
+  
+  /* Scan Progress */
+  .scan-progress{background:white;border:2px solid var(--brand);border-radius:12px;padding:25px;margin:20px auto;max-width:600px;display:none}
+  .scan-progress.active{display:block}
+  .progress-header{text-align:center;margin-bottom:20px}
+  .progress-header h3{margin:0 0 10px 0;color:#1f2937}
+  .main-progress{margin-bottom:25px}
+  .progress-bar{height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;margin-bottom:10px}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2));transition:width 0.3s ease;width:0%}
+  .progress-text{font-size:14px;color:#6b7280;text-align:center}
+  .scan-steps{margin-top:20px}
+  .step{display:flex;align-items:center;padding:12px 0;border-left:3px solid transparent;padding-left:15px;margin-left:10px}
+  .step.completed{border-color:#22c55e;background:#f0f9f4}
+  .step.active{border-color:#7c3aed;background:#f3f4f6;animation:pulse 2s infinite}
+  .step.pending{border-color:#e5e7eb;color:#9ca3af}
+  .step-icon{width:20px;height:20px;margin-right:12px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+  .step.completed .step-icon{background:#22c55e;color:white}
+  .step.active .step-icon{background:#7c3aed;color:white}
+  .step.pending .step-icon{background:#e5e7eb;color:#9ca3af}
+  .step-text{flex:1}
+  .step-duration{font-size:12px;color:#6b7280;margin-top:2px}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.7}}
+  .live-log{margin-top:20px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:15px;max-height:150px;overflow-y:auto}
+  .live-log h4{margin:0 0 10px 0;font-size:14px;color:#374151}
+  .log-entry{font-family:monospace;font-size:12px;margin:2px 0;color:#6b7280}
+  .log-entry.important{color:#7c3aed;font-weight:600}
+  
   .container{max-width:1200px;margin:0 auto;padding:16px 16px 80px}
   .topbar{position:sticky;top:0;z-index:30;background:#ffffff;border-bottom:1px solid var(--border)}
   .topbar-inner{max-width:1200px;margin:0 auto;display:flex;gap:12px;align-items:center;padding:10px 16px}
@@ -21,6 +69,7 @@
   .urlfield{flex:1;display:flex;gap:8px}
   .urlfield input{flex:1;background:#fff;border:1px solid var(--border);padding:12px 14px;border-radius:10px;color:var(--ink)}
   .btn{background:var(--brand);border:none;color:white;padding:12px 16px;border-radius:10px;font-weight:600;cursor:pointer}
+  .btn.alt{background:#e5e7eb;color:#111827}
   .btn:disabled{opacity:.6;cursor:not-allowed}
   .toggle{display:flex;gap:6px;border:1px solid var(--border);border-radius:999px;padding:5px;background:#f3f4f6}
   .toggle button{border:none;padding:8px 12px;border-radius:999px;background:transparent;color:var(--ink);cursor:pointer}
@@ -69,105 +118,240 @@
   code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
   .copy{background:#e5e7eb;border:1px solid var(--border);color:#111827;border-radius:8px;padding:6px 10px;cursor:pointer}
   .empty{padding:18px;border:1px dashed var(--border);border-radius:12px;color:#6b7280;text-align:center}
-  .banner{margin:12px auto 0;max-width:1200px;background:#e0f2fe;border:1px solid #93c5fd;color:#1e3a8a;padding:10px 14px;border-radius:10px;display:none}
+  .preview{margin-left:8px;font-size:.85rem;color:#7c3aed}
+  .banner{margin:12px auto 0;max-width:1200px;background:#e0f2fe;border:1px solid #93c5fd;color:#1e3a8a;padding:10px 14px;border-radius:10px}
+  .test{font-size:.85rem;color:#047857}
+  
+  @media (max-width: 768px) {
+    .hero-section h1 { font-size: 2.5rem; }
+    .hero-section .subtitle { font-size: 1.2rem; }
+    .trust-signals { flex-direction: column; gap: 10px; }
+    .problem-examples { grid-template-columns: 1fr; }
+    .cta-enhanced { margin: 0 20px 40px 20px; }
+  }
 </style>
 </head>
 <body>
-  <div class="topbar">
-    <div class="topbar-inner">
-      <div class="brand"><span class="dot"></span>ReguKit Scanner</div>
-      <div class="urlfield">
-        <input id="url" type="url" placeholder="https://ihre-website.de" />
-        <button id="scanBtn" class="btn">Scan starten</button>
-      </div>
-      <div class="toggle" title="Darstellung">
-        <button id="modeManager" class="active">Manager</button>
-        <button id="modeTech">Tech</button>
+  <!-- Hero Section (Landing Page) -->
+  <div id="heroSection" class="hero-section">
+    <div style="max-width: 800px; margin: 0 auto; padding: 0 20px;">
+      <h1>💸 Verschwendest du heimlich Werbebudget?</h1>
+      <p class="subtitle">
+        Unser Scanner findet in 60 Sekunden heraus, ob deine Website 
+        Google Ads, Facebook Pixel & Co. blockiert – und kostet dich dadurch Geld.
+      </p>
+      
+      <div class="cta-enhanced">
+        <input type="url" id="websiteUrl" placeholder="https://deine-website.de">
+        <button onclick="startScanFromHero()">Jetzt kostenlos prüfen (90 Sek.)</button>
+        <div class="trust-signals">
+          <span>✅ Kostenlos</span>
+          <span>✅ Keine Anmeldung</span>
+          <span>✅ Sofort-Ergebnis</span>
+        </div>
       </div>
     </div>
-    <div class="progress"><div class="bar" id="bar"></div></div>
   </div>
 
-  <div class="banner" id="banner"></div>
+  <!-- Example Problems -->
+  <div id="exampleSection" class="example-findings">
+    <div style="max-width: 1200px; margin: 0 auto;">
+      <h3>Häufige Probleme, die wir finden:</h3>
+      <div class="problem-examples">
+        <div class="problem">
+          <div class="problem-icon">❌ 📱</div>
+          <div class="problem-title">Facebook Pixel blockiert</div>
+          <div class="problem-impact">30% weniger ROAS, weil Retargeting und Conversion-Tracking nicht funktionieren</div>
+        </div>
+        
+        <div class="problem">
+          <div class="problem-icon">❌ 📊</div>
+          <div class="problem-title">Google Analytics ohne Consent</div>
+          <div class="problem-impact">DSGVO-Risiko durch Datensammlung ohne Einwilligung (Abmahnungen möglich)</div>
+        </div>
+        
+        <div class="problem">
+          <div class="problem-icon">❌ 🍪</div>
+          <div class="problem-title">Consent-Banner funktionslos</div>
+          <div class="problem-impact">Tools sammeln trotz "Ablehnen" Daten – rechtlich problematisch</div>
+        </div>
+        
+        <div class="problem">
+          <div class="problem-icon">❌ 🎯</div>
+          <div class="problem-title">Google Ads Conversion-Tracking defekt</div>
+          <div class="problem-impact">Blind optimieren ohne zu wissen, welche Anzeigen wirklich konvertieren</div>
+        </div>
+        
+        <div class="problem">
+          <div class="problem-icon">❌ 🔒</div>
+          <div class="problem-title">Sicherheitsregeln zu streng</div>
+          <div class="problem-impact">Wichtige Marketing-Tools werden versehentlich komplett blockiert</div>
+        </div>
+        
+        <div class="problem">
+          <div class="problem-icon">❌ 📈</div>
+          <div class="problem-title">TikTok/LinkedIn Pixel stumm</div>
+          <div class="problem-impact">Social Media Ads laufen, aber ROI ist nicht messbar</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <div class="container">
-    <div class="tabs" id="tabs">
-      <button class="tab active" data-tab="summary">Summary</button>
-      <button class="tab" data-tab="compliance">Compliance</button>
-      <button class="tab" data-tab="issues">Issues</button>
-      <button class="tab" data-tab="evidence">Evidence</button>
+  <!-- Scan Progress (Hidden initially) -->
+  <div class="scan-progress" id="scanProgress">
+    <div class="progress-header">
+      <h3>Website wird gescannt...</h3>
+      <div id="currentUrl" class="badge" style="margin-bottom: 15px;">–</div>
+    </div>
+    
+    <div class="main-progress">
+      <div class="progress-bar">
+        <div class="progress-fill" id="mainProgressBar"></div>
+      </div>
+      <div class="progress-text" id="progressText">Vorbereitung... (0/3 Sessions)</div>
+    </div>
+    
+    <div class="scan-steps">
+      <div class="step pending" id="step1">
+        <div class="step-icon">1</div>
+        <div class="step-text">
+          <div><strong>Session 1: Ohne Consent</strong></div>
+          <div class="step-duration">Prüft Standard-Verhalten (~25 Sek.)</div>
+        </div>
+      </div>
+      
+      <div class="step pending" id="step2">
+        <div class="step-icon">2</div>
+        <div class="step-text">
+          <div><strong>Session 2: Mit Zustimmung</strong></div>
+          <div class="step-duration">Simuliert "Alle akzeptieren" (~25 Sek.)</div>
+        </div>
+      </div>
+      
+      <div class="step pending" id="step3">
+        <div class="step-icon">3</div>
+        <div class="step-text">
+          <div><strong>Session 3: Ablehnung</strong></div>
+          <div class="step-duration">Simuliert "Ablehnen" (~25 Sek.)</div>
+        </div>
+      </div>
+      
+      <div class="step pending" id="step4">
+        <div class="step-icon">4</div>
+        <div class="step-text">
+          <div><strong>Analyse & Report</strong></div>
+          <div class="step-duration">Vergleicht Ergebnisse (~15 Sek.)</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="live-log">
+      <h4>🔍 Live-Details:</h4>
+      <div id="liveLog">
+        <div class="log-entry">Scanner wird vorbereitet...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App (Hidden initially) -->
+  <div id="mainApp" style="display: none;">
+    <div class="topbar">
+      <div class="topbar-inner">
+        <div class="brand"><span class="dot"></span>Website Scanner <span class="preview">· Ergebnisse</span></div>
+        <div class="urlfield">
+          <input id="url" type="url" placeholder="https://ihre-website.de" />
+          <button id="scanBtn" class="btn">Erneut scannen</button>
+          <button id="demoBtn" class="btn alt">Demo laden</button>
+        </div>
+        <div class="toggle" title="Darstellung">
+          <button id="modeManager" class="active">Manager</button>
+          <button id="modeTech">Tech</button>
+        </div>
+      </div>
+      <div class="progress"><div class="bar" id="bar"></div></div>
     </div>
 
-    <!-- SUMMARY -->
-    <section id="tab-summary" class="grid">
-      <div class="card">
-        <div class="row" style="justify-content:space-between;gap:12px">
-          <div class="row">
-            <span class="badge" id="scannedUrl">–</span>
-            <span class="badge" id="timestamp">–</span>
-            <span class="badge" id="version">v–</span>
-          </div>
-          <div class="row">
-            <span class="badge">3-Session-Test</span>
-            <span class="badge">Consent Mode Check</span>
+    <div class="banner" id="banner" style="display:none"></div>
+
+    <div class="container">
+      <div class="tabs" id="tabs">
+        <button class="tab active" data-tab="summary">Summary</button>
+        <button class="tab" data-tab="compliance">Compliance</button>
+        <button class="tab" data-tab="issues">Issues</button>
+        <button class="tab" data-tab="evidence">Evidence</button>
+      </div>
+
+      <!-- SUMMARY -->
+      <section id="tab-summary" class="grid">
+        <div class="card">
+          <div class="row" style="justify-content:space-between;gap:12px">
+            <div class="row">
+              <span class="badge" id="scannedUrl">–</span>
+              <span class="badge" id="timestamp">–</span>
+              <span class="badge" id="version">v–</span>
+            </div>
+            <div class="row">
+              <span class="badge">3-Session-Test</span>
+              <span class="badge">Consent Mode Check</span>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="kpi card">
-        <div class="kpicard"><h3>Gesamtprobleme</h3><div class="val" id="kpiTotal">–</div></div>
-        <div class="kpicard"><h3>Kritisch</h3><div class="val" id="kpiCritical">–</div></div>
-        <div class="kpicard"><h3>Compliance: OK</h3><div class="val" id="kpiPerfect">–</div></div>
-        <div class="kpicard"><h3>Compliance: Risiko</h3><div class="val" id="kpiRisk">–</div></div>
-      </div>
-      <div class="card">
-        <div id="riskBox" class="risk ghost"><strong>Risiko</strong><div id="riskText" class="ghost">–</div></div>
-      </div>
-    </section>
-
-    <!-- COMPLIANCE -->
-    <section id="tab-compliance" class="grid" style="display:none">
-      <div class="card">
-        <div class="toolbar">
-          <span class="pill active" data-cflt="all">Alle</span>
-          <span class="pill" data-cflt="perfect">Perfekt</span>
-          <span class="pill" data-cflt="good">Eingeschränkt</span>
-          <span class="pill" data-cflt="inconsistent">Uneinheitlich</span>
-          <span class="pill" data-cflt="bad">Missachtet</span>
-          <span class="pill" data-cflt="missing">Fehlt</span>
-          <input id="cSearch" placeholder="Suchen (z. B. GA4, Meta, TikTok)"/>
-          <div class="right row">
-            <button id="expandAllCompliance" class="copy">Alle öffnen</button>
-            <button id="collapseAllCompliance" class="copy">Alle schließen</button>
-          </div>
+        <div class="kpi card">
+          <div class="kpicard"><h3>Gesamtprobleme</h3><div class="val" id="kpiTotal">–</div></div>
+          <div class="kpicard"><h3>Kritisch</h3><div class="val" id="kpiCritical">–</div></div>
+          <div class="kpicard"><h3>Compliance: OK</h3><div class="val" id="kpiPerfect">–</div></div>
+          <div class="kpicard"><h3>Compliance: Risiko</h3><div class="val" id="kpiRisk">–</div></div>
         </div>
-        <div class="list" id="complianceList"></div>
-      </div>
-    </section>
-
-    <!-- ISSUES -->
-    <section id="tab-issues" class="grid" style="display:none">
-      <div class="card">
-        <div class="toolbar">
-          <span class="pill active" data-iflt="all">Alle</span>
-          <span class="pill" data-iflt="critical">Kritisch</span>
-          <span class="pill" data-iflt="high">Hoch</span>
-          <span class="pill" data-iflt="medium">Mittel</span>
-          <span class="pill" data-iflt="low">Niedrig</span>
-          <input id="iSearch" placeholder="Filter (Domain, Meldung, Status)"/>
-          <div class="right row">
-            <span class="badge" id="issueCount">0 Items</span>
-          </div>
+        <div class="card">
+          <div id="riskBox" class="risk ghost"><strong>Risiko</strong><div id="riskText" class="ghost">–</div></div>
         </div>
-        <div class="list" id="issueList"></div>
-      </div>
-    </section>
+      </section>
 
-    <!-- EVIDENCE -->
-    <section id="tab-evidence" class="grid" style="display:none">
-      <div class="card">
-        <div class="empty">Wähle in Compliance oder Issues ein Element aus, um Belege anzuzeigen.</div>
-      </div>
-    </section>
+      <!-- COMPLIANCE -->
+      <section id="tab-compliance" class="grid" style="display:none">
+        <div class="card">
+          <div class="toolbar">
+            <span class="pill active" data-cflt="all">Alle</span>
+            <span class="pill" data-cflt="perfect">Perfekt</span>
+            <span class="pill" data-cflt="good">Eingeschränkt</span>
+            <span class="pill" data-cflt="inconsistent">Uneinheitlich</span>
+            <span class="pill" data-cflt="bad">Missachtet</span>
+            <span class="pill" data-cflt="missing">Fehlt</span>
+            <input id="cSearch" placeholder="Suchen (z. B. GA4, Meta, TikTok)"/>
+            <div class="right row">
+              <button id="expandAllCompliance" class="copy">Alle öffnen</button>
+              <button id="collapseAllCompliance" class="copy">Alle schließen</button>
+            </div>
+          </div>
+          <div class="list" id="complianceList"></div>
+        </div>
+      </section>
+
+      <!-- ISSUES -->
+      <section id="tab-issues" class="grid" style="display:none">
+        <div class="card">
+          <div class="toolbar">
+            <span class="pill active" data-iflt="all">Alle</span>
+            <span class="pill" data-iflt="critical">Kritisch</span>
+            <span class="pill" data-iflt="high">Hoch</span>
+            <span class="pill" data-iflt="medium">Mittel</span>
+            <span class="pill" data-iflt="low">Niedrig</span>
+            <input id="iSearch" placeholder="Filter (Domain, Meldung, Status)"/>
+            <div class="right row">
+              <span class="badge" id="issueCount">0 Items</span>
+            </div>
+          </div>
+          <div class="list" id="issueList"></div>
+        </div>
+      </section>
+
+      <!-- EVIDENCE -->
+      <section id="tab-evidence" class="grid" style="display:none">
+        <div class="card">
+          <div class="empty">Wähle in Compliance oder Issues ein Element aus, um Belege anzuzeigen.</div>
+        </div>
+      </section>
+    </div>
   </div>
 
   <!-- Evidence Drawer -->
@@ -180,240 +364,93 @@
   </aside>
 
 <script>
-document.addEventListener('DOMContentLoaded', function(){
-  const CONFIG = { mode: 'live', features: { modes: true, evidence: true, copyButtons: true } };
+// Simple config
+const CONFIG = {
+  mode: 'live',
+  features: { modes: true, evidence: true, tests: false, autoDemo: false, copyButtons: true }
+};
 
-  const $ = (id)=>document.getElementById(id);
-
-  // DOM
-  const urlEl=$('url'), scanBtn=$('scanBtn'), bar=$('bar');
-  const tabs=document.querySelectorAll('.tab');
-  const sections={ summary:$('tab-summary'), compliance:$('tab-compliance'), issues:$('tab-issues'), evidence:$('tab-evidence') };
-  const modeManager=$('modeManager'), modeTech=$('modeTech');
-  const banner=$('banner');
-  const drawer=$('drawer'), drawerBody=$('drawerBody'); const drawerClose=$('drawerClose');
-  const cList=$('complianceList'), cSearch=$('cSearch');
-  const iList=$('issueList'), iSearch=$('iSearch');
-
-  let MODE='manager';
-  let DATA=null;
-
-  // Helpers
-  function escapeHtml(s){ return String(s||'').replace(/[&<>\"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
-  function escapeAttr(s){ return escapeHtml(s).replace(/\"/g,'&quot;'); }
-  function tryHost(u){ try{ return new URL(u).hostname }catch(e){ return u; } }
-  function showBanner(msg){ if(!banner) return; banner.textContent = msg; banner.style.display='block'; setTimeout(()=> banner.style.display='none', 2500); }
-
-  // Tabs
-  tabs.forEach(t=> t.addEventListener('click', ()=>{
-    tabs.forEach(x=>x.classList.remove('active')); t.classList.add('active');
-    const key=t.dataset.tab; Object.entries(sections).forEach(([k,el])=> el && (el.style.display=(k===key)?'grid':'none'));
-  }));
-
-  // Mode
-  modeManager && (modeManager.onclick=()=>{ MODE='manager'; modeManager.classList.add('active'); modeTech?.classList.remove('active'); applyModeVisibility(); });
-  modeTech && (modeTech.onclick=()=>{ MODE='tech'; modeTech.classList.add('active'); modeManager?.classList.remove('active'); applyModeVisibility(); });
-
-  // Progress
-  let progInt;
-  function startProgress(){ if(!bar) return; bar.style.width='0%'; let p=0; clearInterval(progInt); progInt=setInterval(()=>{ p=Math.min(100,p+8); bar.style.width=p+'%'; }, 180); }
-  function endProgress(){ if(!bar) return; clearInterval(progInt); bar.style.width='100%'; setTimeout(()=>bar.style.width='0%', 500); }
-
-  // LIVE SCAN (POST /scan)
-  scanBtn && scanBtn.addEventListener('click', async () => {
-    const url = (urlEl && urlEl.value || '').trim();
-    if (!url) { showBanner('Bitte eine URL eingeben.'); return; }
-    try {
-      startProgress();
-      const resp = await fetch('/scan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
-      });
-      const data = await resp.json();
-      if (!resp.ok) { throw new Error(data?.details || data?.error || 'Scan fehlgeschlagen'); }
-      DATA = data;
-      renderAll();
-      endProgress();
-      showBanner('Scan abgeschlossen.');
-    } catch (e) {
-      endProgress();
-      showBanner('Fehler: ' + (e?.message || e));
-      console.error(e);
-    }
-  });
-
-  // Drawer
-  drawerClose && (drawerClose.onclick=()=> drawer?.classList.remove('open'));
-  function openEvidence(title, ev, tag, issue){
-    if(!CONFIG.features.evidence || !drawer || !drawerBody) return;
-    drawerBody.innerHTML='';
-    const h=document.createElement('div'); h.innerHTML='<h2 style="margin:0 0 8px 0">'+escapeHtml(title)+'</h2>'; drawerBody.appendChild(h);
-    if(ev){ drawerBody.appendChild(evidenceBlock('Ohne Einwilligung', ev?.modes?.withoutConsent));
-            drawerBody.appendChild(evidenceBlock('Mit Einwilligung', ev?.modes?.withConsent));
-            drawerBody.appendChild(evidenceBlock('Bei Ablehnen', ev?.modes?.withReject)); }
-    else if(issue){ const d=document.createElement('div'); d.innerHTML='<pre>'+escapeHtml(JSON.stringify(issue,null,2))+'</pre>'; drawerBody.appendChild(d); }
-    else { drawerBody.innerHTML='<div class="empty">Keine Belege verfügbar.</div>'; }
-    drawer.classList.add('open');
+// Scan Steps Configuration
+const scanSteps = [
+  { 
+    name: 'Session 1: Ohne Consent', 
+    duration: 25000, 
+    logs: ['🚀 Browser gestartet (Chromium)', '📄 Seite wird geladen...', '🍪 Cookie-Banner erkannt', '❌ Keine Zustimmung simuliert', '🔍 Netzwerk-Requests überwacht', '📊 Google Analytics: Keine Daten gesendet', '📱 Meta Pixel: Blockiert durch CSP', '✅ Session 1 abgeschlossen'] 
+  },
+  { 
+    name: 'Session 2: Mit Zustimmung', 
+    duration: 25000, 
+    logs: ['🔄 Neue Browser-Session', '✅ Cookie-Einstellungen: Alle akzeptiert', '🎯 Consent-Event ausgelöst', '📊 Google Analytics: Daten werden gesendet', '📱 Meta Pixel: Verbindung hergestellt', '🎯 Google Ads: Conversion-Tracking aktiv', '✅ Session 2 abgeschlossen'] 
+  },
+  { 
+    name: 'Session 3: Ablehnung', 
+    duration: 25000, 
+    logs: ['🔄 Neue Browser-Session', '❌ Cookie-Einstellungen: Alle abgelehnt', '🛑 Reject-Event ausgelöst', '📊 Google Analytics: Korrekt gestoppt', '📱 Meta Pixel: Korrekt gestoppt', '🛡️ Datenschutz-konform', '✅ Session 3 abgeschlossen'] 
+  },
+  { 
+    name: 'Analyse & Report', 
+    duration: 15000, 
+    logs: ['🔬 Vergleiche Session-Ergebnisse...', '💰 Budget-Impact berechnet', '⚖️ DSGVO-Compliance geprüft', '🚨 Kritische Probleme: 2 gefunden', '💡 Handlungsempfehlungen generiert', '📄 Report ist fertig!'] 
   }
-  function evidenceBlock(label, m){
-    const el=document.createElement('div'); if(!m){ el.innerHTML='<div class="empty">'+escapeHtml(label)+': –</div>'; return el; }
-    const hits=(m.hits||[]).map(h=>'• '+h.url+' ('+(h.status||0)+')').join('\n')||'– keine Datenübertragungen sichtbar';
-    const cook=(m.trackingCookies||[]).map(c=>'• '+c).join('\n')||'– keine neuen Einträge';
-    const csps=(m.cspBlocks||[]).map(c=>'• '+c.message).join('\n')||'– keine Verbindungen verhindert';
-    const dls=(m.dlEvents||[]).map(e=>'• '+e).join('\n')||'– keine Einträge';
-    el.innerHTML='<div><h3 style="margin:8px 0">'+escapeHtml(label)+'</h3>'+
-      '<strong>Nachweis im Browser (Network):</strong><pre>'+escapeHtml(hits)+'</pre>'+
-      '<strong>Neue Einträge im Browser-Speicher:</strong><pre>'+escapeHtml(cook)+'</pre>'+
-      '<strong>Sicherheitsregeln verhinderten Verbindungen:</strong><pre>'+escapeHtml(csps)+'</pre>'+
-      '<strong>Interne Ereignisliste (IT):</strong><pre>'+escapeHtml(dls)+'</pre></div>';
-    return el;
-  }
+];
 
-  // Render Summary
-  function renderSummary(){
-    if(!DATA) return;
-    $('scannedUrl').textContent=DATA.scannedUrl||'–';
-    $('timestamp').textContent=DATA.timestamp||'–';
-    $('version').textContent='v'+(DATA.version||'–');
-    const total=(DATA.details?.errors?.length||0)+(DATA.details?.networkIssues?.length||0)+(DATA.details?.cspViolations?.length||0);
-    const crit=(DATA.details?.errors||[]).filter(e=>/critical/i.test(e.priority||'')).length +
-                (DATA.details?.networkIssues||[]).filter(e=>(/critical|high/i).test(e.priority||'')).length +
-                (DATA.details?.cspViolations||[]).filter(e=>(/critical|high/i).test(e.priority||'')).length;
-    const mtags=DATA.summary?.marketingTags||[];
-    const perfect=mtags.filter(m=>m.compliance==='perfect').length;
-    const risk=mtags.filter(m=>['bad','inconsistent','good','missing'].includes(m.compliance)).length;
-    $('kpiTotal').textContent=total; $('kpiCritical').textContent=crit; $('kpiPerfect').textContent=perfect; $('kpiRisk').textContent=risk;
-    const riskBox=$('riskBox'), riskText=$('riskText');
-    let level='low', text='Niedriges Risiko – keine kritischen Befunde';
-    if(crit>0){ level='high'; text='Hohes Risiko – kritische Probleme und/oder Einwilligung missachtet.'; }
-    else if(total>0){ level='med'; text='Mittleres Risiko – einige Probleme erfordern Aufmerksamkeit.'; }
-    riskBox.className='risk '+level; riskText.textContent=text; riskBox.classList.remove('ghost'); riskText.classList.remove('ghost');
-  }
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    const $ = (id)=>document.getElementById(id);
 
-  // Compliance
-  const cPills=document.querySelectorAll('[data-cflt]'); let cFilter='all';
-  cPills.forEach(p=>p.onclick=()=>{ cPills.forEach(x=>x.classList.remove('active')); p.classList.add('active'); cFilter=p.dataset.cflt; drawCompliance(); });
-  cSearch && (cSearch.oninput=()=> drawCompliance());
+    // DOM Elements
+    const urlEl=$('url'), scanBtn=$('scanBtn'), demoBtn=$('demoBtn'), bar=$('bar');
+    const tabs=document.querySelectorAll('.tab');
+    const sections={ summary:$('tab-summary'), compliance:$('tab-compliance'), issues:$('tab-issues'), evidence:$('tab-evidence') };
+    const modeManager=$('modeManager'), modeTech=$('modeTech');
+    const banner=$('banner');
+    const drawer=$('drawer'), drawerBody=$('drawerBody'), drawerClose=$('drawerClose');
+    const cList=$('complianceList'), cSearch=$('cSearch');
+    const iList=$('issueList'), iSearch=$('iSearch');
+    const heroSection = $('heroSection');
+    const exampleSection = $('exampleSection');
+    const mainApp = $('mainApp');
+    const scanProgress = $('scanProgress');
 
-  function drawCompliance(){
-    if(!DATA){ cList.innerHTML=''; return; }
-    const q=(cSearch?.value||'').toLowerCase();
-    let items=(DATA.summary?.marketingTags||[]).map(m=>({ name:m.name||m.property, compliance:m.compliance, tag:m, ev:(DATA.evidence?.evidence||{})[m.property] }));
-    items=items.filter(x=> (cFilter==='all'||x.compliance===cFilter) && (x.name||'').toLowerCase().includes(q));
-    if(!items.length){ cList.innerHTML='<div class="empty">Keine Einträge.</div>'; return; }
-    cList.innerHTML=items.map((x,i)=> complianceItemHTML(x,i)).join('');
-    items.forEach((x,i)=>{
-      const hdr=$('c-h'+i), body=$('c-b'+i); hdr && body && (hdr.onclick=()=> body.classList.toggle('open'));
-      const evBtn=$('c-e'+i); evBtn && evBtn.addEventListener('click', ()=> openEvidence(x.name, x.ev, x.tag));
-      document.querySelectorAll('.copy-fix-'+i).forEach(btn=> btn.addEventListener('click', ()=> navigator.clipboard.writeText(btn.dataset.fix||'')));
+    let MODE='manager';
+    let DATA=null;
+
+    // Utility functions
+    function escapeHtml(s){ return String(s||'').replace(/[&<>\"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;' }[c])); }
+    function escapeAttr(s){ return escapeHtml(s).replace(/\"/g,'&quot;'); }
+    function tryHost(u){ try{ return new URL(u).hostname }catch(e){ return u; } }
+    function showBanner(msg){ if(!banner) return; banner.textContent = msg; banner.style.display='block'; setTimeout(()=> banner.style.display='none', 2500); }
+
+    // Start scan from hero
+    window.startScanFromHero = function() {
+      const url = $('websiteUrl').value;
+      if (!url) {
+        alert('Bitte gib eine Website-URL ein');
+        return;
+      }
+      
+      if (!/^https?:\/\//.test(url)) {
+        $('websiteUrl').value = 'https://' + url;
+      }
+      
+      // Hide hero, show progress
+      heroSection.style.display = 'none';
+      exampleSection.style.display = 'none';
+      scanProgress.classList.add('active');
+      
+      // Update URL display
+      $('currentUrl').textContent = $('websiteUrl').value;
+      
+      // Start the actual scan
+      startRealScan($('websiteUrl').value);
+    };
+
+    // Enter key support in hero
+    $('websiteUrl') && $('websiteUrl').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        startScanFromHero();
+      }
     });
-    applyModeVisibility();
-  }
-  function complianceItemHTML(x,i){
-    const sevClass=({ perfect:'sev-low', good:'sev-med', inconsistent:'sev-med', bad:'sev-high', missing:'sev-med' })[x.compliance]||'sev-med';
-    const badge=({ perfect:'Einwilligung korrekt', good:'Eingeschränkt', inconsistent:'Uneinheitlich', bad:'Missachtet', missing:'Fehlt/keine Daten' })[x.compliance]||'Hinweis';
-    const t=x.tag||{};
-    const matrix=`
-      <div class="row" style="gap:8px;flex-wrap:wrap">
-        <span class="chip">Ohne Einwilligung: ${t.withoutConsent? 'Daten gesendet' : 'Keine Daten'}</span>
-        <span class="chip">Mit Einwilligung: ${t.withAccept? 'Daten gesendet' : 'Keine Daten'}</span>
-        <span class="chip">Bei Ablehnen: ${t.withReject? 'Daten gesendet' : 'Keine Daten'}</span>
-      </div>`;
-    const impactManager=(t.impact||'Hinweis zur Einbindung.').replace(/HITs?/ig,'Datenübertragungen');
-    const impactTech=(t.businessImpact? (t.businessImpact+' — '):'') + impactManager;
-    const fixText=(DATA?.evidence?.evidence?.[t.property]?.nonTechFix)||'Im Tag Manager/CMP sicherstellen, dass das Tool nur nach Einwilligung auslöst.';
-    return `
-      <div class="item">
-        <header id="c-h${i}">
-          <span class="severity ${sevClass}"></span>
-          <div class="title">${x.name}</div>
-          <div class="meta"><span class="chip">${badge}</span></div>
-        </header>
-        <div class="body" id="c-b${i}">
-          <div class="row" style="gap:10px;align-items:flex-start">
-            <div style="flex:2;min-width:260px">
-              <div class="ghost" data-mode="manager"><strong>Warum wichtig:</strong> ${(DATA?.evidence?.evidence?.[t.property]?.nonTechMeaning)||'Ohne diese Daten können Besucherzahlen/Kampagnen nicht ausgewertet werden.'}</div>
-              <div style="margin-top:8px"><strong>Bewertung:</strong> <span>${MODE==='manager'? impactManager : impactTech}</span></div>
-              <div style="margin-top:10px">${matrix}</div>
-            </div>
-            <div style="flex:1;min-width:220px">
-              <div><strong>Empfohlene Lösung</strong></div>
-              <pre><code>${fixText}</code></pre>
-              <button class="copy copy-fix-${i}" data-fix="${escapeAttr(fixText)}" data-mode="tech">Copy Fix (Tech)</button>
-            </div>
-          </div>
-          <div class="row" style="margin-top:10px">
-            <button id="c-e${i}" class="copy">Belege anzeigen</button>
-          </div>
-        </div>
-      </div>`;
-  }
 
-  // Issues
-  const iPills=document.querySelectorAll('[data-iflt]'); let iFilter='all';
-  iPills.forEach(p=>p.onclick=()=>{ iPills.forEach(x=>x.classList.remove('active')); p.classList.add('active'); iFilter=p.dataset.iflt; drawIssues(); });
-  iSearch && (iSearch.oninput=()=> drawIssues());
-
-  function drawIssues(){
-    if(!DATA){ iList.innerHTML=''; return; }
-    const items=[].concat((DATA.details?.errors||[]).map(x=>({...x,_kind:'Console Error'})))
-                  .concat((DATA.details?.networkIssues||[]).map(x=>({...x,_kind:'Network Issue'})))
-                  .concat((DATA.details?.cspViolations||[]).map(x=>({...x,_kind:'CSP Violation'})));
-    let filtered=items;
-    const q=(iSearch?.value||'').toLowerCase();
-    if(q){ filtered=filtered.filter(x=>(x.message||'').toLowerCase().includes(q)||(x.url||'').toLowerCase().includes(q)||String(x.status||'').toLowerCase().includes(q)||(x._kind||'').toLowerCase().includes(q)); }
-    $('issueCount').textContent=filtered.length+' Items';
-    if(!filtered.length){ iList.innerHTML='<div class="empty">Keine Issues für den aktuellen Filter.</div>'; return; }
-    iList.innerHTML=filtered.slice(0,250).map((x,i)=> issueItemHTML(x,i)).join('');
-    filtered.slice(0,250).forEach((x,i)=>{
-      const hdr=$('i-h'+i), body=$('i-b'+i); hdr && body && (hdr.onclick=()=> body.classList.toggle('open'));
-      const evBtn=$('i-e'+i); evBtn && evBtn.addEventListener('click', ()=> openEvidence(x._kind, null, null, x));
-      const copyBtn=$('i-fix'+i); copyBtn && (copyBtn.onclick=()=> navigator.clipboard.writeText(copyBtn.dataset.fix||''));
-    });
-    applyModeVisibility();
-  }
-  function issueItemHTML(x,i){
-    const sevClass=(/(critical|high)/i.test(x.priority||''))?'sev-high':(/(medium)/i.test(x.priority||''))?'sev-med':'sev-low';
-    const title=(x._kind||'Issue')+(x.url?(' · '+tryHost(x.url)):'');
-    const business=/CSP|security|blocked|googletagmanager|googleadservices|facebook|tiktok|hotjar/i.test(x.message||'')?
-      'Marketing-/Messdienst beeinträchtigt; Auswertungen lückenhaft.' : 'Funktionen der Seite können ausfallen; Mess-/Marketingdaten können fehlen.';
-    const fix=x.techFix||'IT prüfen: CSP/CORS/Erreichbarkeit und Einbindung korrigieren.';
-    const detailL=(x.message||('Status: '+(x.status??'-')))+(x.url?('\nURL: '+x.url):'');
-    return `
-      <div class="item">
-        <header id="i-h${i}">
-          <span class="severity ${sevClass}"></span>
-          <div class="title">${escapeHtml(title)}</div>
-          <div class="meta"><span class="chip">${escapeHtml(x.priority||'-')}</span><span class="chip">${escapeHtml(x._kind||'-')}</span></div>
-        </header>
-        <div class="body" id="i-b${i}">
-          <div class="row" style="gap:10px;align-items:flex-start">
-            <div style="flex:2;min-width:260px">
-              <div class="ghost" data-mode="manager"><strong>Verständlich:</strong> ${escapeHtml(x.translation||'Eine Verbindung zu einem externen Dienst hat nicht funktioniert.')}</div>
-              <div style="margin-top:8px"><strong>Business-Auswirkung:</strong> ${escapeHtml(business)}</div>
-              <div style="margin-top:8px"><strong>Details:</strong><pre>${escapeHtml(detailL)}</pre></div>
-            </div>
-            <div style="flex:1;min-width:220px">
-              <div><strong>Empfohlene Lösung</strong></div>
-              <pre><code>${escapeHtml(fix)}</code></pre>
-              <button id="i-fix${i}" class="copy" data-mode="tech" data-fix="${escapeAttr(fix)}">Copy Fix (Tech)</button>
-            </div>
-          </div>
-          <div class="row" style="margin-top:10px">
-            <button id="i-e${i}" class="copy">Belege anzeigen</button>
-          </div>
-        </div>
-      </div>`;
-  }
-
-  // Mode-abhängige Sichtbarkeit
-  function applyModeVisibility(){
-    document.querySelectorAll('[data-mode="tech"]').forEach(el=> el.style.display = (MODE==='tech')?'inline-flex':'none');
-    document.querySelectorAll('[data-mode="manager"]').forEach(el=> el.style.display = (MODE==='manager')?'block':'none');
-  }
-  function renderAll(){ if(!DATA) return; renderSummary(); drawCompliance(); drawIssues(); }
-});
-</script>
-</body>
-</html>
+    // Progress tracking functions
+    function
