@@ -7,7 +7,7 @@ const app = express();
 app.set('trust proxy', 1);
 
 const PORT = process.env.PORT || 3000;
-const VERSION = process.env.GIT_SHA || '2.1.0';
+const VERSION = process.env.GIT_SHA || '2.3.0';
 
 // Enhanced Rate Limiting
 const limiter = rateLimit({
@@ -22,49 +22,69 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use('/scan', limiter);
 
+/* -------------------- HIT-based consent evaluation helpers -------------------- */
+// Only real tracking HITS count as consent violations.
+// GTM is treated specially (no clear "hit" endpoint).
+const TAG_META = {
+  hasGA4:        { hitKey: 'hasGA4_HIT',        domains: ['google-analytics.com', 'g.doubleclick.net', 'region'] },
+  hasUA:         { hitKey: 'hasUA_HIT',         domains: ['google-analytics.com'] },
+  hasGoogleAds:  { hitKey: 'hasAds_HIT',        domains: ['googleadservices.com', 'googlesyndication.com'] },
+  hasMetaPixel:  { hitKey: 'hasMeta_HIT',       domains: ['facebook.com', 'connect.facebook.net'] },
+  hasTikTokPixel:{ hitKey: 'hasTikTok_HIT',     domains: ['analytics.tiktok.com'] },
+  hasHotjar:     { hitKey: 'hasHotjar_HIT',     domains: ['static.hotjar.com', 'script.hotjar.com', 'hotjar.com'] },
+  hasCrazyEgg:   { hitKey: 'hasCrazyEgg_HIT',   domains: ['script.crazyegg.com'] },
+};
+
+function cspBlockedForDomains(modeResult, domains = []) {
+  if (!modeResult?.cspViolations?.length) return false;
+  return modeResult.cspViolations.some(v => {
+    const msg = (v?.message || '') + ' ' + (v?.violation?.blockedURI || v?.blockedURI || '');
+    try {
+      const uri = v?.violation?.blockedURI || v?.blockedURI || '';
+      const u = uri ? new URL(uri) : null;
+      return domains.some(d => (u && u.hostname && u.hostname.includes(d)) || msg.includes(d));
+    } catch {
+      return domains.some(d => msg.includes(d));
+    }
+  });
+}
+function lastDlEvents(modeResult) {
+  return modeResult?.marketingTags?.advanced?.domDetection?.dlEvents || [];
+}
+function getHit(modeResult, hitKey) {
+  return !!modeResult?.marketingTags?.advanced?.networkDetection?.[hitKey];
+}
+function getLibPresent(modeResult, tagProperty) {
+  return !!modeResult?.marketingTags?.[tagProperty];
+}
+
+/* ---------------------------------- Scanner --------------------------------- */
+
 class UltimateWebsiteScanner {
-  constructor() {
-    this.reset();
-  }
+  constructor() { this.reset(); }
 
   reset() {
     this.errors = [];
     this.networkIssues = [];
     this.marketingTags = [];
-    this.results = {
-      withoutConsent: null,
-      withConsent: null,
-      withReject: null
-    };
+    this.results = { withoutConsent: null, withConsent: null, withReject: null };
   }
 
   validateUrl(url) {
     try {
       const u = new URL(url);
-
-      if (!/^https?:$/.test(u.protocol)) {
-        throw new Error('Only HTTP/HTTPS URLs allowed');
-      }
-
+      if (!/^https?:$/.test(u.protocol)) throw new Error('Only HTTP/HTTPS URLs allowed');
       const hostname = u.hostname.toLowerCase();
-
       if (/(^|\.)(localhost|127\.0\.0\.1|0\.0\.0\.0|10\.|192\.168\.|172\.1[6-9]\.|172\.2[0-9]\.|172\.3[0-1]\.)/.test(hostname)) {
         throw new Error('Private/internal IPs not allowed');
       }
-
-      if (/^\[?::1\]?$/.test(hostname)) {
-        throw new Error('Loopback IPv6 not allowed');
-      }
-
+      if (/^\[?::1\]?$/.test(hostname)) throw new Error('Loopback IPv6 not allowed');
       if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
-        const parts = hostname.split('.').map(Number);
-        if (parts[0] === 127 || parts[0] === 10 ||
-          (parts[0] === 192 && parts[1] === 168) ||
-          (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31)) {
+        const p = hostname.split('.').map(Number);
+        if (p[0] === 127 || p[0] === 10 || (p[0] === 192 && p[1] === 168) || (p[0] === 172 && p[1] >= 16 && p[1] <= 31)) {
           throw new Error('Private IP ranges not allowed');
         }
       }
-
       return true;
     } catch (error) {
       throw new Error('Invalid URL: ' + error.message);
@@ -73,9 +93,8 @@ class UltimateWebsiteScanner {
 
   async scanWithRetry(url, maxRetries = 2) {
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      try {
-        return await this.scan(url);
-      } catch (error) {
+      try { return await this.scan(url); }
+      catch (error) {
         if (attempt === maxRetries) throw error;
         console.log(`Retry ${attempt + 1}/${maxRetries} for ${url}`);
         await new Promise(resolve => setTimeout(resolve, 3000));
@@ -101,7 +120,7 @@ class UltimateWebsiteScanner {
     });
 
     try {
-      console.log('🚫 Run A: Scanning without consent...');
+      console.log('🚫 Run A: Scanning without consent (default denied)...');
       this.results.withoutConsent = await this.runSingleScan(browser, url, 'no-consent');
 
       console.log('✅ Run B: Scanning with consent accepted...');
@@ -126,6 +145,7 @@ class UltimateWebsiteScanner {
       ignoreHTTPSErrors: true
     });
 
+    // Simulate typical CMP cookies (best effort)
     if (consentMode === 'reject') {
       await this.setConsentCookies(context, url, false);
     } else if (consentMode === 'accept') {
@@ -139,12 +159,15 @@ class UltimateWebsiteScanner {
       cspViolations: [],
       marketingTags: {},
       requestLog: [],
+      cookiesBefore: [],
+      cookiesAfter: [],
       consentMode
     };
 
     await page.addInitScript(() => {
       window.__cspViolations = [];
       window.__requestLog = [];
+      window.__fetchLog = [];
 
       window.addEventListener('securitypolicyviolation', e => {
         window.__cspViolations.push({
@@ -155,17 +178,37 @@ class UltimateWebsiteScanner {
           originalPolicy: e.originalPolicy
         });
       });
+
+      // Fetch proxy to capture more modern requests
+      const _fetch = window.fetch;
+      window.fetch = async (...args) => {
+        try {
+          const res = await _fetch(...args);
+          try {
+            const url = (args && args[0] && args[0].url) || String(args[0]);
+            window.__fetchLog.push({ url, status: res.status || 0, method: (args[1]?.method || 'GET') });
+          } catch {}
+          return res;
+        } catch (err) {
+          try {
+            const url = (args && args[0] && args[0].url) || String(args[0]);
+            window.__fetchLog.push({ url, status: 0, method: (args[1]?.method || 'GET'), error: String(err) });
+          } catch {}
+          throw err;
+        }
+      };
     });
 
     page.on('console', msg => {
       if (msg.type() === 'error') {
+        const text = msg.text() || '';
         scanData.errors.push({
           type: 'Console Error',
-          message: msg.text(),
+          message: text,
           location: msg.location(),
-          priority: this.classifyErrorPriority(msg.text()),
-          translation: this.translateError(msg.text()),
-          techFix: this.suggestFix(msg.text()),
+          priority: this.classifyErrorPriority(text),
+          translation: this.translateError(text),
+          techFix: this.suggestFix(text),
           consentMode
         });
       }
@@ -186,7 +229,6 @@ class UltimateWebsiteScanner {
       try {
         const response = await request.response();
         const status = response ? response.status() : 0;
-
         const rt = typeof request.resourceType === 'function'
           ? request.resourceType()
           : (request.resourceType || 'unknown');
@@ -214,9 +256,14 @@ class UltimateWebsiteScanner {
 
     page.on('requestfailed', request => {
       const failure = request.failure();
+      const rt = typeof request.resourceType === 'function'
+        ? request.resourceType()
+        : (request.resourceType || 'unknown');
+
       scanData.networkIssues.push({
         url: request.url(),
         method: request.method(),
+        resourceType: rt,
         status: failure?.errorText || 'Request Failed',
         priority: this.classifyNetworkPriority(request.url()),
         translation: this.translateNetworkIssue(request.url(), failure?.errorText || ''),
@@ -226,38 +273,93 @@ class UltimateWebsiteScanner {
     });
 
     page.on('response', response => {
-      if (response.status() >= 400) {
-        scanData.networkIssues.push({
-          url: response.url(),
-          status: response.status(),
-          priority: this.classifyNetworkPriority(response.url()),
-          translation: this.translateNetworkIssue(response.url(), String(response.status())),
-          techFix: this.suggestFixForUrl(response.url(), String(response.status())),
-          consentMode
-        });
-      }
+      try {
+        if (response.status() >= 400) {
+          scanData.networkIssues.push({
+            url: response.url(),
+            status: response.status(),
+            priority: this.classifyNetworkPriority(response.url()),
+            translation: this.translateNetworkIssue(response.url(), String(response.status())),
+            techFix: this.suggestFixForUrl(response.url(), String(response.status())),
+            consentMode
+          });
+        }
+      } catch {}
     });
 
     try {
+      // Cookies before
+      scanData.cookiesBefore = await context.cookies(url);
+
+      // Inject Consent Mode default denied before any tag load in "no-consent"
+      if (consentMode === 'no-consent') {
+        await page.addInitScript(() => {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){window.dataLayer.push(arguments);}
+          gtag('consent','default',{
+            ad_storage:'denied',
+            ad_user_data:'denied',
+            ad_personalization:'denied',
+            analytics_storage:'denied',
+            functionality_storage:'granted',
+            security_storage:'granted'
+          });
+        });
+      }
+
       await page.goto(url, {
         waitUntil: 'domcontentloaded',
-        timeout: 20000
+        timeout: 25000
       });
 
+      // Try to interact with CMP
       if (consentMode === 'accept') {
         await this.handleConsent(page, 'accept');
+        await page.evaluate(() => {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){window.dataLayer.push(arguments);}
+          gtag('consent','update',{
+            ad_storage:'granted',
+            ad_user_data:'granted',
+            ad_personalization:'granted',
+            analytics_storage:'granted'
+          });
+        });
       } else if (consentMode === 'reject') {
         await this.handleConsent(page, 'reject');
+        await page.evaluate(() => {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){window.dataLayer.push(arguments);}
+          gtag('consent','update',{
+            ad_storage:'denied',
+            ad_user_data:'denied',
+            ad_personalization:'denied',
+            analytics_storage:'denied'
+          });
+        });
       }
 
       await page.evaluate(() => { window.scrollTo(0, document.body.scrollHeight); });
       await Promise.race([
-        page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {}),
-        page.waitForTimeout(1500)
+        page.waitForLoadState('networkidle', { timeout: 4000 }).catch(() => {}),
+        page.waitForTimeout(2000)
       ]);
 
+      // Merge fetch-proxy logs
+      const fetchLog = await page.evaluate(() => window.__fetchLog.slice());
+      for (const f of fetchLog) {
+        scanData.requestLog.push({
+          url: f.url,
+          method: f.method || 'GET',
+          resourceType: 'fetch',
+          status: f.status || 0
+        });
+      }
+
+      // Marketing tags detection (with HIT vs LIB separation)
       scanData.marketingTags = await this.checkMarketingTagsDeep(page, scanData.requestLog);
 
+      // CSP violations
       const cspViolations = await page.evaluate(() => window.__cspViolations.slice());
       scanData.cspViolations = cspViolations.map(v => ({
         type: 'CSP Violation',
@@ -268,6 +370,9 @@ class UltimateWebsiteScanner {
         violation: v,
         consentMode
       }));
+
+      // Cookies after
+      scanData.cookiesAfter = await context.cookies(url);
 
     } catch (error) {
       scanData.errors.push({
@@ -286,7 +391,6 @@ class UltimateWebsiteScanner {
 
   async setConsentCookies(context, url, acceptAll) {
     const domain = new URL(url).hostname;
-
     const consentCookies = [
       {
         name: 'CookieConsent',
@@ -298,66 +402,52 @@ class UltimateWebsiteScanner {
           marketing: acceptAll,
           method: 'explicit'
         }),
-        domain: domain
+        domain, path: '/'
       },
-      {
-        name: 'cookielawinfo-checkbox-necessary',
-        value: 'yes',
-        domain: domain
-      },
-      {
-        name: 'cookielawinfo-checkbox-analytics',
-        value: acceptAll ? 'yes' : 'no',
-        domain: domain
-      },
-      {
-        name: 'cookielawinfo-checkbox-advertisement',
-        value: acceptAll ? 'yes' : 'no',
-        domain: domain
-      }
+      { name: 'cookielawinfo-checkbox-necessary', value: 'yes', domain, path: '/' },
+      { name: 'cookielawinfo-checkbox-analytics', value: acceptAll ? 'yes' : 'no', domain, path: '/' },
+      { name: 'cookielawinfo-checkbox-advertisement', value: acceptAll ? 'yes' : 'no', domain, path: '/' }
     ];
 
     for (const cookie of consentCookies) {
-      try {
-        await context.addCookies([cookie]);
-      } catch (error) {
-        // Cookie setting can fail, that's ok
-      }
+      try { await context.addCookies([cookie]); } catch {}
     }
   }
 
   async handleConsent(page, action) {
     try {
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(1800);
 
-      const buttons = await page.$$('button, [role="button"], input[type="button"], a, div[onclick], span[onclick]');
+      const selectors = [
+        'button', '[role="button"]', 'input[type="button"]', 'a[href]',
+        '[onclick]', 'div[role="button"]', 'span[role="button"]'
+      ];
+      const elements = await page.$$(selectors.join(','));
 
-      for (const btn of buttons) {
-        const text = (await btn.textContent() || '').toLowerCase();
-        const ariaLabel = (await btn.getAttribute('aria-label') || '').toLowerCase();
-        const className = (await btn.getAttribute('class') || '').toLowerCase();
-        const id = (await btn.getAttribute('id') || '').toLowerCase();
+      const ACCEPT_RE = /accept|zustimmen|einverstanden|alle.*(zulassen|akzeptieren)|ok|verstanden|allow.*all/i;
+      const REJECT_RE = /reject|ablehnen|nur.*(notwendig|necessary|minimal)|essential.*only|necessary.*only/i;
 
-        const allText = `${text} ${ariaLabel} ${className} ${id}`;
+      for (const el of elements) {
+        const text = (await el.textContent())?.toLowerCase() || '';
+        const aria = (await el.getAttribute('aria-label'))?.toLowerCase() || '';
+        const cls  = (await el.getAttribute('class'))?.toLowerCase() || '';
+        const id   = (await el.getAttribute('id'))?.toLowerCase() || '';
 
-        const isVisible = await btn.isVisible().catch(() => false);
+        const hay = `${text} ${aria} ${cls} ${id}`;
+        const isVisible = await el.isVisible().catch(() => false);
         if (!isVisible) continue;
 
-        if (action === 'accept' &&
-          /accept|zustimmen|einverstanden|alle.*zulassen|ok|verstanden|akzeptieren|allow.*all/i.test(allText)) {
-          await btn.click();
-          await page.waitForTimeout(2000);
+        if (action === 'accept' && ACCEPT_RE.test(hay)) {
+          await el.click({ delay: 10 });
+          await page.waitForTimeout(1500);
           return true;
         }
-
-        if (action === 'reject' &&
-          /reject|ablehnen|nur.*notwendig|minimal|essential.*only|necessary.*only/i.test(allText)) {
-          await btn.click();
-          await page.waitForTimeout(2000);
+        if (action === 'reject' && REJECT_RE.test(hay)) {
+          await el.click({ delay: 10 });
+          await page.waitForTimeout(1500);
           return true;
         }
       }
-
       return false;
     } catch (error) {
       console.log(`Consent handling failed: ${error.message}`);
@@ -366,117 +456,172 @@ class UltimateWebsiteScanner {
   }
 
   async checkMarketingTagsDeep(page, requestLog) {
-    const networkBasedDetection = {
-      hasGA4: requestLog.some(r => /gtag\/js\?id=G-|google-analytics\.com\/g\/collect/.test(r.url)),
-      hasUA: requestLog.some(r => /google-analytics\.com\/analytics\.js|google-analytics\.com\/collect/.test(r.url)),
-      hasGTM: requestLog.some(r => /googletagmanager\.com\/gtm\.js/.test(r.url)),
-      hasGoogleAds: requestLog.some(r => /googleadservices\.com|googlesyndication\.com/.test(r.url)),
-      hasMetaPixel: requestLog.some(r => /connect\.facebook\.net|facebook\.com\/tr/.test(r.url)),
-      hasTikTokPixel: requestLog.some(r => /analytics\.tiktok\.com/.test(r.url)),
-      hasHotjar: requestLog.some(r => /static\.hotjar\.com/.test(r.url)),
-      hasCrazyEgg: requestLog.some(r => /script\.crazyegg\.com/.test(r.url))
-    };
+    // Network-based: separate HITs vs LIBs
+    const hasGA4_HIT = requestLog.some(r => /(www|region\d+)\.google-analytics\.com\/g\/collect/.test(r.url));
+    const hasGA4_LIB = requestLog.some(r => /gtag\/js\?id=G-/.test(r.url));
+    const hasUA_HIT  = requestLog.some(r => /google-analytics\.com\/collect(\?|$)/.test(r.url));
+    const hasUA_LIB  = requestLog.some(r => /google-analytics\.com\/analytics\.js/.test(r.url));
+    const hasGTM_NET = requestLog.some(r => /googletagmanager\.com\/gtm\.js/.test(r.url));
+
+    const hasAds_HIT = requestLog.some(r => /(googleadservices|googlesyndication)\.com/.test(r.url));
+
+    const hasMeta_HIT = requestLog.some(r => /facebook\.com\/tr/.test(r.url));
+    const hasMeta_LIB = requestLog.some(r => /connect\.facebook\.net/.test(r.url));
+
+    const hasTikTok_HIT = requestLog.some(r => /analytics\.tiktok\.com/.test(r.url));
+    const hasHotjar_HIT = requestLog.some(r => /(static|script)\.hotjar\.com/.test(r.url));
+    const hasCrazyEgg_HIT = requestLog.some(r => /script\.crazyegg\.com/.test(r.url));
 
     const domBasedDetection = await page.evaluate(() => {
       const scripts = [...document.scripts];
-
-      const hasGA4 = scripts.some(s => /gtag\/js\?id=G-/.test(s.src)) || typeof gtag !== 'undefined';
-      const hasUA = scripts.some(s => /google-analytics\.com\/analytics\.js/.test(s.src)) || typeof ga !== 'undefined';
-      const hasGTM = scripts.some(s => /googletagmanager\.com\/gtm\.js/.test(s.src)) || !!window.dataLayer;
-      const hasGoogleAds = scripts.some(s => /googleadservices\.com|googlesyndication\.com/.test(s.src));
-      const hasMetaPixel = typeof fbq !== 'undefined' || scripts.some(s => /connect\.facebook\.net/.test(s.src));
-      const hasTikTokPixel = typeof ttq !== 'undefined' || scripts.some(s => /analytics\.tiktok\.com/.test(s.src));
-      const hasHotjar = typeof hj !== 'undefined' || scripts.some(s => /static\.hotjar\.com/.test(s.src));
-      const hasCrazyEgg = typeof CE !== 'undefined' || scripts.some(s => /script\.crazyegg\.com/.test(s.src));
-
-      const dlEvents = Array.isArray(window.dataLayer) ?
-        window.dataLayer.map(e => e.event).filter(Boolean) : [];
-
       const iframes = [...document.querySelectorAll('iframe')];
-      const hasGoogleAdsFrame = iframes.some(iframe => /googleadservices|googlesyndication/.test(iframe.src));
-      const hasMetaFrame = iframes.some(iframe => /facebook\.com/.test(iframe.src));
 
-      return {
-        hasGA4: hasGA4,
-        hasUA: hasUA,
-        hasGTM: hasGTM,
-        hasGoogleAds: hasGoogleAds || hasGoogleAdsFrame,
-        hasMetaPixel: hasMetaPixel || hasMetaFrame,
-        hasTikTokPixel: hasTikTokPixel,
-        hasHotjar: hasHotjar,
-        hasCrazyEgg: hasCrazyEgg,
-        dlEvents,
-        scriptCount: scripts.length,
-        iframeCount: iframes.length
-      };
+      const hasGA4 = scripts.some(s => /gtag\/js\?id=G-/.test(s.src)) || typeof window.gtag === 'function';
+      const hasUA  = scripts.some(s => /google-analytics\.com\/analytics\.js/.test(s.src)) || typeof window.ga === 'function';
+      const hasGTM = scripts.some(s => /googletagmanager\.com\/gtm\.js/.test(s.src)) || Array.isArray(window.dataLayer);
+      const hasGoogleAds = scripts.some(s => /google(adservices|syndication)\.com/.test(s.src)) ||
+        iframes.some(f => /google(adservices|syndication)\.com/.test(f.src));
+      const hasMetaPixel = typeof window.fbq === 'function' ||
+        scripts.some(s => /connect\.facebook\.net/.test(s.src)) ||
+        iframes.some(f => /facebook\.com/.test(f.src));
+      const hasTikTokPixel = typeof window.ttq !== 'undefined' || scripts.some(s => /analytics\.tiktok\.com/.test(s.src));
+      const hasHotjar = typeof window.hj === 'function' || scripts.some(s => /(static|script)\.hotjar\.com/.test(s.src));
+      const hasCrazyEgg = typeof window.CE !== 'undefined' || scripts.some(s => /script\.crazyegg\.com/.test(s.src));
+
+      const dlEvents = Array.isArray(window.dataLayer) ? window.dataLayer.map(e => e && e.event).filter(Boolean) : [];
+      return { hasGA4, hasUA, hasGTM, hasGoogleAds, hasMetaPixel, hasTikTokPixel, hasHotjar, hasCrazyEgg, dlEvents,
+               scriptCount: scripts.length, iframeCount: iframes.length };
     });
 
-    return {
-      hasGA4: networkBasedDetection.hasGA4 || domBasedDetection.hasGA4,
-      hasUA: networkBasedDetection.hasUA || domBasedDetection.hasUA,
-      hasGTM: networkBasedDetection.hasGTM || domBasedDetection.hasGTM,
-      hasGoogleAds: networkBasedDetection.hasGoogleAds || domBasedDetection.hasGoogleAds,
-      hasMetaPixel: networkBasedDetection.hasMetaPixel || domBasedDetection.hasMetaPixel,
-      hasTikTokPixel: networkBasedDetection.hasTikTokPixel || domBasedDetection.hasTikTokPixel,
-      hasHotjar: networkBasedDetection.hasHotjar || domBasedDetection.hasHotjar,
-      hasCrazyEgg: networkBasedDetection.hasCrazyEgg || domBasedDetection.hasCrazyEgg,
+    // Combined presence flags (used for UI presence, not for compliance verdict)
+    const merged = {
+      hasGA4: hasGA4_HIT || hasGA4_LIB || domBasedDetection.hasGA4,
+      hasUA: hasUA_HIT || hasUA_LIB || domBasedDetection.hasUA,
+      hasGTM: hasGTM_NET || domBasedDetection.hasGTM,
+      hasGoogleAds: hasAds_HIT || domBasedDetection.hasGoogleAds,
+      hasMetaPixel: hasMeta_HIT || hasMeta_LIB || domBasedDetection.hasMetaPixel,
+      hasTikTokPixel: hasTikTok_HIT || domBasedDetection.hasTikTokPixel,
+      hasHotjar: hasHotjar_HIT || domBasedDetection.hasHotjar,
+      hasCrazyEgg: hasCrazyEgg_HIT || domBasedDetection.hasCrazyEgg,
       dlEvents: domBasedDetection.dlEvents,
       advanced: {
-        networkDetection: networkBasedDetection,
+        networkDetection: {
+          hasGA4_HIT, hasGA4_LIB, hasUA_HIT, hasUA_LIB, hasGTM: hasGTM_NET,
+          hasAds_HIT, hasMeta_HIT, hasMeta_LIB, hasTikTok_HIT, hasHotjar_HIT, hasCrazyEgg_HIT
+        },
         domDetection: domBasedDetection
       }
     };
+
+    return merged;
   }
 
   analyzeConsentCompliance() {
-    const { withoutConsent, withConsent, withReject } = this.results;
-
-    this.marketingTags = [
-      this.analyzeTagCompliance('Google Analytics 4', 'hasGA4'),
-      this.analyzeTagCompliance('Google Analytics Universal', 'hasUA'),
-      this.analyzeTagCompliance('Google Tag Manager', 'hasGTM'),
-      this.analyzeTagCompliance('Google Ads Tracking', 'hasGoogleAds'),
-      this.analyzeTagCompliance('Meta Pixel (Facebook/Instagram)', 'hasMetaPixel'),
-      this.analyzeTagCompliance('TikTok Pixel', 'hasTikTokPixel'),
-      this.analyzeTagCompliance('Hotjar', 'hasHotjar'),
-      this.analyzeTagCompliance('CrazyEgg', 'hasCrazyEgg')
-    ].filter(tag => tag.relevant);
+    const defs = [
+      ['Google Analytics 4', 'hasGA4'],
+      ['Google Analytics Universal', 'hasUA'],
+      ['Google Tag Manager', 'hasGTM'],
+      ['Google Ads Tracking', 'hasGoogleAds'],
+      ['Meta Pixel (Facebook/Instagram)', 'hasMetaPixel'],
+      ['TikTok Pixel', 'hasTikTokPixel'],
+      ['Hotjar', 'hasHotjar'],
+      ['CrazyEgg', 'hasCrazyEgg']
+    ];
+    this.marketingTags = defs.map(([name, prop]) => this.analyzeTagCompliance(name, prop)).filter(t => t.relevant);
   }
 
   analyzeTagCompliance(tagName, tagProperty) {
     const { withoutConsent, withConsent, withReject } = this.results;
 
-    const noConsent = withoutConsent?.marketingTags?.[tagProperty] || false;
-    const withAccept = withConsent?.marketingTags?.[tagProperty] || false;
-    const withRejectConsent = withReject?.marketingTags?.[tagProperty] || false;
+    // GTM: no clear hit endpoint → not a consent violation, only informative
+    if (tagProperty === 'hasGTM') {
+      const presentNo = getLibPresent(withoutConsent, tagProperty);
+      const presentYes = getLibPresent(withConsent, tagProperty);
+      const presentRej = getLibPresent(withReject, tagProperty);
+      if (!presentNo && !presentYes && !presentRej) return { relevant: false };
 
-    if (!noConsent && !withAccept && !withRejectConsent) {
-      return { relevant: false };
+      const dlNo = lastDlEvents(withoutConsent);
+      const hasConsentDefaultDenied = dlNo.some(e => typeof e === 'string' && e.toLowerCase().includes('consent'));
+
+      const compliance = hasConsentDefaultDenied ? 'perfect' : 'inconsistent';
+      const impact = hasConsentDefaultDenied
+        ? '✅ GTM mit Consent-Initialisierung erkannt (default denied).'
+        : '🤔 GTM geladen, aber kein klarer Consent-Init-Event gefunden. Manuell prüfen, ob alle Tags Consent-Checks haben.';
+      const businessImpact = 'GTM Container vorhanden – Wirkung hängt von Consent-Checks der einzelnen Tags ab.';
+      return {
+        relevant: true,
+        name: tagName,
+        property: tagProperty,
+        withoutConsent: presentNo,
+        withAccept: presentYes,
+        withReject: presentRej,
+        compliance,
+        impact,
+        gdprRisk: hasConsentDefaultDenied ? 'none' : 'medium',
+        businessImpact
+      };
     }
+
+    // Others: HIT-based only
+    const meta = TAG_META[tagProperty];
+    if (!meta) return { relevant: false };
+
+    const noHit  = getHit(withoutConsent, meta.hitKey);
+    const yesHit = getHit(withConsent, meta.hitKey);
+    const rejHit = getHit(withReject, meta.hitKey);
+
+    const presentSomewhere =
+      getLibPresent(withoutConsent, tagProperty) ||
+      getLibPresent(withConsent,   tagProperty) ||
+      getLibPresent(withReject,    tagProperty);
+
+    if (!presentSomewhere && !noHit && !yesHit && !rejHit) return { relevant: false };
+
+    const cspBlockedNo  = cspBlockedForDomains(withoutConsent, meta.domains);
+    const cspBlockedRej = cspBlockedForDomains(withReject, meta.domains);
 
     let compliance = 'unknown';
     let impact = '';
     let gdprRisk = 'low';
 
-    if (!noConsent && withAccept && !withRejectConsent) {
+    // Ideal: Hits only after Accept
+    if (!noHit && yesHit && !rejHit) {
       compliance = 'perfect';
-      impact = `✅ ${tagName} respektiert Consent perfekt - DSGVO-konform`;
+      impact = `✅ ${tagName} respektiert Consent (HITs nur nach „Accept“).`;
       gdprRisk = 'none';
-    } else if (noConsent && withAccept && !withRejectConsent) {
-      compliance = 'good';
-      impact = `🟡 ${tagName} lädt vor Consent, aber stoppt bei Ablehnung`;
+    }
+    // Verstoß: Hits nach Reject
+    else if (rejHit) {
+      compliance = noHit ? 'inconsistent' : 'bad';
+      impact = noHit
+        ? `🤔 ${tagName} feuert nach „Reject“, aber nicht vor Consent. Konfigurationsfehler vermutet.`
+        : `🚨 ${tagName} feuert trotz „Reject“ (HITs erkannt).`;
+      gdprRisk = noHit ? 'medium' : 'high';
+    }
+    // Vor-Consent-Hits (aber stoppt bei Reject)
+    else if (noHit && !rejHit) {
+      compliance = yesHit ? 'good' : 'inconsistent';
+      impact = yesHit
+        ? `🟡 ${tagName} feuert vor Consent, stoppt aber bei „Reject“.`
+        : `🤔 ${tagName} feuert vor Consent, aber nicht nach „Accept“. Setup prüfen.`;
       gdprRisk = 'low';
-    } else if (noConsent && withAccept && withRejectConsent) {
-      compliance = 'bad';
-      impact = `🚨 ${tagName} ignoriert Consent komplett - DSGVO-Verstoß!`;
-      gdprRisk = 'high';
-    } else if (!noConsent && !withAccept && !withRejectConsent) {
-      compliance = 'missing';
-      impact = `❌ ${tagName} nicht installiert - kompletter Tracking-Verlust`;
-      gdprRisk = 'none';
-    } else {
+    }
+    // Keine Hits überhaupt
+    else if (!noHit && !yesHit && !rejHit) {
+      if (cspBlockedNo || cspBlockedRej) {
+        compliance = 'inconsistent';
+        impact = `🟡 ${tagName} scheint durch CSP blockiert zu sein (keine Hits). Kein Consent-Verstoß, aber Tracking wirkungslos.`;
+        gdprRisk = 'none';
+      } else {
+        compliance = 'missing';
+        impact = `❌ ${tagName} ist installiert, aber es wurden keine HITs erkannt. Setup prüfen.`;
+        gdprRisk = 'none';
+      }
+    }
+    // Rest: uneinheitlich
+    else {
       compliance = 'inconsistent';
-      impact = `🤔 ${tagName} verhält sich inkonsistent - manuelle Prüfung nötig`;
+      impact = `🤔 ${tagName} zeigt ein uneinheitliches Hit-Muster. Manuelle Prüfung nötig.`;
       gdprRisk = 'medium';
     }
 
@@ -484,13 +629,14 @@ class UltimateWebsiteScanner {
       relevant: true,
       name: tagName,
       property: tagProperty,
-      withoutConsent: noConsent,
-      withAccept: withAccept,
-      withReject: withRejectConsent,
+      withoutConsent: noHit,   // matrix shows HITs, not just presence
+      withAccept: yesHit,
+      withReject: rejHit,
       compliance,
       impact,
       gdprRisk,
-      businessImpact: this.getBusinessImpact(tagName, compliance)
+      businessImpact: this.getBusinessImpact(tagName, compliance),
+      notes: { present: presentSomewhere, cspBlockedNo, cspBlockedRej }
     };
   }
 
@@ -500,22 +646,24 @@ class UltimateWebsiteScanner {
         perfect: 'Besucherdaten werden DSGVO-konform erfasst',
         good: 'Tracking läuft, aber rechtliches Risiko',
         bad: 'Abmahnrisiko durch Consent-Ignorierung',
-        missing: 'Keine Besucherdaten → Marketing fliegt blind'
+        missing: 'Keine Besucherdaten → Marketing fliegt blind',
+        inconsistent: 'Tracking-Verhalten inkonsistent – Datenqualität fraglich'
       },
       'Google Ads Tracking': {
         perfect: 'Conversion-Tracking DSGVO-konform',
         good: 'ROI messbar, aber rechtliches Risiko',
         bad: 'Abmahnrisiko + ungenaue Kampagnen-Daten',
-        missing: 'Werbebudget-Verschwendung durch fehlende Messung'
+        missing: 'Werbebudget-Verschwendung durch fehlende Messung',
+        inconsistent: 'Conversions werden inkonsistent erfasst – Optimierung leidet'
       },
       'Meta Pixel (Facebook/Instagram)': {
         perfect: 'Social Media ROI DSGVO-konform messbar',
         good: 'Retargeting funktioniert, rechtliches Risiko',
         bad: 'Abmahnrisiko bei Facebook/Instagram Ads',
-        missing: 'Facebook/Instagram Ads laufen blind'
+        missing: 'Facebook/Instagram Ads laufen blind',
+        inconsistent: 'Events feuern inkonsistent – Zielgruppenaufbau gestört'
       }
     };
-
     return impacts[tagName]?.[compliance] || 'Unbekannter Business-Impact';
   }
 
@@ -541,17 +689,14 @@ class UltimateWebsiteScanner {
       'googletagmanager': '📊 Google Tag Manager blockiert - alle Marketing-Tags betroffen',
       'analytics.tiktok.com': '🎵 TikTok Pixel blockiert - TikTok Ads ROI unbekannt',
       'static.hotjar.com': '🖱️ Hotjar Heatmap-Tracking blockiert - Nutzerverhalten unbekannt',
+      'script.hotjar.com': '🖱️ Hotjar Heatmap-Tracking blockiert - Nutzerverhalten unbekannt',
       'CORS': '🌐 Cross-Origin Problem - externes Marketing-Script nicht ladbar',
       'ERR_NAME_NOT_RESOLVED': '🌐 DNS-Problem - Marketing-Service nicht erreichbar',
       'ERR_INTERNET_DISCONNECTED': '📡 Internetverbindung unterbrochen'
     };
-
     for (let [key, translation] of Object.entries(translations)) {
-      if (errorMessage.includes(key)) {
-        return translation;
-      }
+      if (errorMessage.includes(key)) return translation;
     }
-
     return '⚠️ Technischer Fehler gefunden - kann Marketing-Performance beeinträchtigen';
   }
 
@@ -559,7 +704,7 @@ class UltimateWebsiteScanner {
     if (url.includes('googleadservices') || url.includes('googlesyndication')) {
       return `🎯 Google Ads (${status}) - Conversion-Tracking gestört, Budget-Verschwendung wahrscheinlich`;
     }
-    if (url.includes('facebook.net') || url.includes('meta')) {
+    if (url.includes('facebook.net') || url.includes('facebook.com') || url.includes('meta')) {
       return `📱 Meta Pixel (${status}) - Social Media ROI unbekannt, Retargeting unmöglich`;
     }
     if (url.includes('analytics') && url.includes('google')) {
@@ -584,8 +729,8 @@ class UltimateWebsiteScanner {
     if (errorMessage.includes('googletagmanager')) {
       return `CSP erweitern:\nContent-Security-Policy:\n  script-src ... https://www.googletagmanager.com;\n  connect-src ... https://www.googletagmanager.com;`;
     }
-    if (errorMessage.includes('static.hotjar.com')) {
-      return `CSP erweitern:\nContent-Security-Policy:\n  script-src ... https://static.hotjar.com;\n  connect-src ... https://static.hotjar.com;`;
+    if (errorMessage.includes('static.hotjar.com') || errorMessage.includes('script.hotjar.com')) {
+      return `CSP erweitern:\nContent-Security-Policy:\n  script-src ... https://static.hotjar.com https://script.hotjar.com;\n  connect-src ... https://*.hotjar.com wss://*.hotjar.com;`;
     }
     if (errorMessage.includes('Content Security Policy')) {
       return 'CSP-Header überprüfen und alle Marketing-Domains in script-src und connect-src whitelisten';
@@ -596,7 +741,7 @@ class UltimateWebsiteScanner {
   suggestFixForUrl(url, error) {
     try {
       const domain = new URL(url).hostname;
-      if (error?.includes('CSP') || error?.includes('BLOCKED')) {
+      if (error?.includes('CSP') || /BLOCKED/i.test(error || '')) {
         return `CSP-Header erweitern:\nContent-Security-Policy:\n  script-src ... https://${domain};\n  connect-src ... https://${domain};`;
       }
       if (error?.includes('CORS')) {
@@ -1187,12 +1332,12 @@ app.get('/', (req, res) => {
                 data.summary.marketingTags.forEach(tag => {
                     html += \`
                         <div class="compliance-item compliance-\${tag.compliance}">
-                            <h3>\${tag.name} (\${tag.compliance === 'perfect' ? '✅ Perfekt' : tag.compliance === 'bad' ? '❌ Verstoß' : '🟡 Unklar'})</h3>
+                            <h3>\${tag.name} (\${tag.compliance === 'perfect' ? '✅ Perfekt' : tag.compliance === 'bad' ? '❌ Verstoß' : tag.compliance === 'good' ? '🟡 Eingeschränkt' : tag.compliance === 'missing' ? '❌ Fehlend' : '🤔 Unklar'})</h3>
                             <p>\${tag.impact}</p>
                             <div class="consent-matrix">
-                                <div class="consent-result \${tag.withoutConsent ? 'consent-fail' : 'consent-pass'}">Ohne Consent: \${tag.withoutConsent ? 'LÄDT' : 'LÄDT NICHT'}</div>
-                                <div class="consent-result \${tag.withAccept ? 'consent-pass' : 'consent-fail'}">Mit Accept: \${tag.withAccept ? 'LÄDT' : 'LÄDT NICHT'}</div>
-                                <div class="consent-result \${tag.withReject ? 'consent-fail' : 'consent-pass'}">Mit Reject: \${tag.withReject ? 'LÄDT' : 'LÄDT NICHT'}</div>
+                                <div class="consent-result \${tag.withoutConsent ? 'consent-fail' : 'consent-pass'}">Ohne Consent: \${tag.withoutConsent ? 'HIT' : 'KEIN HIT'}</div>
+                                <div class="consent-result \${tag.withAccept ? 'consent-pass' : 'consent-fail'}">Mit Accept: \${tag.withAccept ? 'HIT' : 'KEIN HIT'}</div>
+                                <div class="consent-result \${tag.withReject ? 'consent-fail' : 'consent-pass'}">Mit Reject: \${tag.withReject ? 'HIT' : 'KEIN HIT'}</div>
                             </div>
                             <div class="tech-details"><strong>Business Impact:</strong> \${tag.businessImpact}</div>
                         </div>
@@ -1297,9 +1442,23 @@ app.get('/', (req, res) => {
 `);
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`🚀 Website Scanner running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔍 Scanner UI: http://localhost:${PORT}/`);
 });
 
+const graceful = (sig) => async () => {
+  console.log(`\nReceived ${sig}, shutting down gracefully...`);
+  server.close(() => {
+    console.log('HTTP server closed.');
+    process.exit(0);
+  });
+  setTimeout(() => {
+    console.warn('Force exit after 5s');
+    process.exit(1);
+  }, 5000).unref();
+};
+
+process.on('SIGINT', graceful('SIGINT'));
+process.on('SIGTERM', graceful('SIGTERM'));
