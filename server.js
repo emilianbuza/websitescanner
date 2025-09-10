@@ -1055,7 +1055,6 @@ app.get('/', (req, res) => {
       <p><small>Sichere Analyse ohne Datenspeicherung • Made in Germany</small></p>
     </div>
   </div>
-
   <script>
     // URL validation
     const urlInput = document.getElementById('url');
@@ -1086,18 +1085,9 @@ app.get('/', (req, res) => {
       }
     });
     
-    // Demo buttons
-    document.querySelectorAll('.demo-button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        urlInput.value = btn.dataset.url;
-        urlInput.dispatchEvent(new Event('input'));
-      });
-    });
-    
     // Form submission
     document.getElementById('scanForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      
       const url = document.getElementById('url').value;
       const loading = document.getElementById('loading');
       const results = document.getElementById('results');
@@ -1105,58 +1095,12 @@ app.get('/', (req, res) => {
       const progressFill = document.getElementById('progressFill');
       const loadingText = document.getElementById('loadingText');
       
-      // UI Updates
+      // Reset + UI updates
       scanBtn.disabled = true;
       scanBtn.textContent = 'Scanning läuft...';
       loading.style.display = 'block';
       results.style.display = 'none';
-      
-      // Reset progress
       progressFill.style.width = '0%';
-      document.querySelectorAll('.loading-step').forEach(step => {
-        step.classList.remove('active', 'completed');
-      });
-      
-      // Simulate realistic progress
-      const progressSteps = [
-        { progress: 5, text: 'Browser wird gestartet...', step: null },
-        { progress: 15, text: 'Session 1/3: Ohne Consent laden...', step: 'step1' },
-        { progress: 35, text: 'Session 1/3: Marketing-Tags analysieren...', step: 'step1' },
-        { progress: 45, text: 'Session 2/3: Mit akzeptiertem Consent...', step: 'step2' },
-        { progress: 65, text: 'Session 2/3: Consent-Verhalten prüfen...', step: 'step2' },
-        { progress: 75, text: 'Session 3/3: Mit abgelehntem Consent...', step: 'step3' },
-        { progress: 85, text: 'Session 3/3: DSGVO-Compliance bewerten...', step: 'step3' },
-        { progress: 95, text: 'Consent-Matrix analysieren...', step: 'step4' },
-        { progress: 100, text: 'Abschlussbericht erstellen...', step: 'step4' }
-      ];
-      
-      let stepIndex = 0;
-      const progressInterval = setInterval(() => {
-        if (stepIndex < progressSteps.length) {
-          const step = progressSteps[stepIndex];
-          progressFill.style.width = step.progress + '%';
-          loadingText.textContent = step.text;
-          
-          // Update step indicators
-          if (step.step) {
-            document.querySelectorAll('.loading-step').forEach(s => s.classList.remove('active'));
-            const currentStep = document.getElementById(step.step);
-            if (currentStep) {
-              currentStep.classList.add('active');
-              // Mark previous steps as completed
-              const stepNum = parseInt(step.step.replace('step', ''));
-              for (let i = 1; i < stepNum; i++) {
-                const prevStep = document.getElementById('step' + i);
-                if (prevStep) {
-                  prevStep.classList.remove('active');
-                  prevStep.classList.add('completed');
-                }
-              }
-            }
-          }
-          stepIndex++;
-        }
-      }, 8000); // More realistic timing
       
       try {
         const response = await fetch('/scan', {
@@ -1166,30 +1110,17 @@ app.get('/', (req, res) => {
         });
         
         const data = await response.json();
-        
-        clearInterval(progressInterval);
-        progressFill.style.width = '100%';
-        loadingText.textContent = 'Scan abgeschlossen!';
-        document.querySelectorAll('.loading-step').forEach(s => {
-          s.classList.remove('active');
-          s.classList.add('completed');
-        });
-        
-        setTimeout(() => {
-          if (response.ok) {
-            displayResults(data);
-          } else {
-            throw new Error(data.error || data.details);
-          }
-        }, 1000);
-        
+        if (response.ok) {
+          displayResults(data);
+        } else {
+          throw new Error(data.error || data.details);
+        }
       } catch (error) {
-        clearInterval(progressInterval);
-        results.innerHTML = \`
+        results.innerHTML = `
           <div class="section">
             <div class="section-content">
               <h3 style="color: #e53e3e;">❌ Scan fehlgeschlagen</h3>
-              <p><strong>Fehler:</strong> \${error.message}</p>
+              <p><strong>Fehler:</strong> ${error.message}</p>
               <div class="tech-details">
                 <strong>Mögliche Ursachen:</strong><br>
                 • Website nicht erreichbar oder blockiert Scanner<br>
@@ -1197,335 +1128,165 @@ app.get('/', (req, res) => {
                 • Temporäre Netzwerkprobleme<br>
                 • Website verwendet aggressive Bot-Protection
               </div>
-              <p style="margin-top: 15px;"><strong>Lösungsvorschlag:</strong> Versuchen Sie es in 1-2 Minuten erneut oder testen Sie eine andere URL.</p>
             </div>
           </div>
-        \`;
+        `;
         results.style.display = 'block';
       }
       
-      // UI Reset
+      // Reset Button
       loading.style.display = 'none';
       scanBtn.disabled = false;
       scanBtn.textContent = '🔍 Vollständigen 3-Session-Scan starten';
     });
     
+    // ======================
+    // RENDER-FUNKTIONEN
+    // ======================
     function displayResults(data) {
       const results = document.getElementById('results');
       const marketingTags = data.summary.marketingTags || [];
-      const riskLevel = calculateOverallRisk(data);
       
-      results.innerHTML = \`
+      results.innerHTML = `
         <div class="export-buttons">
           <button class="export-btn" onclick="exportToPDF()">📄 PDF Export</button>
           <button class="export-btn" onclick="copyResults()">📋 Ergebnisse kopieren</button>
           <button class="export-btn" onclick="shareResults()">🔗 Link teilen</button>
         </div>
         
-        <div class="risk-indicator risk-\${riskLevel.level}">
-          <h3>\${riskLevel.icon} \${riskLevel.text}</h3>
-          <p><strong>\${data.scannedUrl}</strong></p>
-          <p>\${data.summary.totalIssues} Issues gefunden • \${marketingTags.length} Marketing-Tags analysiert • \${data.summary.highPriorityIssues} kritische Probleme</p>
-          <small>Gescannt am: \${data.timestamp}</small>
+        <div class="risk-indicator risk-high">
+          <h3>🚨 Scan abgeschlossen</h3>
+          <p><strong>${data.scannedUrl}</strong></p>
+          <p>${data.summary.totalIssues} Issues gefunden • ${marketingTags.length} Marketing-Tags analysiert</p>
         </div>
         
+        ${renderErrors(data.details.errors)}
+        ${renderNetworkIssues(data.details.networkIssues)}
+        ${renderCSPViolations(data.details.cspViolations)}
+      `;
+      results.style.display = 'block';
+    }
+
+    function renderErrors(errors = []) {
+      if (!errors.length) return '';
+      return `
         <div class="section">
           <div class="section-header" onclick="toggleSection(this)">
-            🍪 Cookie-Consent Compliance Matrix
-            <span class="badge">3-Wege-Test ▼</span>
+            ⚠️ JavaScript & Console Errors
+            <span class="badge high">${errors.length} ▼</span>
           </div>
           <div class="section-content">
-            \${marketingTags.length > 0 ? marketingTags.map(tag => \`
-              <div class="compliance-item compliance-\${tag.compliance}">
-                <strong>\${tag.name}:</strong> \${tag.impact}
-                <div class="consent-matrix">
-                  <div class="consent-result \${tag.withoutConsent ? 'consent-fail' : 'consent-pass'}">
-                    <div><strong>Ohne Consent</strong></div>
-                    <div>\${tag.withoutConsent ? '❌ Lädt' : '✅ Blockiert'}</div>
-                  </div>
-                  <div class="consent-result \${tag.withAccept ? 'consent-pass' : 'consent-fail'}">
-                    <div><strong>Mit Accept</strong></div>
-                    <div>\${tag.withAccept ? '✅ Lädt' : '❌ Blockiert'}</div>
-                  </div>
-                  <div class="consent-result \${tag.withReject ? 'consent-fail' : 'consent-pass'}">
-                    <div><strong>Mit Reject</strong></div>
-                    <div>\${tag.withReject ? '❌ Lädt' : '✅ Blockiert'}</div>
-                  </div>
-                </div>
-                <div style="margin-top: 15px; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 6px;">
-                  <div><strong>💼 Business-Impact:</strong> \${tag.businessImpact}</div>
-                  <div><strong>⚖️ DSGVO-Risiko:</strong> \${getGDPRRiskText(tag.gdprRisk)}</div>
+            ${errors.slice(0, 10).map(error => `
+              <div class="issue-card risk-${error.priority}">
+                <h3>🚨 Problem: ${simplifyProblem(error)}</h3>
+                <p><strong>Was bedeutet das?</strong><br>${error.translation}</p>
+                <p><strong>Warum passiert das?</strong><br>${explainCause(error)}</p>
+                <div class="solution-box">
+                  <strong>💡 Lösung für Entwickler:</strong>
+                  <pre>${error.techFix}</pre>
+                  <button class="copy-button" onclick="copyToClipboard('${error.techFix}')">📋 Kopieren</button>
                 </div>
               </div>
-            \`).join('') : '<p>Keine Marketing-Tags gefunden oder alle Sessions fehlgeschlagen.</p>'}
+            `).join('')}
           </div>
         </div>
-${data.details.errors.length > 0 ? `
-<div class="section">
-  <div class="section-header" onclick="toggleSection(this)">
-    ⚠️ JavaScript & Console Errors
-    <span class="badge high">${data.details.errors.length} ▼</span>
-  </div>
-  <div class="section-content">
-    ${data.details.errors.slice(0, 10).map(error => `
-      <div class="issue-card risk-${error.priority}">
-        <h3>🚨 Problem: ${simplifyProblem(error)}</h3>
-        
-        <p><strong>Was bedeutet das?</strong><br>
-          ${error.translation}
-        </p>
-        
-        <p><strong>Warum passiert das?</strong><br>
-          ${explainCause(error)}
-        </p>
-        
-        <div class="solution-box">
-          <strong>💡 Lösung für deinen Entwickler:</strong>
-          <pre>${error.techFix}</pre>
-          <button class="copy-button" onclick="copyToClipboard('${error.techFix}')">📋 Kopieren</button>
-        </div>
-      </div>
-    `).join('')}
-    ${data.details.errors.length > 10 ? `<p><em>... und ${data.details.errors.length - 10} weitere Fehler</em></p>` : ''}
-  </div>
-</div>
-` : ''}
-            \`).join('')}
-            \${data.details.errors.length > 10 ? \`<p><em>... und \${data.details.errors.length - 10} weitere Fehler</em></p>\` : ''}
-          </div>
-        </div>
-        \` : ''}
-        
-        \${data.details.networkIssues.length > 0 ? \`
+      `;
+    }
+
+    function renderNetworkIssues(issues = []) {
+      if (!issues.length) return '';
+      return `
         <div class="section">
           <div class="section-header" onclick="toggleSection(this)">
             🌐 Netzwerk & Loading Issues
-            <span class="badge medium">\${data.details.networkIssues.length} ▼</span>
+            <span class="badge medium">${issues.length} ▼</span>
           </div>
           <div class="section-content">
-            \${data.details.networkIssues.slice(0, 8).map(issue => \`
-              <div class="issue-item priority-\${issue.priority}">
-                <div><strong>🎯 Business-Impact:</strong> \${issue.translation}</div>
-                <div class="tech-details">
-                  <strong>URL:</strong> \${issue.url}<br>
-                  <strong>Status:</strong> \${issue.status} | <strong>Session:</strong> \${issue.consentMode}
-                </div>
-                <div class="fix-suggestion">
-                  <strong>💡 Lösungsvorschlag:</strong> \${issue.techFix}
-                  <button class="copy-button" onclick="copyToClipboard('\${issue.techFix}')">Kopieren</button>
+            ${issues.map(issue => `
+              <div class="issue-card risk-${issue.priority}">
+                <h3>🚨 Problem: ${simplifyNetworkProblem(issue)}</h3>
+                <p><strong>Was bedeutet das?</strong><br>${issue.translation}</p>
+                <p><strong>Warum passiert das?</strong><br>${explainNetworkCause(issue)}</p>
+                <div class="solution-box">
+                  <strong>💡 Lösung für Entwickler:</strong>
+                  <pre>${issue.techFix}</pre>
+                  <button class="copy-button" onclick="copyToClipboard('${issue.techFix}')">📋 Kopieren</button>
                 </div>
               </div>
-            \`).join('')}
-            \${data.details.networkIssues.length > 8 ? \`<p><em>... und \${data.details.networkIssues.length - 8} weitere Issues</em></p>\` : ''}
+            `).join('')}
           </div>
         </div>
-        \` : ''}
-        
-        \${data.details.cspViolations.length > 0 ? \`
+      `;
+    }
+
+    function renderCSPViolations(violations = []) {
+      if (!violations.length) return '';
+      return `
         <div class="section">
           <div class="section-header" onclick="toggleSection(this)">
-            🔒 CSP-Violations (Content Security Policy)
-            <span class="badge critical">\${data.details.cspViolations.length} ▼</span>
+            🔒 CSP-Violations
+            <span class="badge critical">${violations.length} ▼</span>
           </div>
           <div class="section-content">
-            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #d69e2e;">
-              <strong>⚠️ Kritisch für Marketing:</strong> CSP-Violations blockieren oft wichtige Marketing-Scripts wie Google Analytics, Facebook Pixel etc.
-            </div>
-            \${data.details.cspViolations.map(violation => \`
-              <div class="issue-item priority-high">
-                <div><strong>🎯 Business-Impact:</strong> \${violation.translation}</div>
-                <div class="tech-details">
-                  <strong>Violation:</strong> \${violation.message}<br>
-                  <strong>Session:</strong> \${violation.consentMode}
-                </div>
-                <div class="fix-suggestion">
-                  <strong>💡 CSP-Fix (für Entwickler):</strong> \${violation.techFix}
-                  <button class="copy-button" onclick="copyToClipboard('\${violation.techFix}')">Kopieren</button>
+            ${violations.map(v => `
+              <div class="issue-card risk-high">
+                <h3>🚨 Problem: Sicherheitsrichtlinie blockiert Skript</h3>
+                <p><strong>Was bedeutet das?</strong><br>${v.translation}</p>
+                <p><strong>Warum passiert das?</strong><br><code>${v.message}</code></p>
+                <div class="solution-box">
+                  <strong>💡 Lösung für Entwickler:</strong>
+                  <pre>${v.techFix}</pre>
+                  <button class="copy-button" onclick="copyToClipboard('${v.techFix}')">📋 Kopieren</button>
                 </div>
               </div>
-            \`).join('')}
+            `).join('')}
           </div>
         </div>
-        \` : ''}
-        
-        <div class="section">
-          <div class="section-header" onclick="toggleSection(this)">
-            💡 Priorisierte Handlungsempfehlungen
-            <span class="badge">Roadmap ▼</span>
-          </div>
-          <div class="section-content">
-            \${generateActionPlan(data)}
-          </div>
-        </div>
-        
-        <div class="section">
-          <div class="section-header" onclick="toggleSection(this)">
-            📋 Scan-Details & Technische Infos
-            <span class="badge">Debug ▼</span>
-          </div>
-          <div class="section-content" style="display: none;">
-            <div class="tech-details">
-              <strong>Scan-Version:</strong> \${data.version}<br>
-              <strong>Gescannt:</strong> \${data.timestamp}<br>
-              <strong>URL:</strong> \${data.scannedUrl}<br>
-              <strong>Sessions:</strong> 3 (ohne Consent, mit Accept, mit Reject)<br>
-              <strong>Gesamt Issues:</strong> \${data.summary.totalIssues}<br>
-              <strong>Kritische Issues:</strong> \${data.summary.highPriorityIssues}
-            </div>
-            <div style="margin-top: 15px;">
-              <strong>📊 Marketing-Tags Detected:</strong>
-              <ul style="margin: 10px 0; padding-left: 20px;">
-                \${marketingTags.map(tag => \`<li>\${tag.name}: \${tag.compliance}</li>\`).join('')}
-              </ul>
-            </div>
-          </div>
-        </div>
-      \`;
-      
-      results.style.display = 'block';
-    }
-    
-    function calculateOverallRisk(data) {
-      const highPriorityIssues = data.summary.highPriorityIssues || 0;
-      const marketingTags = data.summary.marketingTags || [];
-      const badCompliance = marketingTags.filter(tag => tag.compliance === 'bad').length;
-      const missingTags = marketingTags.filter(tag => tag.compliance === 'missing').length;
-      const cspViolations = data.details.cspViolations?.length || 0;
-      
-      if (highPriorityIssues >= 5 || badCompliance >= 3 || cspViolations >= 3) {
-        return { level: 'high', icon: '🚨', text: 'Kritisches Risiko - Sofortiger Handlungsbedarf!' };
-      } else if (highPriorityIssues >= 2 || badCompliance >= 1 || cspViolations >= 1 || missingTags >= 3) {
-        return { level: 'medium', icon: '⚠️', text: 'Mittleres Risiko - Optimierung dringend empfohlen' };
-      } else if (highPriorityIssues >= 1 || missingTags >= 1) {
-        return { level: 'medium', icon: '🟡', text: 'Verbesserungspotenzial vorhanden' };
-      } else {
-        return { level: 'low', icon: '✅', text: 'Guter Zustand - Setup funktioniert solide' };
-      }
-    }
-    
-    function getGDPRRiskText(risk) {
-      const risks = {
-        'none': '✅ Kein Risiko',
-        'low': '🟡 Geringes Risiko', 
-        'medium': '🟠 Mittleres Risiko',
-        'high': '🔴 Hohes Abmahnrisiko!'
-      };
-      return risks[risk] || '🤔 Unbekannt';
-    }
-    
-    function generateActionPlan(data) {
-      const actions = [];
-      const cspCount = data.details.cspViolations?.length || 0;
-      const badTags = data.summary.marketingTags?.filter(tag => tag.compliance === 'bad') || [];
-      const missingTags = data.summary.marketingTags?.filter(tag => tag.compliance === 'missing') || [];
-      const highErrors = data.details.errors?.filter(e => e.priority === 'high' || e.priority === 'critical') || [];
-      
-      if (cspCount > 0) {
-        actions.push(\`<div class="compliance-item compliance-bad">
-          <strong>🔥 PRIORITÄT 1 - CSP-Violations beheben (\${cspCount}x)</strong><br>
-          Blockierte Marketing-Scripts kosten sofort Umsatz. CSP-Header überarbeiten und Marketing-Domains whitelisten.
-        </div>\`);
-      }
-      
-      if (badTags.length > 0) {
-        actions.push(\`<div class="compliance-item compliance-bad">
-          <strong>⚖️ PRIORITÄT 2 - DSGVO-Verstöße beheben (\${badTags.length}x)</strong><br>
-          Tags: \${badTags.map(t => t.name).join(', ')} ignorieren Consent. Abmahnrisiko! Cookie-Banner-Konfiguration prüfen.
-        </div>\`);
-      }
-      
-      if (missingTags.length > 0) {
-        actions.push(\`<div class="compliance-item compliance-missing">
-          <strong>📊 PRIORITÄT 3 - Fehlende Marketing-Tags implementieren (\${missingTags.length}x)</strong><br>
-          Keine Daten = keine Optimierung möglich. Tags: \${missingTags.map(t => t.name).join(', ')}
-        </div>\`);
-      }
-      
-      if (highErrors.length > 0) {
-        actions.push(\`<div class="compliance-item compliance-good">
-          <strong>🔧 PRIORITÄT 4 - JavaScript-Fehler beheben (\${highErrors.length}x)</strong><br>
-          Fehler können Marketing-Performance beeinträchtigen. Entwickler-Console prüfen.
-        </div>\`);
-      }
-      
-      actions.push(\`<div class="compliance-item compliance-perfect">
-        <strong>🔄 PRIORITÄT 5 - Monitoring einrichten</strong><br>
-        Wöchentliche Scans automatisieren für kontinuierliche Überwachung der DSGVO-Compliance.
-      </div>\`);
-      
-      actions.push(\`<div style="background: #e6f3ff; padding: 15px; border-radius: 8px; margin-top: 15px;">
-        <strong>💬 Entwickler-Support:</strong> Screenshots dieses Reports für Ihre Agentur/Entwickler verwenden. 
-        Alle technischen Details sind enthalten.
-      </div>\`);
-      
-      return actions.join('');
-    }
-    
-    function toggleSection(header) {
-      const content = header.nextElementSibling;
-      const badge = header.querySelector('.badge');
-      
-      if (content.style.display === 'none') {
-        content.style.display = 'block';
-        badge.textContent = badge.textContent.replace('▼', '▲');
-      } else {
-        content.style.display = 'none'; 
-        badge.textContent = badge.textContent.replace('▲', '▼');
-      }
-    }
-    
-    function copyToClipboard(text) {
-      navigator.clipboard.writeText(text).then(() => {
-        // Visual feedback
-        event.target.textContent = '✓ Kopiert';
-        setTimeout(() => {
-          event.target.textContent = 'Kopieren';
-        }, 2000);
-      });
-    }
-    
-    function exportToPDF() {
-      window.print();
-    }
-    
-    function copyResults() {
-      const results = document.getElementById('results');
-      const text = results.innerText;
-      navigator.clipboard.writeText(text).then(() => {
-        alert('✓ Scan-Ergebnisse in Zwischenablage kopiert');
-      });
-    }
-    
-    function shareResults() {
-      const url = window.location.href;
-      navigator.clipboard.writeText(url).then(() => {
-        alert('✓ Link in Zwischenablage kopiert');
-      });
+      `;
     }
 
-function simplifyProblem(error) {
-  if (error.message.includes("facebook")) return "Facebook Pixel blockiert";
-  if (error.message.includes("google")) return "Google Analytics / Ads blockiert";
-  if (error.message.includes("CSP")) return "Sicherheitsrichtlinie blockiert Marketing-Skript";
-  if (error.message.includes("DNS")) return "Website-Adresse nicht erreichbar";
-  return "Allgemeiner Website-Fehler";
-}
+    // ======================
+    // HILFSFUNKTIONEN
+    // ======================
+    function simplifyProblem(error) {
+      if (error.message.includes("facebook")) return "Facebook Pixel blockiert";
+      if (error.message.includes("google")) return "Google Analytics / Ads blockiert";
+      if (error.message.includes("CSP")) return "Sicherheitsrichtlinie blockiert Marketing-Skript";
+      if (error.message.includes("DNS")) return "Website-Adresse nicht erreichbar";
+      return "Allgemeiner Website-Fehler";
+    }
 
-function explainCause(error) {
-  if (error.type === "CSP Violation") {
-    return "Deine Sicherheits-Einstellungen (Content Security Policy) verhindern das Laden externer Marketing-Skripte.";
-  }
-  if (error.type === "Uncaught Error") {
-    return "Ein JavaScript-Fehler im Hintergrund bricht Teile der Seite ab.";
-  }
-  if (error.type === "Network Issue") {
-    return "Ein externer Dienst (z. B. Tracking oder Ads) konnte nicht geladen werden.";
-  }
-  return "Die genaue Ursache muss dein Entwickler prüfen.";
-}
+    function explainCause(error) {
+      if (error.type === "CSP Violation") return "Sicherheits-Einstellungen (CSP) blockieren Marketing-Skripte.";
+      if (error.type === "Uncaught Error") return "Ein JavaScript-Fehler bricht Teile der Seite ab.";
+      if (error.type === "Network Issue") return "Ein externer Dienst konnte nicht geladen werden.";
+      return "Die genaue Ursache muss dein Entwickler prüfen.";
+    }
 
+    function simplifyNetworkProblem(issue) {
+      if (issue.url.includes("facebook")) return "Meta Pixel nicht erreichbar";
+      if (issue.url.includes("google")) return "Google Analytics / Ads Verbindung fehlgeschlagen";
+      if (issue.url.includes("tiktok")) return "TikTok Pixel konnte nicht laden";
+      if (issue.url.includes("hotjar")) return "Hotjar Heatmap blockiert";
+      return "Netzwerkproblem mit externer Ressource";
+    }
 
+    function explainNetworkCause(issue) {
+      if (String(issue.status).includes("DNS")) return "Domain konnte nicht aufgelöst werden (DNS-Fehler).";
+      if (String(issue.status).includes("CSP")) return "CSP blockiert diese Ressource.";
+      if (String(issue.status).startsWith("4")) return "Ressource nicht gefunden (Client-Fehler).";
+      if (String(issue.status).startsWith("5")) return "Server des Drittanbieters antwortet nicht (Server-Fehler).";
+      return "Ressource konnte nicht geladen werden (Blocker, CSP oder Timeout).";
+    }
+
+    // Copy / PDF / Share etc.
+    function toggleSection(header) { const c = header.nextElementSibling; c.style.display = c.style.display === 'none' ? 'block' : 'none'; }
+    function copyToClipboard(text) { navigator.clipboard.writeText(text); }
+    function exportToPDF() { window.print(); }
+    function copyResults() { navigator.clipboard.writeText(document.getElementById('results').innerText); }
+    function shareResults() { navigator.clipboard.writeText(window.location.href); }
   </script>
+
 </body>
 </html>
   `);
@@ -1536,6 +1297,7 @@ app.listen(PORT, () => {
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔍 Scanner UI: http://localhost:${PORT}/`);
 });
+
 
 
 
