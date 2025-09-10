@@ -1260,31 +1260,36 @@ app.get('/', (req, res) => {
             \`).join('') : '<p>Keine Marketing-Tags gefunden oder alle Sessions fehlgeschlagen.</p>'}
           </div>
         </div>
+${data.details.errors.length > 0 ? `
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    ⚠️ JavaScript & Console Errors
+    <span class="badge high">${data.details.errors.length} ▼</span>
+  </div>
+  <div class="section-content">
+    ${data.details.errors.slice(0, 10).map(error => `
+      <div class="issue-card risk-${error.priority}">
+        <h3>🚨 Problem: ${simplifyProblem(error)}</h3>
         
-        \${data.details.errors.length > 0 ? \`
-        <div class="section">
-          <div class="section-header" onclick="toggleSection(this)">
-            ⚠️ JavaScript & Console Errors
-            <span class="badge high">\${data.details.errors.length} ▼</span>
-          </div>
-          <div class="section-content">
-            \${data.details.errors.slice(0, 10).map(error => \`
-<div class="issue-card risk-${error.priority}">
-  <h3>🚨 Problem: ${simplifyProblem(error)}</h3>
-  <p><strong>Was bedeutet das?</strong><br>
-    ${error.translation}
-  </p>
-  
-  <p><strong>Warum passiert das?</strong><br>
-    ${explainCause(error)}
-  </p>
-  
-  <div class="solution-box">
-    <strong>💡 Lösung für deinen Entwickler:</strong>
-    <pre>${error.techFix}</pre>
-    <button class="copy-button" onclick="copyToClipboard('${error.techFix}')">📋 Kopieren</button>
+        <p><strong>Was bedeutet das?</strong><br>
+          ${error.translation}
+        </p>
+        
+        <p><strong>Warum passiert das?</strong><br>
+          ${explainCause(error)}
+        </p>
+        
+        <div class="solution-box">
+          <strong>💡 Lösung für deinen Entwickler:</strong>
+          <pre>${error.techFix}</pre>
+          <button class="copy-button" onclick="copyToClipboard('${error.techFix}')">📋 Kopieren</button>
+        </div>
+      </div>
+    `).join('')}
+    ${data.details.errors.length > 10 ? `<p><em>... und ${data.details.errors.length - 10} weitere Fehler</em></p>` : ''}
   </div>
 </div>
+` : ''}
             \`).join('')}
             \${data.details.errors.length > 10 ? \`<p><em>... und \${data.details.errors.length - 10} weitere Fehler</em></p>\` : ''}
           </div>
@@ -1531,6 +1536,7 @@ app.listen(PORT, () => {
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔍 Scanner UI: http://localhost:${PORT}/`);
 });
+
 
 
 
