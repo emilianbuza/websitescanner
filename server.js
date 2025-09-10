@@ -1497,6 +1497,29 @@ app.get('/', (req, res) => {
         alert('✓ Link in Zwischenablage kopiert');
       });
     }
+
+function simplifyProblem(error) {
+  if (error.message.includes("facebook")) return "Facebook Pixel blockiert";
+  if (error.message.includes("google")) return "Google Analytics / Ads blockiert";
+  if (error.message.includes("CSP")) return "Sicherheitsrichtlinie blockiert Marketing-Skript";
+  if (error.message.includes("DNS")) return "Website-Adresse nicht erreichbar";
+  return "Allgemeiner Website-Fehler";
+}
+
+function explainCause(error) {
+  if (error.type === "CSP Violation") {
+    return "Deine Sicherheits-Einstellungen (Content Security Policy) verhindern das Laden externer Marketing-Skripte.";
+  }
+  if (error.type === "Uncaught Error") {
+    return "Ein JavaScript-Fehler im Hintergrund bricht Teile der Seite ab.";
+  }
+  if (error.type === "Network Issue") {
+    return "Ein externer Dienst (z. B. Tracking oder Ads) konnte nicht geladen werden.";
+  }
+  return "Die genaue Ursache muss dein Entwickler prüfen.";
+}
+
+
   </script>
 </body>
 </html>
@@ -1508,6 +1531,7 @@ app.listen(PORT, () => {
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔍 Scanner UI: http://localhost:${PORT}/`);
 });
+
 
 
 
