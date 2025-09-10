@@ -1056,236 +1056,84 @@ app.get('/', (req, res) => {
     </div>
   </div>
   <script>
-    // URL validation
-    const urlInput = document.getElementById('url');
-    const urlValidation = document.getElementById('urlValidation');
-    
-    urlInput.addEventListener('input', (e) => {
-      const url = e.target.value;
-      if (!url) {
-        urlInput.className = '';
-        urlValidation.textContent = '';
-        urlValidation.className = 'url-validation';
-        return;
-      }
-      
-      try {
-        const u = new URL(url);
-        if (u.protocol === 'http:' || u.protocol === 'https:') {
-          urlInput.className = 'valid';
-          urlValidation.textContent = '✅ Gültige URL';
-          urlValidation.className = 'url-validation valid';
-        } else {
-          throw new Error('Nur HTTP/HTTPS URLs');
-        }
-      } catch (error) {
-        urlInput.className = 'invalid';
-        urlValidation.textContent = '❌ Ungültige URL (https://example.com verwenden)';
-        urlValidation.className = 'url-validation invalid';
-      }
-    });
-    
-    // Form submission
-    document.getElementById('scanForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const url = document.getElementById('url').value;
-      const loading = document.getElementById('loading');
-      const results = document.getElementById('results');
-      const scanBtn = document.getElementById('scanBtn');
-      const progressFill = document.getElementById('progressFill');
-      const loadingText = document.getElementById('loadingText');
-      
-      // Reset + UI updates
-      scanBtn.disabled = true;
-      scanBtn.textContent = 'Scanning läuft...';
-      loading.style.display = 'block';
-      results.style.display = 'none';
-      progressFill.style.width = '0%';
-      
-      try {
-        const response = await fetch('/scan', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url })
-        });
-        
-        const data = await response.json();
-        if (response.ok) {
-          displayResults(data);
-        } else {
-          throw new Error(data.error || data.details);
-        }
-      } catch (error) {
-        results.innerHTML = `
-          <div class="section">
-            <div class="section-content">
-              <h3 style="color: #e53e3e;">❌ Scan fehlgeschlagen</h3>
-              <p><strong>Fehler:</strong> ${error.message}</p>
-              <div class="tech-details">
-                <strong>Mögliche Ursachen:</strong><br>
-                • Website nicht erreichbar oder blockiert Scanner<br>
-                • Timeout nach 60+ Sekunden<br>
-                • Temporäre Netzwerkprobleme<br>
-                • Website verwendet aggressive Bot-Protection
-              </div>
-            </div>
-          </div>
-        `;
-        results.style.display = 'block';
-      }
-      
-      // Reset Button
-      loading.style.display = 'none';
-      scanBtn.disabled = false;
-      scanBtn.textContent = '🔍 Vollständigen 3-Session-Scan starten';
-    });
-    
-    // ======================
-    // RENDER-FUNKTIONEN
-    // ======================
-    function displayResults(data) {
-      const results = document.getElementById('results');
-      const marketingTags = data.summary.marketingTags || [];
-      
-      results.innerHTML = `
-        <div class="export-buttons">
-          <button class="export-btn" onclick="exportToPDF()">📄 PDF Export</button>
-          <button class="export-btn" onclick="copyResults()">📋 Ergebnisse kopieren</button>
-          <button class="export-btn" onclick="shareResults()">🔗 Link teilen</button>
-        </div>
-        
-        <div class="risk-indicator risk-high">
-          <h3>🚨 Scan abgeschlossen</h3>
-          <p><strong>${data.scannedUrl}</strong></p>
-          <p>${data.summary.totalIssues} Issues gefunden • ${marketingTags.length} Marketing-Tags analysiert</p>
-        </div>
-        
-        ${renderErrors(data.details.errors)}
-        ${renderNetworkIssues(data.details.networkIssues)}
-        ${renderCSPViolations(data.details.cspViolations)}
-      `;
-      results.style.display = 'block';
-    }
+  function renderErrors(errors = []) {
+    if (!errors.length) return '';
+    return '' +
+      '<div class="section">' +
+        '<div class="section-header" onclick="toggleSection(this)">' +
+          '⚠️ JavaScript & Console Errors' +
+          '<span class="badge high">' + errors.length + ' ▼</span>' +
+        '</div>' +
+        '<div class="section-content">' +
+          errors.slice(0, 10).map(function(error) {
+            return '' +
+              '<div class="issue-card risk-' + error.priority + '">' +
+                '<h3>🚨 Problem: ' + simplifyProblem(error) + '</h3>' +
+                '<p><strong>Was bedeutet das?</strong><br>' + error.translation + '</p>' +
+                '<p><strong>Warum passiert das?</strong><br>' + explainCause(error) + '</p>' +
+                '<div class="solution-box">' +
+                  '<strong>💡 Lösung für Entwickler:</strong>' +
+                  '<pre>' + error.techFix + '</pre>' +
+                  '<button class="copy-button" onclick="copyToClipboard(\'' + error.techFix.replace(/'/g, "\\'") + '\')">📋 Kopieren</button>' +
+                '</div>' +
+              '</div>';
+          }).join('') +
+        '</div>' +
+      '</div>';
+  }
 
-    function renderErrors(errors = []) {
-      if (!errors.length) return '';
-      return `
-        <div class="section">
-          <div class="section-header" onclick="toggleSection(this)">
-            ⚠️ JavaScript & Console Errors
-            <span class="badge high">${errors.length} ▼</span>
-          </div>
-          <div class="section-content">
-            ${errors.slice(0, 10).map(error => `
-              <div class="issue-card risk-${error.priority}">
-                <h3>🚨 Problem: ${simplifyProblem(error)}</h3>
-                <p><strong>Was bedeutet das?</strong><br>${error.translation}</p>
-                <p><strong>Warum passiert das?</strong><br>${explainCause(error)}</p>
-                <div class="solution-box">
-                  <strong>💡 Lösung für Entwickler:</strong>
-                  <pre>${error.techFix}</pre>
-                  <button class="copy-button" onclick="copyToClipboard('${error.techFix}')">📋 Kopieren</button>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
-    }
+  function renderNetworkIssues(issues = []) {
+    if (!issues.length) return '';
+    return '' +
+      '<div class="section">' +
+        '<div class="section-header" onclick="toggleSection(this)">' +
+          '🌐 Netzwerk & Loading Issues' +
+          '<span class="badge medium">' + issues.length + ' ▼</span>' +
+        '</div>' +
+        '<div class="section-content">' +
+          issues.map(function(issue) {
+            return '' +
+              '<div class="issue-card risk-' + issue.priority + '">' +
+                '<h3>🚨 Problem: ' + simplifyNetworkProblem(issue) + '</h3>' +
+                '<p><strong>Was bedeutet das?</strong><br>' + issue.translation + '</p>' +
+                '<p><strong>Warum passiert das?</strong><br>' + explainNetworkCause(issue) + '</p>' +
+                '<div class="solution-box">' +
+                  '<strong>💡 Lösung für Entwickler:</strong>' +
+                  '<pre>' + issue.techFix + '</pre>' +
+                  '<button class="copy-button" onclick="copyToClipboard(\'' + issue.techFix.replace(/'/g, "\\'") + '\')">📋 Kopieren</button>' +
+                '</div>' +
+              '</div>';
+          }).join('') +
+        '</div>' +
+      '</div>';
+  }
 
-    function renderNetworkIssues(issues = []) {
-      if (!issues.length) return '';
-      return `
-        <div class="section">
-          <div class="section-header" onclick="toggleSection(this)">
-            🌐 Netzwerk & Loading Issues
-            <span class="badge medium">${issues.length} ▼</span>
-          </div>
-          <div class="section-content">
-            ${issues.map(issue => `
-              <div class="issue-card risk-${issue.priority}">
-                <h3>🚨 Problem: ${simplifyNetworkProblem(issue)}</h3>
-                <p><strong>Was bedeutet das?</strong><br>${issue.translation}</p>
-                <p><strong>Warum passiert das?</strong><br>${explainNetworkCause(issue)}</p>
-                <div class="solution-box">
-                  <strong>💡 Lösung für Entwickler:</strong>
-                  <pre>${issue.techFix}</pre>
-                  <button class="copy-button" onclick="copyToClipboard('${issue.techFix}')">📋 Kopieren</button>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
-    }
-
-    function renderCSPViolations(violations = []) {
-      if (!violations.length) return '';
-      return `
-        <div class="section">
-          <div class="section-header" onclick="toggleSection(this)">
-            🔒 CSP-Violations
-            <span class="badge critical">${violations.length} ▼</span>
-          </div>
-          <div class="section-content">
-            ${violations.map(v => `
-              <div class="issue-card risk-high">
-                <h3>🚨 Problem: Sicherheitsrichtlinie blockiert Skript</h3>
-                <p><strong>Was bedeutet das?</strong><br>${v.translation}</p>
-                <p><strong>Warum passiert das?</strong><br><code>${v.message}</code></p>
-                <div class="solution-box">
-                  <strong>💡 Lösung für Entwickler:</strong>
-                  <pre>${v.techFix}</pre>
-                  <button class="copy-button" onclick="copyToClipboard('${v.techFix}')">📋 Kopieren</button>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
-    }
-
-    // ======================
-    // HILFSFUNKTIONEN
-    // ======================
-    function simplifyProblem(error) {
-      if (error.message.includes("facebook")) return "Facebook Pixel blockiert";
-      if (error.message.includes("google")) return "Google Analytics / Ads blockiert";
-      if (error.message.includes("CSP")) return "Sicherheitsrichtlinie blockiert Marketing-Skript";
-      if (error.message.includes("DNS")) return "Website-Adresse nicht erreichbar";
-      return "Allgemeiner Website-Fehler";
-    }
-
-    function explainCause(error) {
-      if (error.type === "CSP Violation") return "Sicherheits-Einstellungen (CSP) blockieren Marketing-Skripte.";
-      if (error.type === "Uncaught Error") return "Ein JavaScript-Fehler bricht Teile der Seite ab.";
-      if (error.type === "Network Issue") return "Ein externer Dienst konnte nicht geladen werden.";
-      return "Die genaue Ursache muss dein Entwickler prüfen.";
-    }
-
-    function simplifyNetworkProblem(issue) {
-      if (issue.url.includes("facebook")) return "Meta Pixel nicht erreichbar";
-      if (issue.url.includes("google")) return "Google Analytics / Ads Verbindung fehlgeschlagen";
-      if (issue.url.includes("tiktok")) return "TikTok Pixel konnte nicht laden";
-      if (issue.url.includes("hotjar")) return "Hotjar Heatmap blockiert";
-      return "Netzwerkproblem mit externer Ressource";
-    }
-
-    function explainNetworkCause(issue) {
-      if (String(issue.status).includes("DNS")) return "Domain konnte nicht aufgelöst werden (DNS-Fehler).";
-      if (String(issue.status).includes("CSP")) return "CSP blockiert diese Ressource.";
-      if (String(issue.status).startsWith("4")) return "Ressource nicht gefunden (Client-Fehler).";
-      if (String(issue.status).startsWith("5")) return "Server des Drittanbieters antwortet nicht (Server-Fehler).";
-      return "Ressource konnte nicht geladen werden (Blocker, CSP oder Timeout).";
-    }
-
-    // Copy / PDF / Share etc.
-    function toggleSection(header) { const c = header.nextElementSibling; c.style.display = c.style.display === 'none' ? 'block' : 'none'; }
-    function copyToClipboard(text) { navigator.clipboard.writeText(text); }
-    function exportToPDF() { window.print(); }
-    function copyResults() { navigator.clipboard.writeText(document.getElementById('results').innerText); }
-    function shareResults() { navigator.clipboard.writeText(window.location.href); }
-  </script>
+  function renderCSPViolations(violations = []) {
+    if (!violations.length) return '';
+    return '' +
+      '<div class="section">' +
+        '<div class="section-header" onclick="toggleSection(this)">' +
+          '🔒 CSP-Violations' +
+          '<span class="badge critical">' + violations.length + ' ▼</span>' +
+        '</div>' +
+        '<div class="section-content">' +
+          violations.map(function(v) {
+            return '' +
+              '<div class="issue-card risk-high">' +
+                '<h3>🚨 Problem: Sicherheitsrichtlinie blockiert Skript</h3>' +
+                '<p><strong>Was bedeutet das?</strong><br>' + v.translation + '</p>' +
+                '<p><strong>Warum passiert das?</strong><br><code>' + v.message + '</code></p>' +
+                '<div class="solution-box">' +
+                  '<strong>💡 Lösung für Entwickler:</strong>' +
+                  '<pre>' + v.techFix + '</pre>' +
+                  '<button class="copy-button" onclick="copyToClipboard(\'' + v.techFix.replace(/'/g, "\\'") + '\')">📋 Kopieren</button>' +
+                '</div>' +
+              '</div>';
+          }).join('') +
+        '</div>' +
+      '</div>';
+  }
+</script>
 
 </body>
 </html>
@@ -1297,6 +1145,7 @@ app.listen(PORT, () => {
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔍 Scanner UI: http://localhost:${PORT}/`);
 });
+
 
 
 
