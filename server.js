@@ -1269,17 +1269,22 @@ app.get('/', (req, res) => {
           </div>
           <div class="section-content">
             \${data.details.errors.slice(0, 10).map(error => \`
-              <div class="issue-item priority-\${error.priority}">
-                <div><strong>🎯 Business-Impact:</strong> \${error.translation}</div>
-                <div class="tech-details">
-                  <strong>Technisch:</strong> \${error.message}<br>
-                  <strong>Session:</strong> \${error.consentMode} | <strong>Typ:</strong> \${error.type}
-                </div>
-                <div class="fix-suggestion">
-                  <strong>💡 Lösungsvorschlag:</strong> \${error.techFix}
-                  <button class="copy-button" onclick="copyToClipboard('\${error.techFix}')">Kopieren</button>
-                </div>
-              </div>
+<div class="issue-card risk-${error.priority}">
+  <h3>🚨 Problem: ${simplifyProblem(error)}</h3>
+  <p><strong>Was bedeutet das?</strong><br>
+    ${error.translation}
+  </p>
+  
+  <p><strong>Warum passiert das?</strong><br>
+    ${explainCause(error)}
+  </p>
+  
+  <div class="solution-box">
+    <strong>💡 Lösung für deinen Entwickler:</strong>
+    <pre>${error.techFix}</pre>
+    <button class="copy-button" onclick="copyToClipboard('${error.techFix}')">📋 Kopieren</button>
+  </div>
+</div>
             \`).join('')}
             \${data.details.errors.length > 10 ? \`<p><em>... und \${data.details.errors.length - 10} weitere Fehler</em></p>\` : ''}
           </div>
@@ -1503,5 +1508,6 @@ app.listen(PORT, () => {
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔍 Scanner UI: http://localhost:${PORT}/`);
 });
+
 
 
