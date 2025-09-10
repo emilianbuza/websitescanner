@@ -715,555 +715,554 @@ app.get('/', (req, res) => {
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ultimate Website Scanner - DSGVO & Marketing Check</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        line-height: 1.6; color: #333;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh; padding: 20px;
-    }
-    .container {
-        max-width: 1200px; margin: 0 auto; background: white;
-        border-radius: 16px; box-shadow: 0 25px 50px rgba(0,0,0,0.15);
-        overflow: hidden;
-    }
-    .header {
-        background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
-        color: white; padding: 50px 30px; text-align: center;
-    }
-    .header h1 { font-size: 2.5em; margin-bottom: 20px; font-weight: 700; line-height: 1.2; }
-    .header p { opacity: 0.9; font-size: 1.1em; margin-bottom: 15px; max-width: 800px; margin-left: auto; margin-right: auto; }
-    .features {
-        display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 25px; padding: 30px; background: rgba(255,255,255,0.1);
-        margin-top: 30px; border-radius: 12px;
-    }
-    .feature { text-align: center; padding: 20px; }
-    .feature-icon { font-size: 2.5em; margin-bottom: 15px; }
-    .feature h3 { margin-bottom: 10px; font-size: 1.2em; }
-    .feature p { font-size: 0.95em; opacity: 0.9; }
-    .form-section { padding: 50px; }
-    .input-group { margin-bottom: 30px; }
-    label {
-        display: block; margin-bottom: 12px; font-weight: 600;
-        color: #2d3748; font-size: 1.1em;
-    }
-    .url-input-container { position: relative; }
-    input[type="url"] {
-        width: 100%; padding: 20px; border: 2px solid #e2e8f0;
-        border-radius: 12px; font-size: 16px; transition: all 0.3s;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    input[type="url"]:focus {
-        border-color: #667eea; outline: none;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-    input[type="url"].valid { border-color: #48bb78; }
-    input[type="url"].invalid { border-color: #f56565; }
-    .url-validation {
-        font-size: 0.85em; margin-top: 8px; padding: 5px 0;
-        min-height: 20px;
-    }
-    .url-validation.valid { color: #48bb78; }
-    .url-validation.invalid { color: #f56565; }
-    .scan-button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white; border: none; padding: 22px 50px; border-radius: 12px;
-        font-size: 18px; font-weight: 600; cursor: pointer; width: 100%;
-        transition: all 0.3s; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        position: relative; overflow: hidden;
-    }
-    .scan-button:hover:not(:disabled) {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
-    }
-    .scan-button:disabled {
-        opacity: 0.6; cursor: not-allowed; transform: none;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
-    }
-    .quick-demo {
-        text-align: center; margin: 20px 0; padding: 15px;
-        background: #f7fafc; border-radius: 8px; border: 1px solid #e2e8f0;
-    }
-    .demo-button {
-        background: #4299e1; color: white; border: none; padding: 8px 16px;
-        border-radius: 6px; font-size: 0.9em; cursor: pointer; margin: 0 5px;
-    }
-    .loading {
-        display: none; text-align: center; padding: 40px; color: #667eea;
-        background: #f8f9fa; margin: 20px; border-radius: 12px;
-    }
-    .progress-container {
-        margin: 25px 0;
-    }
-    .progress-bar {
-        width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px;
-        overflow: hidden; position: relative;
-    }
-    .progress-fill {
-        height: 100%; background: linear-gradient(90deg, #667eea, #764ba2);
-        width: 0%; transition: width 0.5s ease; border-radius: 4px;
-        position: relative;
-    }
-    .progress-fill::after {
-        content: '';
-        position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-        animation: shimmer 1.5s infinite;
-    }
-    @keyframes shimmer {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
-    }
-    .loading-steps {
-        display: flex; justify-content: space-between; margin-top: 15px;
-        font-size: 0.85em;
-    }
-    .loading-step {
-        padding: 8px 12px; background: #e2e8f0; border-radius: 15px;
-        transition: all 0.3s;
-    }
-    .loading-step.active {
-        background: #667eea; color: white; transform: scale(1.05);
-    }
-    .loading-step.completed {
-        background: #48bb78; color: white;
-    }
-    .results { display: none; padding: 0 50px 50px; }
-    .risk-indicator {
-        padding: 25px; border-radius: 12px; margin-bottom: 30px;
-        font-weight: 600; text-align: center; position: relative;
-        overflow: hidden;
-    }
-    .risk-indicator::before {
-        content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-        animation: sweep 2s infinite;
-    }
-    @keyframes sweep {
-        0% { left: -100%; }
-        100% { left: 100%; }
-    }
-    .risk-high {
-        background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
-        color: #c53030; border: 2px solid #fc8181;
-    }
-    .risk-medium {
-        background: linear-gradient(135deg, #fefcbf 0%, #faf089 100%);
-        color: #d69e2e; border: 2px solid #f6e05e;
-    }
-    .risk-low {
-        background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
-        color: #2f855a; border: 2px solid #68d391;
-    }
-    .section {
-        margin-bottom: 30px; border: 1px solid #e2e8f0;
-        border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .section:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-    }
-    .section-header {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e2e8f0 100%);
-        padding: 20px; font-weight: 600; display: flex;
-        justify-content: space-between; align-items: center; font-size: 1.1em;
-        cursor: pointer; user-select: none;
-    }
-    .section-header:hover {
-        background: linear-gradient(135deg, #edf2f7 0%, #d4e5f1 100%);
-    }
-    .badge {
-        background: #4299e1; color: white; padding: 6px 12px;
-        border-radius: 15px; font-size: 0.85em; font-weight: 500;
-        display: inline-flex; align-items: center; gap: 5px;
-    }
-    .badge.high { background: #e53e3e; }
-    .badge.medium { background: #d69e2e; }
-    .badge.critical { background: #9f1239; }
-    .section-content { padding: 25px; }
-    .compliance-item {
-        padding: 20px; margin: 15px 0; border-radius: 10px;
-        border-left: 5px solid; position: relative;
-        transition: all 0.3s;
-    }
-    .compliance-item:hover {
-        transform: translateX(5px);
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    .compliance-perfect { background: #f0fff4; border-left-color: #38a169; }
-    .compliance-good { background: #fefcbf; border-left-color: #d69e2e; }
-    .compliance-bad { background: #fff5f5; border-left-color: #e53e3e; }
-    .compliance-missing { background: #f7fafc; border-left-color: #a0aec0; }
-    .compliance-inconsistent { background: #fdf2e9; border-left-color: #ed8936; }
-    .consent-matrix {
-        display: grid; grid-template-columns: 1fr 1fr 1fr;
-        gap: 12px; margin-top: 15px; font-size: 0.9em;
-        background: #f8f9fa; padding: 15px; border-radius: 8px;
-    }
-    .consent-result {
-        text-align: center; padding: 10px; border-radius: 6px;
-        font-weight: 500; transition: transform 0.2s;
-    }
-    .consent-result:hover { transform: scale(1.05); }
-    .consent-pass { background: #c6f6d5; color: #2f855a; }
-    .consent-fail { background: #fed7d7; color: #c53030; }
-    .issue-item {
-        background: #fff5f5; border: 1px solid #feb2b2;
-        border-radius: 10px; padding: 20px; margin: 15px 0;
-        transition: all 0.3s;
-    }
-    .issue-item:hover {
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        transform: translateY(-2px);
-    }
-    .tech-details {
-        background: #f7fafc; padding: 15px; border-radius: 8px;
-        margin-top: 12px; font-size: 0.95em; color: #4a5568;
-        font-family: 'Monaco', 'Menlo', monospace;
-    }
-    .fix-suggestion {
-        background: #e6fffa; border: 1px solid #4fd1c7;
-        padding: 15px; border-radius: 8px; margin-top: 12px;
-        font-family: 'Monaco', 'Menlo', monospace; font-size: 0.9em;
-        position: relative;
-    }
-    .copy-button {
-        position: absolute; top: 8px; right: 8px;
-        background: #319795; color: white; border: none;
-        padding: 4px 8px; border-radius: 4px; font-size: 0.8em;
-        cursor: pointer;
-    }
-    .priority-critical { border-left: 5px solid #c53030; }
-    .priority-high { border-left: 5px solid #e53e3e; }
-    .priority-medium { border-left: 5px solid #d69e2e; }
-    .priority-low { border-left: 5px solid #4299e1; }
-    .export-buttons {
-        display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;
-    }
-    .export-btn {
-        background: #4a5568; color: white; border: none;
-        padding: 10px 16px; border-radius: 6px; cursor: pointer;
-        font-size: 0.9em; display: flex; align-items: center; gap: 5px;
-    }
-    .export-btn:hover { background: #2d3748; }
-    .footer {
-        text-align: center; padding: 30px; background: #f8f9fa;
-        color: #718096; font-size: 0.9em;
-    }
-    .tooltip {
-        position: relative; cursor: help;
-        border-bottom: 1px dotted #999;
-    }
-    .tooltip:hover::after {
-        content: attr(data-tooltip);
-        position: absolute; bottom: 100%; left: 50%;
-        transform: translateX(-50%); background: #2d3748; color: white;
-        padding: 8px 12px; border-radius: 6px; font-size: 0.85em;
-        white-space: nowrap; z-index: 1000;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    }
-    @media (max-width: 768px) {
-        .container { margin: 10px; }
-        .header { padding: 30px 20px; }
-        .header h1 { font-size: 1.8em; }
-        .form-section, .results { padding: 30px 20px; }
-        .features { grid-template-columns: 1fr; gap: 15px; padding: 20px; }
-        .consent-matrix { grid-template-columns: 1fr; gap: 8px; }
-        .loading-steps { flex-direction: column; gap: 8px; }
-        .export-buttons { justify-content: center; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Website Scanner - DSGVO & Marketing Check</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6; color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; padding: 20px;
+        }
+        .container {
+            max-width: 1200px; margin: 0 auto; background: white;
+            border-radius: 16px; box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            color: white; padding: 50px 30px; text-align: center;
+        }
+        .header h1 { font-size: 2.5em; margin-bottom: 20px; font-weight: 700; line-height: 1.2; }
+        .header p { opacity: 0.9; font-size: 1.1em; margin-bottom: 15px; max-width: 800px; margin-left: auto; margin-right: auto; }
+        .features {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px; padding: 30px; background: rgba(255,255,255,0.1);
+            margin-top: 30px; border-radius: 12px;
+        }
+        .feature { text-align: center; padding: 20px; }
+        .feature-icon { font-size: 2.5em; margin-bottom: 15px; }
+        .feature h3 { margin-bottom: 10px; font-size: 1.2em; }
+        .feature p { font-size: 0.95em; opacity: 0.9; }
+        .form-section { padding: 50px; }
+        .input-group { margin-bottom: 30px; }
+        label {
+            display: block; margin-bottom: 12px; font-weight: 600;
+            color: #2d3748; font-size: 1.1em;
+        }
+        .url-input-container { position: relative; }
+        input[type="url"] {
+            width: 100%; padding: 20px; border: 2px solid #e2e8f0;
+            border-radius: 12px; font-size: 16px; transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        input[type="url"]:focus {
+            border-color: #667eea; outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        input[type="url"].valid { border-color: #48bb78; }
+        input[type="url"].invalid { border-color: #f56565; }
+        .url-validation {
+            font-size: 0.85em; margin-top: 8px; padding: 5px 0;
+            min-height: 20px;
+        }
+        .url-validation.valid { color: #48bb78; }
+        .url-validation.invalid { color: #f56565; }
+        .scan-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; padding: 22px 50px; border-radius: 12px;
+            font-size: 18px; font-weight: 600; cursor: pointer; width: 100%;
+            transition: all 0.3s; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            position: relative; overflow: hidden;
+        }
+        .scan-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+        .scan-button:disabled {
+            opacity: 0.6; cursor: not-allowed; transform: none;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+        .quick-demo {
+            text-align: center; margin: 20px 0; padding: 15px;
+            background: #f7fafc; border-radius: 8px; border: 1px solid #e2e8f0;
+        }
+        .demo-button {
+            background: #4299e1; color: white; border: none; padding: 8px 16px;
+            border-radius: 6px; font-size: 0.9em; cursor: pointer; margin: 0 5px;
+        }
+        .loading {
+            display: none; text-align: center; padding: 40px; color: #667eea;
+            background: #f8f9fa; margin: 20px; border-radius: 12px;
+        }
+        .progress-container {
+            margin: 25px 0;
+        }
+        .progress-bar {
+            width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px;
+            overflow: hidden; position: relative;
+        }
+        .progress-fill {
+            height: 100%; background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%; transition: width 0.5s ease; border-radius: 4px;
+            position: relative;
+        }
+        .progress-fill::after {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        .loading-steps {
+            display: flex; justify-content: space-between; margin-top: 15px;
+            font-size: 0.85em;
+        }
+        .loading-step {
+            padding: 8px 12px; background: #e2e8f0; border-radius: 15px;
+            transition: all 0.3s;
+        }
+        .loading-step.active {
+            background: #667eea; color: white; transform: scale(1.05);
+        }
+        .loading-step.completed {
+            background: #48bb78; color: white;
+        }
+        .results { display: none; padding: 0 50px 50px; }
+        .risk-indicator {
+            padding: 25px; border-radius: 12px; margin-bottom: 30px;
+            font-weight: 600; text-align: center; position: relative;
+            overflow: hidden;
+        }
+        .risk-indicator::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: sweep 2s infinite;
+        }
+        @keyframes sweep {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        .risk-high {
+            background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
+            color: #c53030; border: 2px solid #fc8181;
+        }
+        .risk-medium {
+            background: linear-gradient(135deg, #fefcbf 0%, #faf089 100%);
+            color: #d69e2e; border: 2px solid #f6e05e;
+        }
+        .risk-low {
+            background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+            color: #2f855a; border: 2px solid #68d391;
+        }
+        .section {
+            margin-bottom: 30px; border: 1px solid #e2e8f0;
+            border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        .section-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e2e8f0 100%);
+            padding: 20px; font-weight: 600; display: flex;
+            justify-content: space-between; align-items: center; font-size: 1.1em;
+            cursor: pointer; user-select: none;
+        }
+        .section-header:hover {
+            background: linear-gradient(135deg, #edf2f7 0%, #d4e5f1 100%);
+        }
+        .badge {
+            background: #4299e1; color: white; padding: 6px 12px;
+            border-radius: 15px; font-size: 0.85em; font-weight: 500;
+            display: inline-flex; align-items: center; gap: 5px;
+        }
+        .badge.high { background: #e53e3e; }
+        .badge.medium { background: #d69e2e; }
+        .badge.critical { background: #9f1239; }
+        .section-content { padding: 25px; }
+        .compliance-item {
+            padding: 20px; margin: 15px 0; border-radius: 10px;
+            border-left: 5px solid; position: relative;
+            transition: all 0.3s;
+        }
+        .compliance-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .compliance-perfect { background: #f0fff4; border-left-color: #38a169; }
+        .compliance-good { background: #fefcbf; border-left-color: #d69e2e; }
+        .compliance-bad { background: #fff5f5; border-left-color: #e53e3e; }
+        .compliance-missing { background: #f7fafc; border-left-color: #a0aec0; }
+        .compliance-inconsistent { background: #fdf2e9; border-left-color: #ed8936; }
+        .consent-matrix {
+            display: grid; grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px; margin-top: 15px; font-size: 0.9em;
+            background: #f8f9fa; padding: 15px; border-radius: 8px;
+        }
+        .consent-result {
+            text-align: center; padding: 10px; border-radius: 6px;
+            font-weight: 500; transition: transform 0.2s;
+        }
+        .consent-result:hover { transform: scale(1.05); }
+        .consent-pass { background: #c6f6d5; color: #2f855a; }
+        .consent-fail { background: #fed7d7; color: #c53030; }
+        .issue-item {
+            background: #fff5f5; border: 1px solid #feb2b2;
+            border-radius: 10px; padding: 20px; margin: 15px 0;
+            transition: all 0.3s;
+        }
+        .issue-item:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        .tech-details {
+            background: #f7fafc; padding: 15px; border-radius: 8px;
+            margin-top: 12px; font-size: 0.95em; color: #4a5568;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+        .fix-suggestion {
+            background: #e6fffa; border: 1px solid #4fd1c7;
+            padding: 15px; border-radius: 8px; margin-top: 12px;
+            font-family: 'Monaco', 'Menlo', monospace; font-size: 0.9em;
+            position: relative;
+        }
+        .copy-button {
+            position: absolute; top: 8px; right: 8px;
+            background: #319795; color: white; border: none;
+            padding: 4px 8px; border-radius: 4px; font-size: 0.8em;
+            cursor: pointer;
+        }
+        .priority-critical { border-left: 5px solid #c53030; }
+        .priority-high { border-left: 5px solid #e53e3e; }
+        .priority-medium { border-left: 5px solid #d69e2e; }
+        .priority-low { border-left: 5px solid #4299e1; }
+        .export-buttons {
+            display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;
+        }
+        .export-btn {
+            background: #4a5568; color: white; border: none;
+            padding: 10px 16px; border-radius: 6px; cursor: pointer;
+            font-size: 0.9em; display: flex; align-items: center; gap: 5px;
+        }
+        .export-btn:hover { background: #2d3748; }
+        .footer {
+            text-align: center; padding: 30px; background: #f8f9fa;
+            color: #718096; font-size: 0.9em;
+        }
+        .tooltip {
+            position: relative; cursor: help;
+            border-bottom: 1px dotted #999;
+        }
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute; bottom: 100%; left: 50%;
+            transform: translateX(-50%); background: #2d3748; color: white;
+            padding: 8px 12px; border-radius: 6px; font-size: 0.85em;
+            white-space: nowrap; z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        @media (max-width: 768px) {
+            .container { margin: 10px; }
+            .header { padding: 30px 20px; }
+            .header h1 { font-size: 1.8em; }
+            .form-section, .results { padding: 30px 20px; }
+            .features { grid-template-columns: 1fr; gap: 15px; padding: 20px; }
+            .consent-matrix { grid-template-columns: 1fr; gap: 8px; }
+            .loading-steps { flex-direction: column; gap: 8px; }
+            .export-buttons { justify-content: center; }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>🔍 Website-Scanner: DSGVO & Marketing Check</h1>
-      <p>Finde sofort heraus, ob deine Website rechtssicher funktioniert und wo du Umsatz verlierst</p>
-      <p style="font-size: 0.95em; opacity: 0.8;">Unser 3-Session-Test prüft Cookie-Banner, Marketing-Tags und CSP-Einstellungen</p>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Website-Scanner: DSGVO & Marketing Check</h1>
+            <p>Finde sofort heraus, ob deine Website rechtssicher funktioniert und wo du Umsatz verlierst</p>
+            <p style="font-size: 0.95em; opacity: 0.8;">Unser 3-Session-Test prüft Cookie-Banner, Marketing-Tags und CSP-Einstellungen</p>
 
-      <div class="features">
-        <div class="feature">
-          <div class="feature-icon">🍪</div>
-          <h3>Cookie-Banner-Test</h3>
-          <p>3-Wege-Analyse: ohne Consent, mit Accept, mit Reject</p>
-        </div>
-        <div class="feature">
-          <div class="feature-icon">🔒</div>
-          <h3>CSP-Violations</h3>
-          <p>Findet blockierte Marketing-Scripts durch Sicherheitsrichtlinien</p>
-        </div>
-        <div class="feature">
-          <div class="feature-icon">📊</div>
-          <h3>DSGVO-Compliance</h3>
-          <p>Überprüft Google Analytics, Meta Pixel, TikTok & mehr</p>
-        </div>
-        <div class="feature">
-          <div class="feature-icon">💰</div>
-          <h3>Business Impact</h3>
-          <p>Zeigt konkrete Umsatz-Verluste und Lösungsansätze</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <form id="scanForm">
-        <div class="input-group">
-          <label for="url">Website-URL für vollständige Analyse:</label>
-          <div class="url-input-container">
-            <input
-              type="url"
-              id="url"
-              placeholder="https://ihre-website.de"
-              required
-            >
-            <div class="url-validation" id="urlValidation"></div>
-          </div>
-        </div>
-        <button type="submit" class="scan-button" id="scanBtn">
-          🔍 Vollständigen 3-Session-Scan starten
-        </button>
-      </form>
-
-      <div class="loading" id="loading">
-        <h3>⏳ Führe umfassende DSGVO & Marketing-Analyse durch...</h3>
-        <div class="progress-container">
-          <div class="progress-bar">
-            <div class="progress-fill" id="progressFill"></div>
-          </div>
-          <div class="loading-steps">
-            <div class="loading-step" id="step1">1. Ohne Consent</div>
-            <div class="loading-step" id="step2">2. Mit Accept</div>
-            <div class="loading-step" id="step3">3. Mit Reject</div>
-            <div class="loading-step" id="step4">4. Analyse</div>
-          </div>
-        </div>
-        <p id="loadingText">Initialisiere Browser...</p>
-        <p><small>Das kann 60-90 Sekunden dauern</small></p>
-      </div>
-    </div>
-
-    <div class="results" id="results"></div>
-
-    <div class="footer">
-      <p>Powered by ReguKit Compliance Software</p>
-      <p><small>Sichere Analyse ohne Datenspeicherung • Made in Germany</small></p>
-    </div>
-  </div>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const scanForm = document.getElementById('scanForm');
-      const urlInput = document.getElementById('url');
-      const scanBtn = document.getElementById('scanBtn');
-      const loadingDiv = document.getElementById('loading');
-      const resultsDiv = document.getElementById('results');
-      const progressFill = document.getElementById('progressFill');
-      const loadingText = document.getElementById('loadingText');
-      const urlValidation = document.getElementById('urlValidation');
-
-      const scanSteps = [
-        'Initialisiere Browser...',
-        'Scanne ohne Consent...',
-        'Scanne mit Consent accepted...',
-        'Scanne mit Consent rejected...',
-        'Analysiere Ergebnisse...',
-        'Generiere Report...'
-      ];
-
-      let currentStep = 0;
-      let progressInterval;
-
-      function updateProgress() {
-        if (currentStep < scanSteps.length) {
-          loadingText.textContent = scanSteps[currentStep];
-          const progress = (currentStep / scanSteps.length) * 100;
-          progressFill.style.width = `${progress}%`;
-          currentStep++;
-        } else {
-          clearInterval(progressInterval);
-          progressFill.style.width = '100%';
-        }
-      }
-
-      urlInput.addEventListener('input', (e) => {
-        const url = e.target.value.trim();
-        const isValid = validateUrl(url);
-        if (url === '') {
-          urlValidation.textContent = '';
-          urlInput.classList.remove('valid', 'invalid');
-        } else if (isValid) {
-          urlValidation.textContent = 'Gültige URL ✔️';
-          urlValidation.classList.remove('invalid');
-          urlValidation.classList.add('valid');
-          urlInput.classList.remove('invalid');
-          urlInput.classList.add('valid');
-          scanBtn.disabled = false;
-        } else {
-          urlValidation.textContent = 'Ungültige URL. Muss mit http:// oder https:// beginnen.';
-          urlValidation.classList.remove('valid');
-          urlValidation.classList.add('invalid');
-          urlInput.classList.remove('valid');
-          urlInput.classList.add('invalid');
-          scanBtn.disabled = true;
-        }
-      });
-
-      function validateUrl(url) {
-        try {
-          const u = new URL(url);
-          return u.protocol === 'http:' || u.protocol === 'https:';
-        } catch (e) {
-          return false;
-        }
-      }
-
-      scanForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const url = urlInput.value.trim();
-        if (!validateUrl(url)) {
-          alert('Bitte eine gültige URL eingeben (inkl. http:// oder https://)');
-          return;
-        }
-
-        scanBtn.disabled = true;
-        loadingDiv.style.display = 'block';
-        resultsDiv.style.display = 'none';
-        resultsDiv.innerHTML = '';
-
-        currentStep = 0;
-        updateProgress();
-        progressInterval = setInterval(updateProgress, 15000); // Update every 15s
-
-        try {
-          const response = await fetch('/scan', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url })
-          });
-
-          clearInterval(progressInterval);
-          progressFill.style.width = '100%';
-          loadingText.textContent = 'Report fertiggestellt! 🎉';
-
-          const results = await response.json();
-
-          if (!response.ok) {
-            throw new Error(results.details || 'Unknown error');
-          }
-
-          setTimeout(() => {
-            renderResults(results);
-            loadingDiv.style.display = 'none';
-            resultsDiv.style.display = 'block';
-            scanBtn.disabled = false;
-          }, 1000);
-
-        } catch (error) {
-          clearInterval(progressInterval);
-          loadingDiv.style.display = 'none';
-          scanBtn.disabled = false;
-          alert('Scan failed: ' + error.message);
-          console.error('Scan Error:', error);
-        }
-      });
-
-      function renderResults(data) {
-        let html = '';
-
-        const riskLevel = data.summary.highPriorityIssues > 0 ? 'high' : data.summary.totalIssues > 0 ? 'medium' : 'low';
-        const riskText = data.summary.highPriorityIssues > 0 ? 'Hohes Risiko 🚨' : data.summary.totalIssues > 0 ? 'Mittleres Risiko 🟡' : 'Niedriges Risiko ✅';
-
-        html += `<div class="risk-indicator risk-${riskLevel}"><h1>${riskText}</h1><p>Gefundene Probleme: ${data.summary.totalIssues} (davon ${data.summary.highPriorityIssues} kritisch)</p></div>`;
-
-        html += `<div class="export-buttons"><button class="export-btn" onclick="downloadJSON(${JSON.stringify(data)})">Export JSON</button></div>`;
-
-        html += `<h2>Marketing & DSGVO Compliance Check</h2>`;
-        data.summary.marketingTags.forEach(tag => {
-          html += `
-            <div class="compliance-item compliance-${tag.compliance}">
-              <h3>${tag.name} (${tag.compliance === 'perfect' ? '✅ Perfekt' : tag.compliance === 'bad' ? '❌ Verstoß' : '🟡 Unklar'})</h3>
-              <p>${tag.impact}</p>
-              <div class="consent-matrix">
-                <div class="consent-result ${tag.withoutConsent ? 'consent-fail' : 'consent-pass'}">Ohne Consent: ${tag.withoutConsent ? 'LÄDT' : 'LÄDT NICHT'}</div>
-                <div class="consent-result ${tag.withAccept ? 'consent-pass' : 'consent-fail'}">Mit Accept: ${tag.withAccept ? 'LÄDT' : 'LÄDT NICHT'}</div>
-                <div class="consent-result ${tag.withReject ? 'consent-fail' : 'consent-pass'}">Mit Reject: ${tag.withReject ? 'LÄDT' : 'LÄDT NICHT'}</div>
-              </div>
-              <div class="tech-details"><strong>Business Impact:</strong> ${tag.businessImpact}</div>
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">🍪</div>
+                    <h3>Cookie-Banner-Test</h3>
+                    <p>3-Wege-Analyse: ohne Consent, mit Accept, mit Reject</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🔒</div>
+                    <h3>CSP-Violations</h3>
+                    <p>Findet blockierte Marketing-Scripts durch Sicherheitsrichtlinien</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">📊</div>
+                    <h3>DSGVO-Compliance</h3>
+                    <p>Überprüft Google Analytics, Meta Pixel, TikTok & mehr</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">💰</div>
+                    <h3>Business Impact</h3>
+                    <p>Zeigt konkrete Umsatz-Verluste und Lösungsansätze</p>
+                </div>
             </div>
-          `;
+        </div>
+
+        <div class="form-section">
+            <form id="scanForm">
+                <div class="input-group">
+                    <label for="url">Website-URL für vollständige Analyse:</label>
+                    <div class="url-input-container">
+                        <input
+                            type="url"
+                            id="url"
+                            placeholder="https://ihre-website.de"
+                            required
+                        >
+                        <div class="url-validation" id="urlValidation"></div>
+                    </div>
+                </div>
+                <button type="submit" class="scan-button" id="scanBtn">
+                    🔍 Vollständigen 3-Session-Scan starten
+                </button>
+            </form>
+
+            <div class="loading" id="loading">
+                <h3>⏳ Führe umfassende DSGVO & Marketing-Analyse durch...</h3>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="loading-steps">
+                        <div class="loading-step" id="step1">1. Ohne Consent</div>
+                        <div class="loading-step" id="step2">2. Mit Accept</div>
+                        <div class="loading-step" id="step3">3. Mit Reject</div>
+                        <div class="loading-step" id="step4">4. Analyse</div>
+                    </div>
+                </div>
+                <p id="loadingText">Initialisiere Browser...</p>
+                <p><small>Das kann 60-90 Sekunden dauern</small></p>
+            </div>
+        </div>
+
+        <div class="results" id="results"></div>
+
+        <div class="footer">
+            <p>Powered by ReguKit Compliance Software</p>
+            <p><small>Sichere Analyse ohne Datenspeicherung • Made in Germany</small></p>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const scanForm = document.getElementById('scanForm');
+            const urlInput = document.getElementById('url');
+            const scanBtn = document.getElementById('scanBtn');
+            const loadingDiv = document.getElementById('loading');
+            const resultsDiv = document.getElementById('results');
+            const progressFill = document.getElementById('progressFill');
+            const loadingText = document.getElementById('loadingText');
+            const urlValidation = document.getElementById('urlValidation');
+
+            const scanSteps = [
+                'Initialisiere Browser...',
+                'Scanne ohne Consent...',
+                'Scanne mit Consent accepted...',
+                'Scanne mit Consent rejected...',
+                'Analysiere Ergebnisse...',
+                'Generiere Report...'
+            ];
+
+            let currentStep = 0;
+            let progressInterval;
+
+            function updateProgress() {
+                if (currentStep < scanSteps.length) {
+                    loadingText.textContent = scanSteps[currentStep];
+                    const progress = (currentStep / scanSteps.length) * 100;
+                    progressFill.style.width = `${progress}%`;
+                    currentStep++;
+                } else {
+                    clearInterval(progressInterval);
+                    progressFill.style.width = '100%';
+                }
+            }
+
+            urlInput.addEventListener('input', (e) => {
+                const url = e.target.value.trim();
+                const isValid = validateUrl(url);
+                if (url === '') {
+                    urlValidation.textContent = '';
+                    urlInput.classList.remove('valid', 'invalid');
+                } else if (isValid) {
+                    urlValidation.textContent = 'Gültige URL ✔️';
+                    urlValidation.classList.remove('invalid');
+                    urlValidation.classList.add('valid');
+                    urlInput.classList.remove('invalid');
+                    urlInput.classList.add('valid');
+                    scanBtn.disabled = false;
+                } else {
+                    urlValidation.textContent = 'Ungültige URL. Muss mit http:// oder https:// beginnen.';
+                    urlValidation.classList.remove('valid');
+                    urlValidation.classList.add('invalid');
+                    urlInput.classList.remove('valid');
+                    urlInput.classList.add('invalid');
+                    scanBtn.disabled = true;
+                }
+            });
+
+            function validateUrl(url) {
+                try {
+                    const u = new URL(url);
+                    return u.protocol === 'http:' || u.protocol === 'https:';
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            scanForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const url = urlInput.value.trim();
+                if (!validateUrl(url)) {
+                    alert('Bitte eine gültige URL eingeben (inkl. http:// oder https://)');
+                    return;
+                }
+
+                scanBtn.disabled = true;
+                loadingDiv.style.display = 'block';
+                resultsDiv.style.display = 'none';
+                resultsDiv.innerHTML = '';
+
+                currentStep = 0;
+                updateProgress();
+                progressInterval = setInterval(updateProgress, 15000); // Update every 15s
+
+                try {
+                    const response = await fetch('/scan', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url })
+                    });
+
+                    clearInterval(progressInterval);
+                    progressFill.style.width = '100%';
+                    loadingText.textContent = 'Report fertiggestellt! 🎉';
+
+                    const results = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(results.details || 'Unknown error');
+                    }
+
+                    setTimeout(() => {
+                        renderResults(results);
+                        loadingDiv.style.display = 'none';
+                        resultsDiv.style.display = 'block';
+                        scanBtn.disabled = false;
+                    }, 1000);
+
+                } catch (error) {
+                    clearInterval(progressInterval);
+                    loadingDiv.style.display = 'none';
+                    scanBtn.disabled = false;
+                    alert('Scan failed: ' + error.message);
+                    console.error('Scan Error:', error);
+                }
+            });
+
+            function renderResults(data) {
+                let html = '';
+
+                const riskLevel = data.summary.highPriorityIssues > 0 ? 'high' : data.summary.totalIssues > 0 ? 'medium' : 'low';
+                const riskText = data.summary.highPriorityIssues > 0 ? 'Hohes Risiko 🚨' : data.summary.totalIssues > 0 ? 'Mittleres Risiko 🟡' : 'Niedriges Risiko ✅';
+
+                html += `<div class="risk-indicator risk-${riskLevel}"><h1>${riskText}</h1><p>Gefundene Probleme: ${data.summary.totalIssues} (davon ${data.summary.highPriorityIssues} kritisch)</p></div>`;
+
+                html += `<div class="export-buttons"><button class="export-btn" onclick="downloadJSON(${JSON.stringify(data)})">Export JSON</button></div>`;
+
+                html += `<h2>Marketing & DSGVO Compliance Check</h2>`;
+                data.summary.marketingTags.forEach(tag => {
+                    html += `
+                        <div class="compliance-item compliance-${tag.compliance}">
+                            <h3>${tag.name} (${tag.compliance === 'perfect' ? '✅ Perfekt' : tag.compliance === 'bad' ? '❌ Verstoß' : '🟡 Unklar'})</h3>
+                            <p>${tag.impact}</p>
+                            <div class="consent-matrix">
+                                <div class="consent-result ${tag.withoutConsent ? 'consent-fail' : 'consent-pass'}">Ohne Consent: ${tag.withoutConsent ? 'LÄDT' : 'LÄDT NICHT'}</div>
+                                <div class="consent-result ${tag.withAccept ? 'consent-pass' : 'consent-fail'}">Mit Accept: ${tag.withAccept ? 'LÄDT' : 'LÄDT NICHT'}</div>
+                                <div class="consent-result ${tag.withReject ? 'consent-fail' : 'consent-pass'}">Mit Reject: ${tag.withReject ? 'LÄDT' : 'LÄDT NICHT'}</div>
+                            </div>
+                            <div class="tech-details"><strong>Business Impact:</strong> ${tag.businessImpact}</div>
+                        </div>
+                    `;
+                });
+
+                html += `<h2>Technische Probleme (${data.details.errors.length + data.details.networkIssues.length + data.details.cspViolations.length})</h2>`;
+                html += renderErrors(data.details.errors);
+                html += renderNetworkIssues(data.details.networkIssues);
+                html += renderCSPViolations(data.details.cspViolations);
+
+                resultsDiv.innerHTML = html;
+            }
+
+            // Helper functions
+            function toggleSection(element) {
+                const content = element.nextElementSibling;
+                if (content.style.display === "block") {
+                    content.style.display = "none";
+                } else {
+                    content.style.display = "block";
+                }
+            }
+
+            function downloadJSON(data) {
+                const filename = 'scan-report-' + new Date().toISOString().slice(0, 10) + '.json';
+                const jsonStr = JSON.stringify(data, null, 2);
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            window.toggleSection = toggleSection;
+            window.downloadJSON = downloadJSON;
+
+            function simplifyProblem(error) {
+                if (error.type === 'Uncaught Error') return 'Unerwarteter JavaScript Fehler';
+                if (error.message.includes('CSP')) return 'Sicherheitsrichtlinie (CSP) blockiert Skript';
+                if (error.message.includes('googleadservices')) return 'Google Ads Tracking Error';
+                return 'Allgemeiner Konsolenfehler';
+            }
+
+            function explainCause(error) {
+                return `Der Fehler '${error.message}' ist in der Konsole aufgetreten.`;
+            }
+
+            function simplifyNetworkProblem(issue) {
+                if (issue.status >= 400) return `HTTP ${issue.status} Error`;
+                return `Netzwerkfehler: ${issue.status}`;
+            }
+
+            function explainNetworkCause(issue) {
+                return `Der Aufruf der URL '${issue.url}' ist mit dem Fehler '${issue.status}' fehlgeschlagen.`;
+            }
+
+            function copyToClipboard(text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert('Code in die Zwischenablage kopiert!');
+                }).catch(err => {
+                    console.error('Fehler beim Kopieren', err);
+                });
+            }
+            window.copyToClipboard = copyToClipboard;
         });
-
-        html += `<h2>Technische Probleme (${data.details.errors.length + data.details.networkIssues.length + data.details.cspViolations.length})</h2>`;
-        html += renderErrors(data.details.errors);
-        html += renderNetworkIssues(data.details.networkIssues);
-        html += renderCSPViolations(data.details.cspViolations);
-
-        resultsDiv.innerHTML = html;
-      }
-
-      // Helper functions
-      function toggleSection(element) {
-        const content = element.nextElementSibling;
-        if (content.style.display === "block") {
-          content.style.display = "none";
-        } else {
-          content.style.display = "block";
-        }
-      }
-
-      function downloadJSON(data) {
-        const filename = 'scan-report-' + new Date().toISOString().slice(0, 10) + '.json';
-        const jsonStr = JSON.stringify(data, null, 2);
-        const blob = new Blob([jsonStr], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }
-
-      window.toggleSection = toggleSection;
-      window.downloadJSON = downloadJSON;
-
-      function simplifyProblem(error) {
-        if (error.type === 'Uncaught Error') return 'Unerwarteter JavaScript Fehler';
-        if (error.message.includes('CSP')) return 'Sicherheitsrichtlinie (CSP) blockiert Skript';
-        if (error.message.includes('googleadservices')) return 'Google Ads Tracking Error';
-        return 'Allgemeiner Konsolenfehler';
-      }
-
-      function explainCause(error) {
-        return `Der Fehler '${error.message}' ist in der Konsole aufgetreten.`;
-      }
-
-      function simplifyNetworkProblem(issue) {
-        if (issue.status >= 400) return `HTTP ${issue.status} Error`;
-        return `Netzwerkfehler: ${issue.status}`;
-      }
-
-      function explainNetworkCause(issue) {
-        return `Der Aufruf der URL '${issue.url}' ist mit dem Fehler '${issue.status}' fehlgeschlagen.`;
-      }
-
-      function copyToClipboard(text) {
-        navigator.clipboard.writeText(text).then(() => {
-          alert('Code in die Zwischenablage kopiert!');
-        }).catch(err => {
-          console.error('Fehler beim Kopieren', err);
-        });
-      }
-      window.copyToClipboard = copyToClipboard;
-    });
-  </script>
-
+    </script>
 </body>
 </html>
 `);
