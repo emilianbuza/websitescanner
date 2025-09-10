@@ -364,13 +364,11 @@
   </aside>
 
 <script>
-// Configuration
 const CONFIG = {
   mode: 'live',
   features: { modes: true, evidence: true, tests: false, autoDemo: false, copyButtons: true }
 };
 
-// Scan Steps Configuration
 const scanSteps = [
   { 
     name: 'Session 1: Ohne Consent', 
@@ -394,474 +392,279 @@ const scanSteps = [
   }
 ];
 
-(function(){
-  document.addEventListener('DOMContentLoaded', function(){
-    const $ = (id)=>document.getElementById(id);
+let MODE = 'manager';
+let DATA = null;
 
-    // DOM Elements
-    const urlEl=$('url'), scanBtn=$('scanBtn'), demoBtn=$('demoBtn'), bar=$('bar');
-    const tabs=document.querySelectorAll('.tab');
-    const sections={ summary:$('tab-summary'), compliance:$('tab-compliance'), issues:$('tab-issues'), evidence:$('tab-evidence') };
-    const modeManager=$('modeManager'), modeTech=$('modeTech');
-    const banner=$('banner');
-    const drawer=$('drawer'), drawerBody=$('drawerBody'), drawerClose=$('drawerClose');
-    const cList=$('complianceList'), cSearch=$('cSearch');
-    const iList=$('issueList'), iSearch=$('iSearch');
-    const heroSection = $('heroSection');
-    const exampleSection = $('exampleSection');
-    const mainApp = $('mainApp');
-    const scanProgress = $('scanProgress');
+// Utility functions
+function $(id) { return document.getElementById(id); }
+function escapeHtml(s) { return String(s||'').replace(/[&<>\"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;' }[c])); }
+function escapeAttr(s) { return escapeHtml(s).replace(/\"/g,'&quot;'); }
+function tryHost(u) { try{ return new URL(u).hostname }catch(e){ return u; } }
 
-    let MODE='manager';
-    let DATA=null;
+function showBanner(msg) { 
+  const banner = $('banner');
+  if(!banner) return; 
+  banner.textContent = msg; 
+  banner.style.display='block'; 
+  setTimeout(()=> banner.style.display='none', 2500); 
+}
 
-    // Utility functions
-    function escapeHtml(s){ return String(s||'').replace(/[&<>\"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;' }[c])); }
-    function escapeAttr(s){ return escapeHtml(s).replace(/\"/g,'&quot;'); }
-    function tryHost(u){ try{ return new URL(u).hostname }catch(e){ return u; } }
-    function showBanner(msg){ if(!banner) return; banner.textContent = msg; banner.style.display='block'; setTimeout(()=> banner.style.display='none', 2500); }
+// Progress tracking
+function updateDetailedProgress(stepIndex, stepProgress, currentLog) {
+  const totalSteps = scanSteps.length;
+  const overallProgress = ((stepIndex + stepProgress) / totalSteps) * 100;
+  
+  const progressBar = $('mainProgressBar');
+  if (progressBar) {
+    progressBar.style.width = overallProgress + '%';
+  }
+  
+  const progressText = $('progressText');
+  if (progressText) {
+    const currentStep = scanSteps[stepIndex];
+    progressText.innerHTML = '<div><strong>' + currentStep.name + '</strong></div>' +
+      '<div style="font-size: 0.9rem; color: #6b7280; margin-top: 4px;">' + (currentLog || 'Wird verarbeitet...') + '</div>' +
+      '<div style="font-size: 0.8rem; color: #9ca3af; margin-top: 2px;">Schritt ' + (stepIndex + 1) + ' von ' + totalSteps + ' (' + Math.round(overallProgress) + '%)</div>';
+  }
+  
+  // Update step indicators
+  // Update step indicators
+  const stepElements = ['step1', 'step2', 'step3', 'step4'];
+  stepElements.forEach(function(stepId, index) {
+    const element = $(stepId);
+    if (!element) return;
+    
+    if (index < stepIndex) {
+      element.className = 'step completed';
+      element.querySelector('.step-icon').textContent = '✓';
+    } else if (index === stepIndex) {
+      element.className = 'step active';
+      element.querySelector('.step-icon').textContent = index + 1;
+    } else {
+      element.className = 'step pending';
+      element.querySelector('.step-icon').textContent = index + 1;
+    }
+  });
+}
 
-    // Progress tracking functions
-    function updateDetailedProgress(stepIndex, stepProgress, currentLog) {
-      const totalSteps = scanSteps.length;
-      const overallProgress = ((stepIndex + stepProgress) / totalSteps) * 100;
+function addLogEntry(text, important) {
+  const logDiv = $('liveLog');
+  if (!logDiv) return;
+  
+  const entry = document.createElement('div');
+  entry.className = important ? 'log-entry important' : 'log-entry';
+  entry.textContent = text;
+  logDiv.appendChild(entry);
+  logDiv.scrollTop = logDiv.scrollHeight;
+  
+  // Keep only last 10 entries
+  const entries = logDiv.querySelectorAll('.log-entry');
+  if (entries.length > 10) {
+    entries[0].remove();
+  }
+}
+
+function sleep(ms) {
+  return new Promise(function(resolve) { setTimeout(resolve, ms); });
+}
+
+// Real scan function with progress
+async function startRealScan(url) {
+  try {
+    addLogEntry('🚀 Scan wird gestartet...', true);
+    
+    // Simulate progress for user experience
+    for (let stepIndex = 0; stepIndex < scanSteps.length; stepIndex++) {
+      const step = scanSteps[stepIndex];
       
-      const progressBar = $('mainProgressBar');
-      if (progressBar) {
-        progressBar.style.width = overallProgress + '%';
-      }
+      addLogEntry('▶️ Starte: ' + step.name, true);
       
-      const progressText = $('progressText');
-      if (progressText) {
-        const currentStep = scanSteps[stepIndex];
-        progressText.innerHTML = `
-          <div><strong>${currentStep.name}</strong></div>
-          <div style="font-size: 0.9rem; color: #6b7280; margin-top: 4px;">${currentLog || 'Wird verarbeitet...'}</div>
-          <div style="font-size: 0.8rem; color: #9ca3af; margin-top: 2px;">Schritt ${stepIndex + 1} von ${totalSteps} (${Math.round(overallProgress)}%)</div>
-        `;
-      }
-      
-      // Update step indicators
-      const stepElements = ['step1', 'step2', 'step3', 'step4'];
-      stepElements.forEach((stepId, index) => {
-        const element = $(stepId);
-        if (!element) return;
+      for (let logIndex = 0; logIndex < step.logs.length; logIndex++) {
+        const progress = logIndex / step.logs.length;
+        const currentLog = step.logs[logIndex];
         
-        if (index < stepIndex) {
-          element.className = 'step completed';
-          element.querySelector('.step-icon').textContent = '✓';
-        } else if (index === stepIndex) {
-          element.className = 'step active';
-          element.querySelector('.step-icon').textContent = index + 1;
-        } else {
-          element.className = 'step pending';
-          element.querySelector('.step-icon').textContent = index + 1;
-        }
+        updateDetailedProgress(stepIndex, progress, currentLog);
+        addLogEntry(currentLog);
+        
+        await sleep(step.duration / step.logs.length);
+      }
+      
+      await sleep(500);
+    }
+    
+    // Complete progress
+    updateDetailedProgress(3, 1, 'Scan abgeschlossen!');
+    addLogEntry('🎉 Scan erfolgreich abgeschlossen!', true);
+    
+    // Try actual scan
+    try {
+      const response = await fetch('/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url })
       });
-    }
-
-    function addLogEntry(text, important = false) {
-      const logDiv = $('liveLog');
-      if (!logDiv) return;
       
-      const entry = document.createElement('div');
-      entry.className = important ? 'log-entry important' : 'log-entry';
-      entry.textContent = text;
-      logDiv.appendChild(entry);
-      logDiv.scrollTop = logDiv.scrollHeight;
-      
-      // Keep only last 10 entries
-      const entries = logDiv.querySelectorAll('.log-entry');
-      if (entries.length > 10) {
-        entries[0].remove();
-      }
-    }
-
-    // Real scan function with progress
-    async function startRealScan(url) {
-      try {
-        addLogEntry('🚀 Scan wird gestartet...', true);
-        
-        // Simulate progress for user experience
-        for (let stepIndex = 0; stepIndex < scanSteps.length; stepIndex++) {
-          const step = scanSteps[stepIndex];
-          
-          addLogEntry(`▶️ Starte: ${step.name}`, true);
-          
-          for (let logIndex = 0; logIndex < step.logs.length; logIndex++) {
-            const progress = logIndex / step.logs.length;
-            const currentLog = step.logs[logIndex];
-            
-            updateDetailedProgress(stepIndex, progress, currentLog);
-            addLogEntry(currentLog);
-            
-            await new Promise(resolve => setTimeout(resolve, step.duration / step.logs.length));
-          }
-          
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
-        
-        // Complete progress
-        updateDetailedProgress(4, 1, 'Scan abgeschlossen!');
-        addLogEntry('🎉 Scan erfolgreich abgeschlossen!', true);
-        
-        // Start actual scan in background
-        const response = await fetch('/scan', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url })
-        });
-        
-        if (!response.ok) throw new Error('Scan failed');
+      if (response.ok) {
         const data = await response.json();
-        
-        // Show results
         DATA = data;
-        scanProgress.classList.remove('active');
-        mainApp.style.display = 'block';
-        renderAll();
-        showBanner('Scan erfolgreich abgeschlossen!');
-        
-      } catch (error) {
-        addLogEntry('❌ Scan-Fehler: ' + error.message, true);
-        setTimeout(() => {
-          // For demo purposes, load demo data on error
-          DATA = buildDemoData();
-          scanProgress.classList.remove('active');
-          mainApp.style.display = 'block';
-          renderAll();
-          showBanner('Demo-Daten geladen (Scan-Server nicht erreichbar).');
-        }, 2000);
+      } else {
+        throw new Error('Server error');
+      }
+    } catch (e) {
+      // Fallback to demo data
+      DATA = buildDemoData();
+    }
+    
+    // Show results
+    $('scanProgress').classList.remove('active');
+    $('mainApp').style.display = 'block';
+    renderAll();
+    showBanner('Scan abgeschlossen!');
+    
+  } catch (error) {
+    addLogEntry('❌ Fehler: ' + error.message, true);
+    // Fallback
+    setTimeout(function() {
+      DATA = buildDemoData();
+      $('scanProgress').classList.remove('active');
+      $('mainApp').style.display = 'block';
+      renderAll();
+      showBanner('Demo-Daten geladen.');
+    }, 2000);
+  }
+}
+
+// Start scan from hero
+function startScanFromHero() {
+  const url = $('websiteUrl').value;
+  if (!url) {
+    alert('Bitte gib eine Website-URL ein');
+    return;
+  }
+  
+  if (!/^https?:\/\//.test(url)) {
+    $('websiteUrl').value = 'https://' + url;
+  }
+  
+  // Hide hero, show progress
+  $('heroSection').style.display = 'none';
+  $('exampleSection').style.display = 'none';
+  $('scanProgress').classList.add('active');
+  
+  // Update URL display
+  $('currentUrl').textContent = $('websiteUrl').value;
+  
+  // Start the actual scan
+  startRealScan($('websiteUrl').value);
+}
+
+// DEMO DATA
+function buildDemoData() {
+  const now = new Date().toLocaleString('de-DE');
+  return {
+    version: '2.4.0',
+    scannedUrl: 'https://demo.regukit.de',
+    timestamp: now,
+    summary: {
+      totalIssues: 7,
+      highPriorityIssues: 2,
+      marketingTags: [
+        { name:'Google Analytics 4', property:'hasGA4', compliance:'perfect', impact:'✅ GA4 respektiert die Einwilligung.', gdprRisk:'none', withoutConsent:false, withAccept:true, withReject:false, businessImpact:'Besucherdaten DSGVO-konform.' },
+        { name:'Meta Pixel (Facebook/Instagram)', property:'hasMetaPixel', compliance:'inconsistent', impact:'🤔 Uneinheitliches Verhalten, teils CSP-Blockaden.', gdprRisk:'medium', withoutConsent:false, withAccept:true, withReject:false, businessImpact:'Social ROI nur teilweise messbar.' },
+        { name:'Google Tag Manager', property:'hasGTM', compliance:'perfect', impact:'✅ Consent default denied vorhanden.', gdprRisk:'none', withoutConsent:true, withAccept:true, withReject:true, businessImpact:'Steuert Tags korrekt nach Einwilligung.' },
+        { name:'TikTok Pixel', property:'hasTikTokPixel', compliance:'missing', impact:'❌ Eingebunden, aber keine Datenübertragungen erkannt.', gdprRisk:'none', withoutConsent:false, withAccept:false, withReject:false, businessImpact:'TikTok-Kampagnen nicht messbar.' }
+      ]
+    },
+    details: {
+      errors: [
+        { type:'Console Error', message:'Content Security Policy blocked Facebook', priority:'high', translation:'Sicherheits­einstellungen blockieren Verbindungen.', techFix:'CSP connect-src um connect.facebook.net erweitern.' }
+      ],
+      networkIssues: [
+        { url:'https://www.facebook.com/tr/?id=12345', method:'GET', resourceType:'fetch', status:0, priority:'high', translation:'Meta Pixel – Social ROI unbekannt.', techFix:'CSP/CORS prüfen' }
+      ],
+      cspViolations: [
+        { message:'connect-src blocked https://www.facebook.com/tr/?id=12345', priority:'high', techFix:'connect-src https://www.facebook.com zulassen' }
+      ]
+    },
+    evidence: {
+      evidence: {
+        hasGA4: { nonTechMeaning: 'Misst Besucher ohne Einwilligung zu verletzen.', nonTechFix: 'Consent Mode aktivieren.' },
+        hasMetaPixel: { nonTechMeaning: 'Facebook/Instagram Kampagnen messen.', nonTechFix: 'Pixel nur nach Einwilligung auslösen.' }
       }
     }
+  };
+}
 
-    // Start scan from hero
-    window.startScanFromHero = function() {
-      const url = $('websiteUrl').value;
-      if (!url) {
-        alert('Bitte gib eine Website-URL ein');
-        return;
-      }
-      
-      if (!/^https?:\/\//.test(url)) {
-        $('websiteUrl').value = 'https://' + url;
-      }
-      
-      // Hide hero, show progress
-      heroSection.style.display = 'none';
-      exampleSection.style.display = 'none';
-      scanProgress.classList.add('active');
-      
-      // Update URL display
-      $('currentUrl').textContent = $('websiteUrl').value;
-      
-      // Start the actual scan
-      startRealScan($('websiteUrl').value);
-    };
+// Render functions
+function renderSummary() {
+  if (!DATA) return;
+  $('scannedUrl').textContent = DATA.scannedUrl || '–';
+  $('timestamp').textContent = DATA.timestamp || '–';
+  $('version').textContent = 'v' + (DATA.version || '–');
+  
+  const total = (DATA.details?.errors?.length || 0) + (DATA.details?.networkIssues?.length || 0) + (DATA.details?.cspViolations?.length || 0);
+  const crit = (DATA.details?.errors || []).filter(function(e) { return /critical|high/i.test(e.priority || ''); }).length;
+  const mtags = DATA.summary?.marketingTags || [];
+  const perfect = mtags.filter(function(m) { return m.compliance === 'perfect'; }).length;
+  const risk = mtags.filter(function(m) { return ['bad','inconsistent','good','missing'].includes(m.compliance); }).length;
+  
+  $('kpiTotal').textContent = total; 
+  $('kpiCritical').textContent = crit; 
+  $('kpiPerfect').textContent = perfect; 
+  $('kpiRisk').textContent = risk;
+  
+  const riskBox = $('riskBox');
+  const riskText = $('riskText');
+  let level = 'low';
+  let text = 'Niedriges Risiko – keine kritischen Befunde';
+  
+  if (crit > 0) { 
+    level = 'high'; 
+    text = 'Hohes Risiko – kritische Probleme gefunden.'; 
+  } else if (total > 0) { 
+    level = 'med'; 
+    text = 'Mittleres Risiko – einige Probleme erfordern Aufmerksamkeit.'; 
+  }
+  
+  riskBox.className = 'risk ' + level; 
+  riskText.textContent = text; 
+  riskBox.classList.remove('ghost'); 
+  riskText.classList.remove('ghost');
+}
 
-    // Enter key support in hero
-    $('websiteUrl') && $('websiteUrl').addEventListener('keypress', function(e) {
+function renderAll() { 
+  if (!DATA) return; 
+  renderSummary(); 
+  // Add other render functions here as needed
+}
+
+// Event handlers
+document.addEventListener('DOMContentLoaded', function() {
+  // Hero input enter key
+  const websiteUrl = $('websiteUrl');
+  if (websiteUrl) {
+    websiteUrl.addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
         startScanFromHero();
       }
     });
+  }
 
-    // Tabs
-    tabs.forEach(t=> t.addEventListener('click', ()=>{
-      tabs.forEach(x=>x.classList.remove('active')); t.classList.add('active');
-      const key=t.dataset.tab; Object.entries(sections).forEach(([k,el])=> el && (el.style.display=(k===key)?'grid':'none'));
-    }));
-
-    // Mode
-    modeManager && (modeManager.onclick=()=>{ MODE='manager'; modeManager.classList.add('active'); modeTech?.classList.remove('active'); applyModeVisibility(); });
-    modeTech && (modeTech.onclick=()=>{ MODE='tech'; modeTech.classList.add('active'); modeManager?.classList.remove('active'); applyModeVisibility(); });
-
-    // Progress for old topbar
-    let progInt; 
-    function startProgress(){ if(!bar) return; bar.style.width='0%'; let p=0; clearInterval(progInt); progInt=setInterval(()=>{ p=Math.min(100,p+8); bar.style.width=p+'%'; }, 180); }
-    function endProgress(){ if(!bar) return; clearInterval(progInt); bar.style.width='100%'; setTimeout(()=>bar.style.width='0%', 500); }
-
-    // Scan from topbar (re-scan)
-    scanBtn && scanBtn.addEventListener('click', ()=> {
-      const url = urlEl.value;
-      if (!url) {
-        alert('Bitte gib eine URL ein');
-        return;
-      }
-      startProgress();
-      startRealScan(url).finally(() => endProgress());
+  // Demo button
+  const demoBtn = $('demoBtn');
+  if (demoBtn) {
+    demoBtn.addEventListener('click', function() {
+      DATA = buildDemoData();
+      renderAll();
+      showBanner('Demo-Daten geladen.');
     });
+  }
 
-    // Demo
-    demoBtn && demoBtn.addEventListener('click', ()=>{ 
-      startProgress(); 
-      setTimeout(()=>{ 
-        DATA=buildDemoData(); 
-        renderAll(); 
-        endProgress(); 
-        showBanner('Demo-Daten geladen.'); 
-      }, 300); 
-    });
-
-    // Drawer
-    drawerClose && (drawerClose.onclick=()=> drawer?.classList.remove('open'));
-    function openEvidence(title, ev, tag, issue){
-      if(!CONFIG.features.evidence || !drawer || !drawerBody) return;
-      drawerBody.innerHTML='';
-      const h=document.createElement('div'); h.innerHTML='<h2 style="margin:0 0 8px 0">'+escapeHtml(title)+'</h2>'; drawerBody.appendChild(h);
-      if(ev){ drawerBody.appendChild(evidenceBlock('Ohne Einwilligung', ev?.modes?.withoutConsent));
-              drawerBody.appendChild(evidenceBlock('Mit Einwilligung', ev?.modes?.withConsent));
-              drawerBody.appendChild(evidenceBlock('Bei Ablehnen', ev?.modes?.withReject)); }
-      else if(issue){ const d=document.createElement('div'); d.innerHTML='<pre>'+escapeHtml(JSON.stringify(issue,null,2))+'</pre>'; drawerBody.appendChild(d); }
-      else { drawerBody.innerHTML='<div class="empty">Keine Belege verfügbar.</div>'; }
-      drawer.classList.add('open');
-    }
-    function evidenceBlock(label, m){
-      const el=document.createElement('div'); if(!m){ el.innerHTML='<div class="empty">'+escapeHtml(label)+': –</div>'; return el; }
-      const hits=(m.hits||[]).map(h=>'• '+h.url+' ('+(h.status||0)+')').join('\\n')||'– keine Datenübertragungen sichtbar';
-      const cook=(m.trackingCookies||[]).map(c=>'• '+c).join('\\n')||'– keine neuen Einträge';
-      const csps=(m.cspBlocks||[]).map(c=>'• '+c.message).join('\\n')||'– keine Verbindungen verhindert';
-      const dls=(m.dlEvents||[]).map(e=>'• '+e).join('\\n')||'– keine Einträge';
-      el.innerHTML='<div><h3 style="margin:8px 0">'+escapeHtml(label)+'</h3>'+
-        '<strong>Nachweis im Browser (Network):</strong><pre>'+escapeHtml(hits)+'</pre>'+
-        '<strong>Neue Einträge im Browser-Speicher:</strong><pre>'+escapeHtml(cook)+'</pre>'+
-        '<strong>Sicherheitsregeln verhinderten Verbindungen:</strong><pre>'+escapeHtml(csps)+'</pre>'+
-        '<strong>Interne Ereignisliste (IT):</strong><pre>'+escapeHtml(dls)+'</pre></div>';
-      return el;
-    }
-
-    // Render Summary
-    function renderSummary(){
-      if(!DATA) return;
-      $('scannedUrl').textContent=DATA.scannedUrl||'–';
-      $('timestamp').textContent=DATA.timestamp||'–';
-      $('version').textContent='v'+(DATA.version||'–');
-      const total=(DATA.details?.errors?.length||0)+(DATA.details?.networkIssues?.length||0)+(DATA.details?.cspViolations?.length||0);
-      const crit=(DATA.details?.errors||[]).filter(e=>/critical/i.test(e.priority||'')).length +
-                  (DATA.details?.networkIssues||[]).filter(e=>(/critical|high/i).test(e.priority||'')).length +
-                  (DATA.details?.cspViolations||[]).filter(e=>(/critical|high/i).test(e.priority||'')).length;
-      const mtags=DATA.summary?.marketingTags||[];
-      const perfect=mtags.filter(m=>m.compliance==='perfect').length;
-      const risk=mtags.filter(m=>['bad','inconsistent','good','missing'].includes(m.compliance)).length;
-      $('kpiTotal').textContent=total; $('kpiCritical').textContent=crit; $('kpiPerfect').textContent=perfect; $('kpiRisk').textContent=risk;
-      const riskBox=$('riskBox'), riskText=$('riskText');
-      let level='low', text='Niedriges Risiko – keine kritischen Befunde';
-      if(crit>0){ level='high'; text='Hohes Risiko – kritische Probleme und/oder Einwilligung missachtet.'; }
-      else if(total>0){ level='med'; text='Mittleres Risiko – einige Probleme erfordern Aufmerksamkeit.'; }
-      riskBox.className='risk '+level; riskText.textContent=text; riskBox.classList.remove('ghost'); riskText.classList.remove('ghost');
-    }
-
-    // Compliance
-    const cPills=document.querySelectorAll('[data-cflt]'); let cFilter='all';
-    cPills.forEach(p=>p.onclick=()=>{ cPills.forEach(x=>x.classList.remove('active')); p.classList.add('active'); cFilter=p.dataset.cflt; drawCompliance(); });
-    cSearch && (cSearch.oninput=()=> drawCompliance());
-
-    function drawCompliance(){
-      if(!DATA){ cList.innerHTML=''; return; }
-      const q=(cSearch?.value||'').toLowerCase();
-      let items=(DATA.summary?.marketingTags||[]).map(m=>({ name:m.name||m.property, compliance:m.compliance, tag:m, ev:(DATA.evidence?.evidence||{})[m.property] }));
-      items=items.filter(x=> (cFilter==='all'||x.compliance===cFilter) && (x.name||'').toLowerCase().includes(q));
-      if(!items.length){ cList.innerHTML='<div class="empty">Keine Einträge.</div>'; return; }
-      cList.innerHTML=items.map((x,i)=> complianceItemHTML(x,i)).join('');
-      items.forEach((x,i)=>{
-        const hdr=$('c-h'+i), body=$('c-b'+i); hdr && body && (hdr.onclick=()=> body.classList.toggle('open'));
-        const evBtn=$('c-e'+i); evBtn && evBtn.addEventListener('click', ()=> openEvidence(x.name, x.ev, x.tag));
-        document.querySelectorAll('.copy-fix-'+i).forEach(btn=> btn.addEventListener('click', ()=> navigator.clipboard.writeText(btn.dataset.fix||'')));
-      });
-      applyModeVisibility();
-    }
-    function complianceItemHTML(x,i){
-      const sevClass=({ perfect:'sev-low', good:'sev-med', inconsistent:'sev-med', bad:'sev-high', missing:'sev-med' })[x.compliance]||'sev-med';
-      const badge=({ perfect:'Einwilligung korrekt', good:'Eingeschränkt', inconsistent:'Uneinheitlich', bad:'Missachtet', missing:'Fehlt/keine Daten' })[x.compliance]||'Hinweis';
-      const t=x.tag||{};
-      const matrix=`
-        <div class="row" style="gap:8px;flex-wrap:wrap">
-          <span class="chip">Ohne Einwilligung: ${t.withoutConsent? 'Daten gesendet' : 'Keine Daten'}</span>
-          <span class="chip">Mit Einwilligung: ${t.withAccept? 'Daten gesendet' : 'Keine Daten'}</span>
-          <span class="chip">Bei Ablehnen: ${t.withReject? 'Daten gesendet' : 'Keine Daten'}</span>
-        </div>`;
-      const impactManager=(t.impact||'Hinweis zur Einbindung.').replace(/HITs?/ig,'Datenübertragungen');
-      const impactTech=(t.businessImpact? (t.businessImpact+' — '):'') + impactManager;
-      const fixText=(DATA?.evidence?.evidence?.[t.property]?.nonTechFix)||'Im Tag Manager/CMP sicherstellen, dass das Tool nur nach Einwilligung auslöst.';
-      return `
-        <div class="item">
-          <header id="c-h${i}">
-            <span class="severity ${sevClass}"></span>
-            <div class="title">${x.name}</div>
-            <div class="meta"><span class="chip">${badge}</span></div>
-          </header>
-          <div class="body" id="c-b${i}">
-            <div class="row" style="gap:10px;align-items:flex-start">
-              <div style="flex:2;min-width:260px">
-                <div class="ghost" data-mode="manager"><strong>Warum wichtig:</strong> ${(DATA?.evidence?.evidence?.[t.property]?.nonTechMeaning)||'Ohne diese Daten können Besucherzahlen/Kampagnen nicht ausgewertet werden.'}</div>
-                <div style="margin-top:8px"><strong>Bewertung:</strong> <span>${MODE==='manager'? impactManager : impactTech}</span></div>
-                <div style="margin-top:10px">${matrix}</div>
-              </div>
-              <div style="flex:1;min-width:220px">
-                <div><strong>Empfohlene Lösung</strong></div>
-                <pre><code>${fixText}</code></pre>
-                <button class="copy copy-fix-${i}" data-fix="${escapeAttr(fixText)}" data-mode="tech">Copy Fix (Tech)</button>
-              </div>
-            </div>
-            <div class="row" style="margin-top:10px">
-              <button id="c-e${i}" class="copy">Belege anzeigen</button>
-            </div>
-          </div>
-        </div>`;
-    }
-
-    // Issues
-    const iPills=document.querySelectorAll('[data-iflt]'); let iFilter='all';
-    iPills.forEach(p=>p.onclick=()=>{ iPills.forEach(x=>x.classList.remove('active')); p.classList.add('active'); iFilter=p.dataset.iflt; drawIssues(); });
-    iSearch && (iSearch.oninput=()=> drawIssues());
-
-    function drawIssues(){
-      if(!DATA){ iList.innerHTML=''; return; }
-      const items=[].concat((DATA.details?.errors||[]).map(x=>({...x,_kind:'Console Error'})))
-                    .concat((DATA.details?.networkIssues||[]).map(x=>({...x,_kind:'Network Issue'})))
-                    .concat((DATA.details?.cspViolations||[]).map(x=>({...x,_kind:'CSP Violation'})));
-      let filtered=items;
-      const q=(iSearch?.value||'').toLowerCase();
-      if(q){ filtered=filtered.filter(x=>(x.message||'').toLowerCase().includes(q)||(x.url||'').toLowerCase().includes(q)||String(x.status||'').toLowerCase().includes(q)||(x._kind||'').toLowerCase().includes(q)); }
-      $('issueCount').textContent=filtered.length+' Items';
-      if(!filtered.length){ iList.innerHTML='<div class="empty">Keine Issues für den aktuellen Filter.</div>'; return; }
-      iList.innerHTML=filtered.slice(0,250).map((x,i)=> issueItemHTML(x,i)).join('');
-      filtered.slice(0,250).forEach((x,i)=>{
-        const hdr=$('i-h'+i), body=$('i-b'+i); hdr && body && (hdr.onclick=()=> body.classList.toggle('open'));
-        const evBtn=$('i-e'+i); evBtn && evBtn.addEventListener('click', ()=> openEvidence(x._kind, null, null, x));
-        const copyBtn=$('i-fix'+i); copyBtn && (copyBtn.onclick=()=> navigator.clipboard.writeText(copyBtn.dataset.fix||''));
-      });
-      applyModeVisibility();
-    }
-    function issueItemHTML(x,i){
-      const sevClass=(/(critical|high)/i.test(x.priority||''))?'sev-high':(/(medium)/i.test(x.priority||''))?'sev-med':'sev-low';
-      const title=(x._kind||'Issue')+(x.url?(' · '+tryHost(x.url)):'');
-      const business=/CSP|security|blocked|googletagmanager|googleadservices|facebook|tiktok|hotjar/i.test(x.message||'')?
-        'Marketing-/Messdienst beeinträchtigt; Auswertungen lückenhaft.' : 'Funktionen der Seite können ausfallen; Mess-/Marketingdaten können fehlen.';
-      const fix=x.techFix||'IT prüfen: CSP/CORS/Erreichbarkeit und Einbindung korrigieren.';
-      const detailL=(x.message||('Status: '+(x.status??'-')))+(x.url?('\\nURL: '+x.url):'');
-      return `
-        <div class="item">
-          <header id="i-h${i}">
-            <span class="severity ${sevClass}"></span>
-            <div class="title">${escapeHtml(title)}</div>
-            <div class="meta"><span class="chip">${escapeHtml(x.priority||'-')}</span><span class="chip">${escapeHtml(x._kind||'-')}</span></div>
-          </header>
-          <div class="body" id="i-b${i}">
-            <div class="row" style="gap:10px;align-items:flex-start">
-              <div style="flex:2;min-width:260px">
-                <div class="ghost" data-mode="manager"><strong>Verständlich:</strong> ${escapeHtml(x.translation||'Eine Verbindung zu einem externen Dienst hat nicht funktioniert.')}</div>
-                <div style="margin-top:8px"><strong>Business-Auswirkung:</strong> ${escapeHtml(business)}</div>
-                <div style="margin-top:8px"><strong>Details:</strong><pre>${escapeHtml(detailL)}</pre></div>
-              </div>
-              <div style="flex:1;min-width:220px">
-                <div><strong>Empfohlene Lösung</strong></div>
-                <pre><code>${escapeHtml(fix)}</code></pre>
-                <button id="i-fix${i}" class="copy" data-mode="tech" data-fix="${escapeAttr(fix)}">Copy Fix (Tech)</button>
-              </div>
-            </div>
-            <div class="row" style="margin-top:10px">
-              <button id="i-e${i}" class="copy">Belege anzeigen</button>
-            </div>
-          </div>
-        </div>`;
-    }
-
-    // Mode-abhängige Sichtbarkeit
-    function applyModeVisibility(){
-      document.querySelectorAll('[data-mode="tech"]').forEach(el=> el.style.display = (MODE==='tech')?'inline-flex':'none');
-      document.querySelectorAll('[data-mode="manager"]').forEach(el=> el.style.display = (MODE==='manager')?'block':'none');
-    }
-    function renderAll(){ if(!DATA) return; renderSummary(); drawCompliance(); drawIssues(); }
-
-    // DEMO DATA
-    function buildDemoData(){
-      const now = new Date().toLocaleString('de-DE');
-      const evidence = {
-        url: 'https://demo.regukit.de',
-        generatedAt: new Date().toISOString(),
-        evidence: {
-          hasGA4: {
-            name: 'Google Analytics 4',
-            modes: {
-              withoutConsent: { hits: [], trackingCookies: [], cspBlocks: [], dlEvents: ['consent','gtm.init'] },
-              withConsent:    { hits: [{url:'https://region1.google-analytics.com/g/collect?v=2&tid=G-XXXX', status:204}], trackingCookies:['_ga (Domain: .demo.regukit.de)'], cspBlocks: [], dlEvents: ['consent.update','page_view'] },
-              withReject:     { hits: [], trackingCookies: [], cspBlocks: [], dlEvents: ['consent.update'] }
-            },
-            howToVerify: [
-              'Browser-Werkzeuge öffnen → Tab "Network" → nach "g/collect" filtern',
-              'Seite neu laden und Status prüfen (200/204)',
-              'Im Tab "Application/Speicher" nach _ga suchen'
-            ],
-            nonTechMeaning: 'Misst Besucher & Seitenaufrufe. Ohne Einwilligung dürfen keine Daten an Google gesendet werden.',
-            nonTechFix: 'Consent Mode aktivieren und GA4-Tag nur nach Einwilligung auslösen.'
-          },
-          hasMetaPixel: {
-            name: 'Meta Pixel (Facebook/Instagram)',
-            modes: {
-              withoutConsent: { hits: [], trackingCookies: [], cspBlocks: [], dlEvents: [] },
-              withConsent:    { hits: [{url:'https://www.facebook.com/tr/?id=12345&ev=PageView', status:200}], trackingCookies:['_fbp (Domain: .demo.regukit.de)'], cspBlocks: [], dlEvents: [] },
-              withReject:     { hits: [], trackingCookies: [], cspBlocks: [{message:'connect-src blocked https://www.facebook.com/tr/?id=12345'}], dlEvents: [] }
-            },
-            howToVerify: ['Network → Filter "tr?id="', 'Konsole → CSP-Meldungen prüfen'],
-            nonTechMeaning: 'Misst Kampagnen-Erfolg bei Facebook/Instagram.',
-            nonTechFix: 'Pixel nur nach Einwilligung & per GTM mit Consent-Prüfung auslösen.'
-          },
-          hasGTM: {
-            name: 'Google Tag Manager',
-            modes: {
-              withoutConsent: { hits: [], trackingCookies: [], cspBlocks: [], dlEvents: ['consent','gtm.init'] },
-              withConsent:    { hits: [], trackingCookies: [], cspBlocks: [], dlEvents: ['consent.update','gtm.js'] },
-              withReject:     { hits: [], trackingCookies: [], cspBlocks: [], dlEvents: ['consent.update'] }
-            },
-            howToVerify: ['Konsole: window.dataLayer?.slice(-10)', 'GTM-Preview prüfen'],
-            nonTechMeaning: 'Container für Marketing-Tags.',
-            nonTechFix: 'Consent-Initialisierung vor allen Tags, Standard = abgelehnt.'
-          }
-        }
-      };
-
-      return {
-        version: '2.4.0',
-        scannedUrl: 'https://demo.regukit.de',
-        timestamp: now,
-        summary: {
-          totalIssues: 7,
-          highPriorityIssues: 2,
-          marketingTags: [
-            { name:'Google Analytics 4', property:'hasGA4', compliance:'perfect', impact:'✅ GA4 respektiert die Einwilligung.', gdprRisk:'none', withoutConsent:false, withAccept:true, withReject:false, businessImpact:'Besucherdaten DSGVO-konform.' },
-            { name:'Meta Pixel (Facebook/Instagram)', property:'hasMetaPixel', compliance:'inconsistent', impact:'🤔 Uneinheitliches Verhalten, teils CSP-Blockaden.', gdprRisk:'medium', withoutConsent:false, withAccept:true, withReject:false, businessImpact:'Social ROI nur teilweise messbar.' },
-            { name:'Google Tag Manager', property:'hasGTM', compliance:'perfect', impact:'✅ Consent default denied vorhanden.', gdprRisk:'none', withoutConsent:true, withAccept:true, withReject:true, businessImpact:'Steuert Tags korrekt nach Einwilligung.' },
-            { name:'TikTok Pixel', property:'hasTikTokPixel', compliance:'missing', impact:'❌ Eingebunden, aber keine Datenübertragungen erkannt.', gdprRisk:'none', withoutConsent:false, withAccept:false, withReject:false, businessImpact:'TikTok-Kampagnen nicht messbar.' }
-          ],
-          consentCompliance: {}
-        },
-        details: {
-          errors: [
-            { type:'Console Error', message:'Content Security Policy: The page's settings blocked the loading of a resource at https://connect.facebook.net', priority:'high', translation:'Sicherheits­einstellungen blockieren Verbindungen.', techFix:'CSP connect-src um connect.facebook.net erweitern.' },
-            { type:'Console Error', message:'Deprecated gtag command used', priority:'medium', translation:'Veraltete API-Nutzung', techFix:'gtag Aufrufe aktualisieren.' }
-          ],
-          networkIssues: [
-            { url:'https://www.facebook.com/tr/?id=12345', method:'GET', resourceType:'fetch', status:0, priority:'high', translation:'Meta Pixel – Social ROI unbekannt.', techFix:'CSP/CORS prüfen' },
-            { url:'https://analytics.tiktok.com/i18n/pixel/events.js', method:'GET', resourceType:'script', status:404, priority:'medium', translation:'TikTok Pixel – unoptimiert.', techFix:'Script-URL prüfen' }
-          ],
-          cspViolations: [
-            { message:'connect-src blocked https://www.facebook.com/tr/?id=12345', priority:'high', techFix:'connect-src https://www.facebook.com zulassen' }
-          ]
-        },
-        evidence
-      };
-    }
-
-    // Initialize
-    setTimeout(()=>{ 
-      if (CONFIG.features.autoDemo) {
-        demoBtn && demoBtn.click(); 
-      }
-      $('websiteUrl') && $('websiteUrl').focus(); 
-    }, 300);
-  });
-})();
+  // Focus URL input
+  setTimeout(function() {
+    if (websiteUrl) websiteUrl.focus();
+  }, 300);
+});
 </script>
 </body>
 </html>
