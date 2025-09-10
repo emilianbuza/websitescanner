@@ -1055,84 +1055,213 @@ app.get('/', (req, res) => {
       <p><small>Sichere Analyse ohne Datenspeicherung • Made in Germany</small></p>
     </div>
   </div>
-  <script>
-  function renderErrors(errors = []) {
-    if (!errors.length) return '';
-    return '' +
-      '<div class="section">' +
-        '<div class="section-header" onclick="toggleSection(this)">' +
-          '⚠️ JavaScript & Console Errors' +
-          '<span class="badge high">' + errors.length + ' ▼</span>' +
-        '</div>' +
-        '<div class="section-content">' +
-          errors.slice(0, 10).map(function(error) {
-            return '' +
-              '<div class="issue-card risk-' + error.priority + '">' +
-                '<h3>🚨 Problem: ' + simplifyProblem(error) + '</h3>' +
-                '<p><strong>Was bedeutet das?</strong><br>' + error.translation + '</p>' +
-                '<p><strong>Warum passiert das?</strong><br>' + explainCause(error) + '</p>' +
-                '<div class="solution-box">' +
-                  '<strong>💡 Lösung für Entwickler:</strong>' +
-                  '<pre>' + error.techFix + '</pre>' +
-                  '<button class="copy-button" onclick="copyToClipboard(\'' + error.techFix.replace(/'/g, "\\'") + '\')">📋 Kopieren</button>' +
-                '</div>' +
-              '</div>';
-          }).join('') +
-        '</div>' +
-      '</div>';
-  }
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const scanForm = document.getElementById('scanForm');
+        const urlInput = document.getElementById('url');
+        const scanBtn = document.getElementById('scanBtn');
+        const loadingDiv = document.getElementById('loading');
+        const resultsDiv = document.getElementById('results');
+        const progressFill = document.getElementById('progressFill');
+        const loadingText = document.getElementById('loadingText');
+        const urlValidation = document.getElementById('urlValidation');
 
-  function renderNetworkIssues(issues = []) {
-    if (!issues.length) return '';
-    return '' +
-      '<div class="section">' +
-        '<div class="section-header" onclick="toggleSection(this)">' +
-          '🌐 Netzwerk & Loading Issues' +
-          '<span class="badge medium">' + issues.length + ' ▼</span>' +
-        '</div>' +
-        '<div class="section-content">' +
-          issues.map(function(issue) {
-            return '' +
-              '<div class="issue-card risk-' + issue.priority + '">' +
-                '<h3>🚨 Problem: ' + simplifyNetworkProblem(issue) + '</h3>' +
-                '<p><strong>Was bedeutet das?</strong><br>' + issue.translation + '</p>' +
-                '<p><strong>Warum passiert das?</strong><br>' + explainNetworkCause(issue) + '</p>' +
-                '<div class="solution-box">' +
-                  '<strong>💡 Lösung für Entwickler:</strong>' +
-                  '<pre>' + issue.techFix + '</pre>' +
-                  '<button class="copy-button" onclick="copyToClipboard(\'' + issue.techFix.replace(/'/g, "\\'") + '\')">📋 Kopieren</button>' +
-                '</div>' +
-              '</div>';
-          }).join('') +
-        '</div>' +
-      '</div>';
-  }
+        const scanSteps = [
+            'Initialisiere Browser...',
+            'Scanne ohne Consent...',
+            'Scanne mit Consent accepted...',
+            'Scanne mit Consent rejected...',
+            'Analysiere Ergebnisse...',
+            'Generiere Report...'
+        ];
 
-  function renderCSPViolations(violations = []) {
-    if (!violations.length) return '';
-    return '' +
-      '<div class="section">' +
-        '<div class="section-header" onclick="toggleSection(this)">' +
-          '🔒 CSP-Violations' +
-          '<span class="badge critical">' + violations.length + ' ▼</span>' +
-        '</div>' +
-        '<div class="section-content">' +
-          violations.map(function(v) {
-            return '' +
-              '<div class="issue-card risk-high">' +
-                '<h3>🚨 Problem: Sicherheitsrichtlinie blockiert Skript</h3>' +
-                '<p><strong>Was bedeutet das?</strong><br>' + v.translation + '</p>' +
-                '<p><strong>Warum passiert das?</strong><br><code>' + v.message + '</code></p>' +
-                '<div class="solution-box">' +
-                  '<strong>💡 Lösung für Entwickler:</strong>' +
-                  '<pre>' + v.techFix + '</pre>' +
-                  '<button class="copy-button" onclick="copyToClipboard(\'' + v.techFix.replace(/'/g, "\\'") + '\')">📋 Kopieren</button>' +
-                '</div>' +
-              '</div>';
-          }).join('') +
-        '</div>' +
-      '</div>';
-  }
+        let currentStep = 0;
+        let progressInterval;
+
+        function updateProgress() {
+            if (currentStep < scanSteps.length) {
+                loadingText.textContent = scanSteps[currentStep];
+                const progress = (currentStep / scanSteps.length) * 100;
+                progressFill.style.width = `${progress}%`;
+                currentStep++;
+            } else {
+                clearInterval(progressInterval);
+                progressFill.style.width = '100%';
+            }
+        }
+
+        urlInput.addEventListener('input', (e) => {
+            const url = e.target.value.trim();
+            const isValid = validateUrl(url);
+            if (url === '') {
+                urlValidation.textContent = '';
+                urlInput.classList.remove('valid', 'invalid');
+            } else if (isValid) {
+                urlValidation.textContent = 'Gültige URL ✔️';
+                urlValidation.classList.remove('invalid');
+                urlValidation.classList.add('valid');
+                urlInput.classList.remove('invalid');
+                urlInput.classList.add('valid');
+                scanBtn.disabled = false;
+            } else {
+                urlValidation.textContent = 'Ungültige URL. Muss mit http:// oder https:// beginnen.';
+                urlValidation.classList.remove('valid');
+                urlValidation.classList.add('invalid');
+                urlInput.classList.remove('valid');
+                urlInput.classList.add('invalid');
+                scanBtn.disabled = true;
+            }
+        });
+
+        function validateUrl(url) {
+            try {
+                const u = new URL(url);
+                return u.protocol === 'http:' || u.protocol === 'https:';
+            } catch (e) {
+                return false;
+            }
+        }
+
+        scanForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const url = urlInput.value.trim();
+            if (!validateUrl(url)) {
+                alert('Bitte eine gültige URL eingeben (inkl. http:// oder https://)');
+                return;
+            }
+
+            scanBtn.disabled = true;
+            loadingDiv.style.display = 'block';
+            resultsDiv.style.display = 'none';
+            resultsDiv.innerHTML = '';
+
+            currentStep = 0;
+            updateProgress();
+            progressInterval = setInterval(updateProgress, 15000); // Update every 15s
+
+            try {
+                const response = await fetch('/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+
+                clearInterval(progressInterval);
+                progressFill.style.width = '100%';
+                loadingText.textContent = 'Report fertiggestellt! 🎉';
+
+                const results = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(results.details || 'Unknown error');
+                }
+                
+                setTimeout(() => {
+                    renderResults(results);
+                    loadingDiv.style.display = 'none';
+                    resultsDiv.style.display = 'block';
+                    scanBtn.disabled = false;
+                }, 1000);
+
+            } catch (error) {
+                clearInterval(progressInterval);
+                loadingDiv.style.display = 'none';
+                scanBtn.disabled = false;
+                alert('Scan failed: ' + error.message);
+                console.error('Scan Error:', error);
+            }
+        });
+
+        function renderResults(data) {
+            let html = '';
+            
+            const riskLevel = data.summary.highPriorityIssues > 0 ? 'high' : data.summary.totalIssues > 0 ? 'medium' : 'low';
+            const riskText = data.summary.highPriorityIssues > 0 ? 'Hohes Risiko 🚨' : data.summary.totalIssues > 0 ? 'Mittleres Risiko 🟡' : 'Niedriges Risiko ✅';
+
+            html += `<div class="risk-indicator risk-${riskLevel}"><h1>${riskText}</h1><p>Gefundene Probleme: ${data.summary.totalIssues} (davon ${data.summary.highPriorityIssues} kritisch)</p></div>`;
+
+            html += `<div class="export-buttons"><button class="export-btn" onclick="downloadJSON(${JSON.stringify(data)})">Export JSON</button></div>`;
+            
+            html += `<h2>Marketing & DSGVO Compliance Check</h2>`;
+            data.summary.marketingTags.forEach(tag => {
+                html += `
+                    <div class="compliance-item compliance-${tag.compliance}">
+                        <h3>${tag.name} (${tag.compliance === 'perfect' ? '✅ Perfekt' : tag.compliance === 'bad' ? '❌ Verstoß' : '🟡 Unklar'})</h3>
+                        <p>${tag.impact}</p>
+                        <div class="consent-matrix">
+                            <div class="consent-result ${tag.withoutConsent ? 'consent-fail' : 'consent-pass'}">Ohne Consent: ${tag.withoutConsent ? 'LÄDT' : 'LÄDT NICHT'}</div>
+                            <div class="consent-result ${tag.withAccept ? 'consent-pass' : 'consent-fail'}">Mit Accept: ${tag.withAccept ? 'LÄDT' : 'LÄDT NICHT'}</div>
+                            <div class="consent-result ${tag.withReject ? 'consent-fail' : 'consent-pass'}">Mit Reject: ${tag.withReject ? 'LÄDT' : 'LÄDT NICHT'}</div>
+                        </div>
+                        <div class="tech-details"><strong>Business Impact:</strong> ${tag.businessImpact}</div>
+                    </div>
+                `;
+            });
+
+            html += `<h2>Technische Probleme (${data.details.errors.length + data.details.networkIssues.length + data.details.cspViolations.length})</h2>`;
+            html += renderErrors(data.details.errors);
+            html += renderNetworkIssues(data.details.networkIssues);
+            html += renderCSPViolations(data.details.cspViolations);
+
+            resultsDiv.innerHTML = html;
+        }
+
+        // Helper functions
+        function toggleSection(element) {
+            const content = element.nextElementSibling;
+            if (content.style.display === "block") {
+                content.style.display = "none";
+            } else {
+                content.style.display = "block";
+            }
+        }
+        
+        function downloadJSON(data) {
+            const filename = 'scan-report-' + new Date().toISOString().slice(0, 10) + '.json';
+            const jsonStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        window.toggleSection = toggleSection;
+        window.downloadJSON = downloadJSON;
+        
+        function simplifyProblem(error) {
+            if (error.type === 'Uncaught Error') return 'Unerwarteter JavaScript Fehler';
+            if (error.message.includes('CSP')) return 'Sicherheitsrichtlinie (CSP) blockiert Skript';
+            if (error.message.includes('googleadservices')) return 'Google Ads Tracking Error';
+            return 'Allgemeiner Konsolenfehler';
+        }
+        
+        function explainCause(error) {
+            return `Der Fehler '${error.message}' ist in der Konsole aufgetreten.`;
+        }
+
+        function simplifyNetworkProblem(issue) {
+            if (issue.status >= 400) return `HTTP ${issue.status} Error`;
+            return `Netzwerkfehler: ${issue.status}`;
+        }
+        
+        function explainNetworkCause(issue) {
+            return `Der Aufruf der URL '${issue.url}' ist mit dem Fehler '${issue.status}' fehlgeschlagen.`;
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Code in die Zwischenablage kopiert!');
+            }).catch(err => {
+                console.error('Fehler beim Kopieren', err);
+            });
+        }
+        window.copyToClipboard = copyToClipboard;
+    });
 </script>
 
 </body>
@@ -1145,6 +1274,7 @@ app.listen(PORT, () => {
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔍 Scanner UI: http://localhost:${PORT}/`);
 });
+
 
 
 
