@@ -2,6 +2,8 @@ import express from 'express';
 import { chromium } from 'playwright';
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
+import { collectAllForCurrentState } from './scannerModules.js';
+import { formatReport } from './reportFormatter.js';
 
 const app = express();
 app.set('trust proxy', 1);
