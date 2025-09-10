@@ -2,8 +2,8 @@ import express from 'express';
 import { chromium } from 'playwright';
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
-import { collectAllForCurrentState } from './scannerModules.js';
-import { formatReport } from './reportFormatter.js';
+import { collectAllForCurrentState } from './ScannerModules.js';
+import { formatReport } from './ReportFormatter.js';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -1049,3 +1049,4 @@ const graceful = (sig) => async () => {
 };
 process.on('SIGINT', graceful('SIGINT'));
 process.on('SIGTERM', graceful('SIGTERM'));
+
