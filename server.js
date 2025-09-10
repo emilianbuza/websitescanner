@@ -710,6 +710,7 @@ app.get('/version', (req, res) => {
 });
 
 // Frontend Route - Das komplette UI mit UX-Verbesserungen
+// Frontend Route - Fixed template literal escaping
 app.get('/', (req, res) => {
   res.send(`
 <!DOCTYPE html>
@@ -1082,7 +1083,7 @@ app.get('/', (req, res) => {
                 if (currentStep < scanSteps.length) {
                     loadingText.textContent = scanSteps[currentStep];
                     const progress = (currentStep / scanSteps.length) * 100;
-                    progressFill.style.width = `${progress}%`;
+                    progressFill.style.width = \`\${progress}%\`;
                     currentStep++;
                 } else {
                     clearInterval(progressInterval);
@@ -1178,32 +1179,80 @@ app.get('/', (req, res) => {
                 const riskLevel = data.summary.highPriorityIssues > 0 ? 'high' : data.summary.totalIssues > 0 ? 'medium' : 'low';
                 const riskText = data.summary.highPriorityIssues > 0 ? 'Hohes Risiko 🚨' : data.summary.totalIssues > 0 ? 'Mittleres Risiko 🟡' : 'Niedriges Risiko ✅';
 
-                html += `<div class="risk-indicator risk-${riskLevel}"><h1>${riskText}</h1><p>Gefundene Probleme: ${data.summary.totalIssues} (davon ${data.summary.highPriorityIssues} kritisch)</p></div>`;
+                html += \`<div class="risk-indicator risk-\${riskLevel}"><h1>\${riskText}</h1><p>Gefundene Probleme: \${data.summary.totalIssues} (davon \${data.summary.highPriorityIssues} kritisch)</p></div>\`;
 
-                html += `<div class="export-buttons"><button class="export-btn" onclick="downloadJSON(${JSON.stringify(data)})">Export JSON</button></div>`;
+                html += \`<div class="export-buttons"><button class="export-btn" onclick="downloadJSON(\${JSON.stringify(data).replace(/"/g, '&quot;')})">Export JSON</button></div>\`;
 
-                html += `<h2>Marketing & DSGVO Compliance Check</h2>`;
+                html += \`<h2>Marketing & DSGVO Compliance Check</h2>\`;
                 data.summary.marketingTags.forEach(tag => {
-                    html += `
-                        <div class="compliance-item compliance-${tag.compliance}">
-                            <h3>${tag.name} (${tag.compliance === 'perfect' ? '✅ Perfekt' : tag.compliance === 'bad' ? '❌ Verstoß' : '🟡 Unklar'})</h3>
-                            <p>${tag.impact}</p>
+                    html += \`
+                        <div class="compliance-item compliance-\${tag.compliance}">
+                            <h3>\${tag.name} (\${tag.compliance === 'perfect' ? '✅ Perfekt' : tag.compliance === 'bad' ? '❌ Verstoß' : '🟡 Unklar'})</h3>
+                            <p>\${tag.impact}</p>
                             <div class="consent-matrix">
-                                <div class="consent-result ${tag.withoutConsent ? 'consent-fail' : 'consent-pass'}">Ohne Consent: ${tag.withoutConsent ? 'LÄDT' : 'LÄDT NICHT'}</div>
-                                <div class="consent-result ${tag.withAccept ? 'consent-pass' : 'consent-fail'}">Mit Accept: ${tag.withAccept ? 'LÄDT' : 'LÄDT NICHT'}</div>
-                                <div class="consent-result ${tag.withReject ? 'consent-fail' : 'consent-pass'}">Mit Reject: ${tag.withReject ? 'LÄDT' : 'LÄDT NICHT'}</div>
+                                <div class="consent-result \${tag.withoutConsent ? 'consent-fail' : 'consent-pass'}">Ohne Consent: \${tag.withoutConsent ? 'LÄDT' : 'LÄDT NICHT'}</div>
+                                <div class="consent-result \${tag.withAccept ? 'consent-pass' : 'consent-fail'}">Mit Accept: \${tag.withAccept ? 'LÄDT' : 'LÄDT NICHT'}</div>
+                                <div class="consent-result \${tag.withReject ? 'consent-fail' : 'consent-pass'}">Mit Reject: \${tag.withReject ? 'LÄDT' : 'LÄDT NICHT'}</div>
                             </div>
-                            <div class="tech-details"><strong>Business Impact:</strong> ${tag.businessImpact}</div>
+                            <div class="tech-details"><strong>Business Impact:</strong> \${tag.businessImpact}</div>
                         </div>
-                    `;
+                    \`;
                 });
 
-                html += `<h2>Technische Probleme (${data.details.errors.length + data.details.networkIssues.length + data.details.cspViolations.length})</h2>`;
+                html += \`<h2>Technische Probleme (\${data.details.errors.length + data.details.networkIssues.length + data.details.cspViolations.length})</h2>\`;
                 html += renderErrors(data.details.errors);
                 html += renderNetworkIssues(data.details.networkIssues);
                 html += renderCSPViolations(data.details.cspViolations);
 
                 resultsDiv.innerHTML = html;
+            }
+
+            function renderErrors(errors) {
+                if (!errors || errors.length === 0) return '';
+                return errors.map(error => \`
+                    <div class="issue-item priority-\${error.priority}">
+                        <h4>\${error.type}</h4>
+                        <p><strong>Problem:</strong> \${error.translation}</p>
+                        <div class="tech-details"><strong>Technische Details:</strong> \${error.message}</div>
+                        <div class="fix-suggestion">
+                            <strong>Lösung:</strong><br>
+                            <code>\${error.techFix}</code>
+                            <button class="copy-button" onclick="copyToClipboard('\${error.techFix.replace(/'/g, "\\'")}')">Copy</button>
+                        </div>
+                    </div>
+                \`).join('');
+            }
+
+            function renderNetworkIssues(issues) {
+                if (!issues || issues.length === 0) return '';
+                return issues.map(issue => \`
+                    <div class="issue-item priority-\${issue.priority}">
+                        <h4>Netzwerk Problem</h4>
+                        <p><strong>Problem:</strong> \${issue.translation}</p>
+                        <div class="tech-details"><strong>URL:</strong> \${issue.url}<br><strong>Status:</strong> \${issue.status}</div>
+                        <div class="fix-suggestion">
+                            <strong>Lösung:</strong><br>
+                            <code>\${issue.techFix}</code>
+                            <button class="copy-button" onclick="copyToClipboard('\${issue.techFix.replace(/'/g, "\\'")}')">Copy</button>
+                        </div>
+                    </div>
+                \`).join('');
+            }
+
+            function renderCSPViolations(violations) {
+                if (!violations || violations.length === 0) return '';
+                return violations.map(violation => \`
+                    <div class="issue-item priority-\${violation.priority}">
+                        <h4>\${violation.type}</h4>
+                        <p><strong>Problem:</strong> \${violation.translation}</p>
+                        <div class="tech-details"><strong>Details:</strong> \${violation.message}</div>
+                        <div class="fix-suggestion">
+                            <strong>CSP Fix:</strong><br>
+                            <code>\${violation.techFix}</code>
+                            <button class="copy-button" onclick="copyToClipboard('\${violation.techFix.replace(/'/g, "\\'")}')">Copy</button>
+                        </div>
+                    </div>
+                \`).join('');
             }
 
             // Helper functions
@@ -1233,26 +1282,6 @@ app.get('/', (req, res) => {
             window.toggleSection = toggleSection;
             window.downloadJSON = downloadJSON;
 
-            function simplifyProblem(error) {
-                if (error.type === 'Uncaught Error') return 'Unerwarteter JavaScript Fehler';
-                if (error.message.includes('CSP')) return 'Sicherheitsrichtlinie (CSP) blockiert Skript';
-                if (error.message.includes('googleadservices')) return 'Google Ads Tracking Error';
-                return 'Allgemeiner Konsolenfehler';
-            }
-
-            function explainCause(error) {
-                return `Der Fehler '${error.message}' ist in der Konsole aufgetreten.`;
-            }
-
-            function simplifyNetworkProblem(issue) {
-                if (issue.status >= 400) return `HTTP ${issue.status} Error`;
-                return `Netzwerkfehler: ${issue.status}`;
-            }
-
-            function explainNetworkCause(issue) {
-                return `Der Aufruf der URL '${issue.url}' ist mit dem Fehler '${issue.status}' fehlgeschlagen.`;
-            }
-
             function copyToClipboard(text) {
                 navigator.clipboard.writeText(text).then(() => {
                     alert('Code in die Zwischenablage kopiert!');
@@ -1273,3 +1302,4 @@ app.listen(PORT, () => {
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔍 Scanner UI: http://localhost:${PORT}/`);
 });
+
