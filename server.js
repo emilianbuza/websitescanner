@@ -4,6 +4,10 @@ import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import { collectAllForCurrentState } from './ScannerModules.js';
 import { formatReport } from './ReportFormatter.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname  = path.dirname(__filename);
 
 const app = express();
 app.set('trust proxy', 1);
@@ -23,6 +27,7 @@ const limiter = rateLimit({
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use('/scan', limiter);
+app.use(express.static(path.join(__dirname, 'public')));
 
 /* -------------------- HIT-based consent evaluation helpers ------------------- */
 const TAG_META = {
@@ -847,240 +852,6 @@ app.get('/version', (req, res) => {
   res.json({ version: VERSION, buildTime: new Date().toISOString(), nodeVersion: process.version });
 });
 
-/* ---------------------------------- Frontend -------------------------------- */
-app.get('/', (req, res) => {
-  res.send(`<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ultimate Website Scanner - DSGVO & Marketing Check</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;color:#333;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;padding:20px}
-.container{max-width:1200px;margin:0 auto;background:#fff;border-radius:16px;box-shadow:0 25px 50px rgba(0,0,0,.15);overflow:hidden}
-.header{background:linear-gradient(135deg,#2d3748 0%,#1a202c 100%);color:#fff;padding:50px 30px;text-align:center}
-.header h1{font-size:2.5em;margin-bottom:20px;font-weight:700;line-height:1.2}
-.header p{opacity:.9;font-size:1.1em;margin-bottom:15px;max-width:800px;margin-left:auto;margin-right:auto}
-.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:25px;padding:30px;background:rgba(255,255,255,.1);margin-top:30px;border-radius:12px}
-.feature{text-align:center;padding:20px}.feature-icon{font-size:2.5em;margin-bottom:15px}.feature h3{margin-bottom:10px;font-size:1.2em}.feature p{font-size:.95em;opacity:.9}
-.form-section{padding:50px}.input-group{margin-bottom:30px}label{display:block;margin-bottom:12px;font-weight:600;color:#2d3748;font-size:1.1em}
-.url-input-container{position:relative}input[type="url"]{width:100%;padding:20px;border:2px solid #e2e8f0;border-radius:12px;font-size:16px;transition:all .3s;box-shadow:0 2px 4px rgba(0,0,0,.1)}
-input[type="url"]:focus{border-color:#667eea;outline:none;box-shadow:0 0 0 3px rgba(102,126,234,.1)}input[type="url"].valid{border-color:#48bb78}input[type="url"].invalid{border-color:#f56565}
-.url-validation{font-size:.85em;margin-top:8px;padding:5px 0;min-height:20px}.url-validation.valid{color:#48bb78}.url-validation.invalid{color:#f56565}
-.scan-button{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;border:none;padding:22px 50px;border-radius:12px;font-size:18px;font-weight:600;cursor:pointer;width:100%;transition:all .3s;box-shadow:0 4px 15px rgba(102,126,234,.4);position:relative;overflow:hidden}
-.scan-button:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 25px rgba(102,126,234,.6)}.scan-button:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:0 4px 15px rgba(102,126,234,.2)}
-.loading{display:none;text-align:center;padding:40px;color:#667eea;background:#f8f9fa;margin:20px;border-radius:12px}
-.progress-container{margin:25px 0}.progress-bar{width:100%;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;position:relative}.progress-fill{height:100%;background:linear-gradient(90deg,#667eea,#764ba2);width:0%;transition:width .5s ease;border-radius:4px;position:relative}
-.results{display:none;padding:0 50px 50px}
-.risk-indicator{padding:25px;border-radius:12px;margin-bottom:30px;font-weight:600;text-align:center;position:relative;overflow:hidden}
-.risk-high{background:linear-gradient(135deg,#fed7d7 0%,#feb2b2 100%);color:#c53030;border:2px solid #fc8181}
-.risk-medium{background:linear-gradient(135deg,#fefcbf 0%,#faf089 100%);color:#d69e2e;border:2px solid #f6e05e}
-.risk-low{background:linear-gradient(135deg,#c6f6d5 0%,#9ae6b4 100%);color:#2f855a;border:2px solid #68d391}
-.compliance-item{padding:20px;margin:15px 0;border-radius:10px;border-left:5px solid;position:relative;transition:all .3s}
-.compliance-perfect{background:#f0fff4;border-left-color:#38a169}.compliance-good{background:#fefcbf;border-left-color:#d69e2e}.compliance-bad{background:#fff5f5;border-left-color:#e53e3e}.compliance-missing{background:#f7fafc;border-left-color:#a0aec0}.compliance-inconsistent{background:#fdf2e9;border-left-color:#ed8936}
-.consent-matrix{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:15px;font-size:.9em;background:#f8f9fa;padding:15px;border-radius:8px}
-.consent-result{text-align:center;padding:10px;border-radius:6px;font-weight:500}
-.badge{display:inline-block;background:#2b6cb0;color:#fff;border-radius:999px;padding:3px 8px;font-size:.75rem;margin-left:8px}
-.evidence{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-top:12px}
-.evidence pre{background:#edf2f7;padding:10px;border-radius:8px;overflow:auto}
-.evidence h4{margin:8px 0 6px 0}
-.fix-suggestion{background:#e6fffa;border:1px solid #4fd1c7;padding:12px;border-radius:8px;margin-top:8px;font-family:Monaco,Menlo,monospace;font-size:.9em;position:relative}
-.copy-button{position:absolute;top:8px;right:8px;background:#319795;color:#fff;border:none;padding:4px 8px;border-radius:4px;font-size:.8em;cursor:pointer}
-@media (max-width:768px){.container{margin:10px}.form-section,.results{padding:30px 20px}.consent-matrix{grid-template-columns:1fr}}
-</style>
-</head>
-<body>
-<div class="container">
-  <div class="header">
-    <h1>🔍 Website-Scanner: DSGVO & Marketing Check</h1>
-    <p>Finde sofort heraus, ob deine Website rechtssicher funktioniert und wo du Umsatz verlierst</p>
-    <p style="font-size:.95em;opacity:.8;">Unser 3-Session-Test prüft Cookie-Banner, Marketing-Tags und Sicherheitsregeln</p>
-  </div>
-
-  <div class="form-section">
-    <form id="scanForm">
-      <div class="input-group">
-        <label for="url">Website-URL für vollständige Analyse:</label>
-        <div class="url-input-container">
-          <input type="url" id="url" placeholder="https://ihre-website.de" required>
-          <div class="url-validation" id="urlValidation"></div>
-        </div>
-      </div>
-      <button type="submit" class="scan-button" id="scanBtn">🔍 Vollständigen 3-Session-Scan starten</button>
-    </form>
-
-    <div class="loading" id="loading">
-      <h3>⏳ DSGVO & Marketing-Analyse läuft…</h3>
-      <div class="progress-container"><div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div></div>
-      <p id="loadingText">Initialisiere Browser…</p><p><small>Das kann 60–90 Sekunden dauern</small></p>
-    </div>
-  </div>
-
-  <div class="results" id="results"></div>
-
-  <div class="footer" style="text-align:center;padding:24px;background:#f8f9fa;color:#718096;font-size:.9em">
-    Powered by ReguKit • Sichere Analyse ohne Datenspeicherung • Made in Germany
-  </div>
-</div>
-
-<script>
-(function(){
-  const scanForm = document.getElementById('scanForm');
-  const urlInput = document.getElementById('url');
-  const scanBtn = document.getElementById('scanBtn');
-  const loadingDiv = document.getElementById('loading');
-  const resultsDiv = document.getElementById('results');
-  const progressFill = document.getElementById('progressFill');
-  const loadingText = document.getElementById('loadingText');
-  const urlValidation = document.getElementById('urlValidation');
-
-  const steps = ['Initialisiere Browser…','Scanne ohne Einwilligung…','Scanne nach „Zustimmen“…','Scanne nach „Ablehnen“…','Analysiere Ergebnisse…','Erstelle Bericht…'];
-  let currentStep = 0, progressInterval;
-
-  urlInput.addEventListener('input', e => {
-    const url = e.target.value.trim();
-    const ok = validateUrl(url);
-    urlValidation.textContent = url === '' ? '' : (ok ? 'Gültige URL ✔️' : 'Ungültige URL. Muss mit http:// oder https:// beginnen.');
-    urlValidation.className = 'url-validation ' + (ok ? 'valid' : 'invalid');
-    urlInput.className = ok ? 'valid' : 'invalid';
-    scanBtn.disabled = !ok;
-  });
-  function validateUrl(u){ try{ const x=new URL(u); return x.protocol==='http:'||x.protocol==='https:'; } catch(e){ return false; } }
-  function advance(){ if(currentStep<steps.length){ loadingText.textContent=steps[currentStep]; progressFill.style.width=((currentStep/steps.length)*100)+'%'; currentStep++; } else { clearInterval(progressInterval); progressFill.style.width='100%'; } }
-
-  scanForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const url = urlInput.value.trim();
-    if (!validateUrl(url)) return alert('Bitte eine gültige URL eingeben.');
-
-    scanBtn.disabled = true; loadingDiv.style.display='block'; resultsDiv.style.display='none'; resultsDiv.innerHTML='';
-    currentStep=0; advance(); progressInterval=setInterval(advance,15000);
-
-    try{
-      const resp = await fetch('/scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
-      clearInterval(progressInterval); progressFill.style.width='100%'; loadingText.textContent='Bericht fertig! 🎉';
-      const data = await resp.json(); if(!resp.ok) throw new Error(data.details||'Unknown error');
-      setTimeout(()=>{ renderResults(data); loadingDiv.style.display='none'; resultsDiv.style.display='block'; scanBtn.disabled=false; }, 800);
-    }catch(err){
-      clearInterval(progressInterval); loadingDiv.style.display='none'; scanBtn.disabled=false;
-      alert('Scan failed: '+err.message); console.error(err);
-    }
-  });
-
-  function renderResults(data){
-    let html = '';
-    const riskLevel = data.summary.highPriorityIssues>0?'high':(data.summary.totalIssues>0?'medium':'low');
-    const riskText  = data.summary.highPriorityIssues>0?'Hohes Risiko 🚨':(data.summary.totalIssues>0?'Mittleres Risiko 🟡':'Niedriges Risiko ✅');
-    html += \`<div class="risk-indicator risk-\${riskLevel}"><h2>\${riskText}</h2><p>Gefundene Punkte: \${data.summary.totalIssues} (davon \${data.summary.highPriorityIssues} kritisch)</p></div>\`;
-
-    html += '<h2>Marketing & DSGVO</h2>';
-    data.summary.marketingTags.forEach(tag => {
-      html += renderCompliance(tag, data.evidence?.evidence || {});
-    });
-
-    html += \`<h2>Technische Hinweise (\${data.details.errors.length + data.details.networkIssues.length + data.details.cspViolations.length})</h2>\`;
-    html += renderErrors(data.details.errors);
-    html += renderIssues(data.details.networkIssues);
-    html += renderCSP(data.details.cspViolations);
-
-    resultsDiv.innerHTML = html;
-  }
-
-  function renderCompliance(tag, evMap){
-    const ev = evMap[tag.property] || null;
-    const badge = tag.compliance==='perfect'?'✅ In Ordnung':tag.compliance==='bad'?'❌ Verstoß':tag.compliance==='good'?'🟡 Eingeschränkt':tag.compliance==='missing'?'❌ Keine Messung':'🤔 Unklar';
-
-    return \`
-      <div class="compliance-item compliance-\${tag.compliance}">
-        <h3>\${tag.name} <span class="badge">\${badge}</span></h3>
-        <p>\${tag.impact}</p>
-        <div class="consent-matrix">
-          <div class="consent-result \${tag.withoutConsent ? 'consent-fail' : 'consent-pass'}">Ohne Einwilligung: \${tag.withoutConsent ? 'Daten gesendet' : 'Keine Daten gesendet'}</div>
-          <div class="consent-result \${tag.withAccept ? 'consent-pass' : 'consent-fail'}">Nach „Zustimmen“: \${tag.withAccept ? 'Daten gesendet' : 'Keine Daten gesendet'}</div>
-          <div class="consent-result \${tag.withReject ? 'consent-fail' : 'consent-pass'}">Nach „Ablehnen“: \${tag.withReject ? 'Daten gesendet' : 'Keine Daten gesendet'}</div>
-        </div>
-        \${renderEvidence(ev)}
-        <div class="evidence">
-          <h4>Was bedeutet das?</h4>
-          <p>\${ev?.nonTechMeaning || 'Dieses Werkzeug sendet Mess-Anfragen. Ohne Einwilligung dürfen keine Daten gesendet werden.'}</p>
-          <h4>So beheben</h4>
-          <div class="fix-suggestion">
-            <code>\${ev?.nonTechFix || 'Im Tag Manager/CMP sicherstellen, dass das Tool nur nach Einwilligung sendet.'}</code>
-            <button class="copy-button" onclick="navigator.clipboard.writeText(this.previousSibling.textContent)">Copy</button>
-          </div>
-        </div>
-      </div>
-    \`;
-  }
-
-  function renderEvidence(ev){
-    if(!ev) return '';
-    const m = ev.modes || {};
-    const block = (label,key) => {
-      const x = m[key] || {};
-      const hitList = (x.hits||[]).map(h => \`• \${h.url} (\${h.status||0})\`).join('<br>') || '– keine passenden Einträge';
-      const cookies = (x.trackingCookies||[]).map(c => '• '+c).join('<br>') || '– keine neuen Einträge';
-      const csps = (x.cspBlocks||[]).map(v => \`• \${v.message}\`).join('<br>') || '– keine verhinderten Verbindungen';
-      const dls = (x.dlEvents||[]).map(e => '• '+e).join('<br>') || '– keine Ereignisse gefunden';
-      return \`
-        <div class="evidence">
-          <h4>Nachweise – \${label}</h4>
-          <strong>Nachweis im Browser (Network):</strong>
-          <pre>\${hitList}</pre>
-          <strong>Neue Einträge im Browser-Speicher:</strong>
-          <pre>\${cookies}</pre>
-          <strong>Sicherheitsregeln haben Verbindungen verhindert:</strong>
-          <pre>\${csps}</pre>
-          <strong>Ereignisprotokoll (dataLayer):</strong>
-          <pre>\${dls}</pre>
-        </div>\`;
-    };
-    const howto = (ev.howToVerify||[]).map(s=>'• '+s).join('<br>');
-    return \`
-      \${block('Ohne Einwilligung','withoutConsent')}
-      \${block('Nach „Zustimmen“','withConsent')}
-      \${block('Nach „Ablehnen“','withReject')}
-      <div class="evidence">
-        <h4>Wo finde ich die Nachweise?</h4>
-        <pre>\${howto}</pre>
-      </div>
-    \`;
-  }
-
-  function renderErrors(arr){
-    if(!arr||!arr.length) return '';
-    return arr.map(e=>\`
-    <div class="evidence">
-      <h4>\${e.type}</h4>
-      <p><strong>Problem (verständlich):</strong> \${e.translation}</p>
-      <pre>\${e.message}</pre>
-      <div class="fix-suggestion"><code>\${e.techFix}</code><button class="copy-button" onclick="navigator.clipboard.writeText(this.previousSibling.textContent)">Copy</button></div>
-    </div>\`).join('');
-  }
-  function renderIssues(arr){
-    if(!arr||!arr.length) return '';
-    return arr.map(i=>\`
-    <div class="evidence">
-      <h4>Netzwerk</h4>
-      <p><strong>Problem (verständlich):</strong> \${i.translation}</p>
-      <pre>Adresse: \${i.url}\\nStatus: \${i.status}</pre>
-      <div class="fix-suggestion"><code>\${i.techFix}</code><button class="copy-button" onclick="navigator.clipboard.writeText(this.previousSibling.textContent)">Copy</button></div>
-    </div>\`).join('');
-  }
-  function renderCSP(arr){
-    if(!arr||!arr.length) return '';
-    return arr.map(v=>\`
-    <div class="evidence">
-      <h4>Sicherheitsregel (CSP)</h4>
-      <p><strong>Problem (verständlich):</strong> \${v.translation}</p>
-      <pre>\${v.message}</pre>
-      <div class="fix-suggestion"><code>\${v.techFix}</code><button class="copy-button" onclick="navigator.clipboard.writeText(this.previousSibling.textContent)">Copy</button></div>
-    </div>\`).join('');
-  }
-})();
-</script>
-</body></html>`);
-});
-
 /* ----------------------------- Start & Shutdown ---------------------------- */
 const server = app.listen(PORT, () => {
   console.log(`🚀 Website Scanner running on port ${PORT}`);
@@ -1094,3 +865,4 @@ const graceful = (sig) => async () => {
 };
 process.on('SIGINT', graceful('SIGINT'));
 process.on('SIGTERM', graceful('SIGTERM'));
+
