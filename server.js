@@ -1,10 +1,3 @@
-Ich verstehe. Es tut mir leid. Hier ist die **vollständige, korrigierte `server.js`**-Datei.
-
-Sie können den gesamten Inhalt Ihrer aktuellen `server.js`-Datei löschen und diesen Code stattdessen einfügen.
-
------
-
-```javascript
 import express from 'express';
 import { chromium } from 'playwright';
 import rateLimit from 'express-rate-limit';
@@ -1281,4 +1274,3 @@ app.listen(PORT, () => {
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔍 Scanner UI: http://localhost:${PORT}/`);
 });
-```
