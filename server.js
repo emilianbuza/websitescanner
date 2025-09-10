@@ -24,15 +24,21 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use('/scan', limiter);
 
-/* -------------------- HIT-based consent evaluation helpers ------------------- */
+/* -------------------- Marketing-Tag Metadaten & Cookie-Hinweise -------------- */
+/*  Sprache für Laien:
+    - "HIT" nennen wir in der Darstellung "Datenübertragung"
+    - "Beispiel-Requests" -> "Nachweis im Browser (Network)"
+    - "CSP-Blockaden" -> "Sicherheitsregeln haben Verbindungen verhindert"
+    - "Neu gesetzte Cookies" -> "Neue Einträge im Browser-Speicher"
+*/
 const TAG_META = {
-  hasGA4:        { hitKey: 'hasGA4_HIT',        label: 'Google Analytics 4',      hitRegex: /(www|region\d+)\.google-analytics\.com\/g\/collect/i,      domains: ['google-analytics.com', 'g.doubleclick.net'] },
-  hasUA:         { hitKey: 'hasUA_HIT',         label: 'Google Analytics (UA)',   hitRegex: /google-analytics\.com\/collect(\?|$)/i,                      domains: ['google-analytics.com'] },
-  hasGoogleAds:  { hitKey: 'hasAds_HIT',        label: 'Google Ads',              hitRegex: /(googleadservices|googlesyndication)\.com/i,                domains: ['googleadservices.com','googlesyndication.com'] },
-  hasMetaPixel:  { hitKey: 'hasMeta_HIT',       label: 'Meta Pixel',              hitRegex: /(facebook\.com\/tr|connect\.facebook\.net)/i,               domains: ['facebook.com','connect.facebook.net'] },
-  hasTikTokPixel:{ hitKey: 'hasTikTok_HIT',     label: 'TikTok Pixel',            hitRegex: /analytics\.tiktok\.com/i,                                   domains: ['analytics.tiktok.com'] },
-  hasHotjar:     { hitKey: 'hasHotjar_HIT',     label: 'Hotjar',                  hitRegex: /(static|script)\.hotjar\.com/i,                             domains: ['static.hotjar.com','script.hotjar.com'] },
-  hasCrazyEgg:   { hitKey: 'hasCrazyEgg_HIT',   label: 'CrazyEgg',                hitRegex: /script\.crazyegg\.com/i,                                    domains: ['script.crazyegg.com'] },
+  hasGA4:        { hitKey: 'hasGA4_HIT',        label: 'Google Analytics 4',                 hitRegex: /(www|region\d+)\.google-analytics\.com\/g\/collect/i,      domains: ['google-analytics.com', 'g.doubleclick.net'] },
+  hasUA:         { hitKey: 'hasUA_HIT',         label: 'Google Analytics (UA)',              hitRegex: /google-analytics\.com\/collect(\?|$)/i,                      domains: ['google-analytics.com'] },
+  hasGoogleAds:  { hitKey: 'hasAds_HIT',        label: 'Google Ads',                         hitRegex: /(googleadservices|googlesyndication)\.com/i,                domains: ['googleadservices.com','googlesyndication.com'] },
+  hasMetaPixel:  { hitKey: 'hasMeta_HIT',       label: 'Meta Pixel (Facebook/Instagram)',    hitRegex: /(facebook\.com\/tr|connect\.facebook\.net)/i,               domains: ['facebook.com','connect.facebook.net'] },
+  hasTikTokPixel:{ hitKey: 'hasTikTok_HIT',     label: 'TikTok Pixel',                       hitRegex: /analytics\.tiktok\.com/i,                                   domains: ['analytics.tiktok.com'] },
+  hasHotjar:     { hitKey: 'hasHotjar_HIT',     label: 'Hotjar',                             hitRegex: /(static|script)\.hotjar\.com/i,                             domains: ['static.hotjar.com','script.hotjar.com'] },
+  hasCrazyEgg:   { hitKey: 'hasCrazyEgg_HIT',   label: 'CrazyEgg',                           hitRegex: /script\.crazyegg\.com/i,                                    domains: ['script.crazyegg.com'] },
   // GTM hat keinen eindeutigen Hit-Endpoint → Sonderfall
 };
 const COOKIE_HINTS = [
@@ -140,7 +146,7 @@ class UltimateWebsiteScanner {
       this.results.withReject = await this.runSingleScan(browser, url, 'reject');
 
       this.analyzeConsentCompliance();
-      this.attachEvidence(url); // <-- NEU: baut Belege/Quellen auf
+      this.attachEvidence(url);
     } finally {
       await browser.close();
     }
@@ -222,8 +228,8 @@ class UltimateWebsiteScanner {
         type: 'Uncaught Error',
         message: String(error),
         priority: 'high',
-        translation: 'JavaScript-Fehler kann Funktionen/Tracking bremsen',
-        techFix: 'Fehlerstack im Browser prüfen, betroffene Datei fixen',
+        translation: 'Auf der Seite ist ein Fehler aufgetreten.',
+        techFix: 'Die IT soll die Fehlermeldung in der Browser-Konsole prüfen und beheben.',
         consentMode
       });
     });
@@ -343,7 +349,7 @@ class UltimateWebsiteScanner {
         type: 'CSP Violation',
         message: `${v.violatedDirective} blocked ${v.blockedURI} @line:${v.lineNumber}`,
         priority: 'high',
-        translation: '🔒 Sicherheitsrichtlinie blockiert Marketing-Script',
+        translation: 'Die Sicherheits­einstellungen der Website lassen diese Verbindung nicht zu.',
         techFix: this.suggestCSPFix(v),
         violation: v,
         consentMode,
@@ -357,7 +363,7 @@ class UltimateWebsiteScanner {
         type: 'Page Load Error',
         message: error.message,
         priority: 'critical',
-        translation: 'Website nicht erreichbar - kritischer Umsatzverlust!',
+        translation: 'Website nicht erreichbar.',
         techFix: 'Domain, SSL-Zertifikat und Server-Erreichbarkeit prüfen',
         consentMode
       });
@@ -461,7 +467,7 @@ class UltimateWebsiteScanner {
       ['Google Analytics 4', 'hasGA4'],
       ['Google Analytics Universal', 'hasUA'],
       ['Google Tag Manager', 'hasGTM'],
-      ['Google Ads Tracking', 'hasGoogleAds'],
+      ['Google Ads', 'hasGoogleAds'],
       ['Meta Pixel (Facebook/Instagram)', 'hasMetaPixel'],
       ['TikTok Pixel', 'hasTikTokPixel'],
       ['Hotjar', 'hasHotjar'],
@@ -484,9 +490,9 @@ class UltimateWebsiteScanner {
 
       const compliance = hasConsentDefaultDenied ? 'perfect' : 'inconsistent';
       const impact = hasConsentDefaultDenied
-        ? '✅ GTM mit Consent-Initialisierung erkannt (default denied).'
-        : '🤔 GTM geladen, aber kein klarer Consent-Init-Event gefunden. Manuell prüfen, ob alle Tags Consent-Checks haben.';
-      const businessImpact = 'GTM Container vorhanden – Wirkung hängt von Consent-Checks der einzelnen Tags ab.';
+        ? '✅ GTM beachtet die Einwilligung: Standard ist „abgelehnt“, bis aktiv zugestimmt wird.'
+        : '🤔 GTM geladen, aber kein klarer Einwilligungs-Start sichtbar. Prüfen, ob alle Tags Einwilligungs-Prüfungen haben.';
+      const businessImpact = 'GTM ist der Container. Wirkung hängt davon ab, ob die einzelnen Tags eine Einwilligung respektieren.';
       return {
         relevant: true, name: tagName, property: tagProperty,
         withoutConsent: presentNo, withAccept: presentYes, withReject: presentRej,
@@ -514,27 +520,36 @@ class UltimateWebsiteScanner {
     let compliance = 'unknown', impact = '', gdprRisk = 'low';
 
     if (!noHit && yesHit && !rejHit) {
-      compliance = 'perfect'; impact = `✅ ${tagName} respektiert Consent (HITs nur nach „Accept“).`; gdprRisk = 'none';
+      compliance = 'perfect';
+      impact = `✅ ${tagName} respektiert die Einwilligung (Daten werden erst nach „Zustimmen“ gesendet).`;
+      gdprRisk = 'none';
     } else if (rejHit) {
       compliance = noHit ? 'inconsistent' : 'bad';
       impact = noHit
-        ? `🤔 ${tagName} feuert nach „Reject“, aber nicht vor Consent. Konfigurationsfehler vermutet.`
-        : `🚨 ${tagName} feuert trotz „Reject“ (HITs erkannt).`;
+        ? `🤔 ${tagName} sendet Daten trotz „Ablehnen“, jedoch nicht vor der Einwilligung. Konfiguration prüfen.`
+        : `🚨 ${tagName} sendet Daten trotz „Ablehnen“.`;
       gdprRisk = noHit ? 'medium' : 'high';
     } else if (noHit && !rejHit) {
       compliance = yesHit ? 'good' : 'inconsistent';
       impact = yesHit
-        ? `🟡 ${tagName} feuert vor Consent, stoppt aber bei „Reject“.`
-        : `🤔 ${tagName} feuert vor Consent, aber nicht nach „Accept“. Setup prüfen.`;
+        ? `🟡 ${tagName} sendet bereits vor Einwilligung, stoppt aber bei „Ablehnen“.`
+        : `🤔 ${tagName} sendet vor Einwilligung, jedoch nicht nach „Zustimmen“. Konfiguration prüfen.`;
       gdprRisk = 'low';
     } else if (!noHit && !yesHit && !rejHit) {
       if (cspBlockedNo || cspBlockedRej) {
-        compliance = 'inconsistent'; impact = `🟡 ${tagName} wirkt durch CSP blockiert (keine Hits). Kein Consent-Verstoß, aber Tracking wirkungslos.`; gdprRisk = 'none';
+        compliance = 'inconsistent';
+        impact = `🟡 ${tagName} wird durch Sicherheits­einstellungen blockiert. Es sind keine Datenübertragungen sichtbar.`;
+        gdprRisk = 'none';
       } else {
-        compliance = 'missing'; impact = `❌ ${tagName} ist installiert, aber es wurden keine HITs erkannt. Setup prüfen.`; gdprRisk = 'none';
+        compliance = 'missing';
+        impact = `❌ ${tagName} ist zwar eingebunden, aber es wurden keine Datenübertragungen erkannt.
+Das bedeutet: Es kommen keine Besucherdaten an. Die IT/Agentur muss prüfen, ob die Einbindung korrekt ist (Tag Manager, Consent Mode, IDs).`;
+        gdprRisk = 'none';
       }
     } else {
-      compliance = 'inconsistent'; impact = `🤔 ${tagName} zeigt ein uneinheitliches Hit-Muster. Manuelle Prüfung nötig.`; gdprRisk = 'medium';
+      compliance = 'inconsistent';
+      impact = `🤔 ${tagName} zeigt ein uneinheitliches Verhalten beim Senden von Daten. Manuelle Prüfung nötig.`;
+      gdprRisk = 'medium';
     }
 
     return {
@@ -548,9 +563,9 @@ class UltimateWebsiteScanner {
   /* ------------------------- Evidence / Quellenaufbau ------------------------ */
   attachEvidence(scannedUrl) {
     const modes = [
-      { key: 'withoutConsent', label: 'Ohne Consent' },
-      { key: 'withConsent',    label: 'Mit Accept'   },
-      { key: 'withReject',     label: 'Mit Reject'   }
+      { key: 'withoutConsent', label: 'Ohne Einwilligung' },
+      { key: 'withConsent',    label: 'Mit Einwilligung'   },
+      { key: 'withReject',     label: 'Bei Ablehnen'       }
     ];
 
     const evidence = {};
@@ -585,10 +600,10 @@ class UltimateWebsiteScanner {
         name,
         modes: perMode,
         howToVerify: [
-          'DevTools öffnen → Network → Filter je nach Tool (z. B. "g/collect", "tr?id=")',
-          'Seite neu laden (je Modus: ohne Consent / Accept / Reject)',
-          'Prüfen: erscheinen Requests? Status 200/204? Werden Cookies gesetzt (_ga, _fbp …)?',
-          'CSP-Tab/Console prüfen: blockierte Domains für dieses Tool?'
+          'Browser-Werkzeuge öffnen → Tab „Network/Netzwerk“ → nach dem Dienst filtern (z. B. „g/collect“, „tr?id=“).',
+          'Seite neu laden (je Modus: Ohne Einwilligung / Mit Einwilligung / Bei Ablehnen).',
+          'Prüfen: Erscheinen Datenübertragungen? Status 200/204? Werden Einträge im Browser-Speicher gesetzt (_ga, _fbp …)?',
+          'Tab „Konsole“ prüfen: Werden Verbindungen durch Sicherheitsregeln verhindert?'
         ],
         nonTechMeaning: this.nonTechMeaningText(name),
         nonTechFix: this.nonTechFixText(name)
@@ -606,7 +621,7 @@ class UltimateWebsiteScanner {
         .slice(0, 5)
         .map(v => ({ message: v.message, directive: v?.violation?.violatedDirective || '', blocked: v?.violation?.blockedURI || '' }));
       gtmPerMode[m.key] = {
-        hits: [], // keine
+        hits: [],
         trackingCookies: highlightCookies(cookieDiff(run.cookiesBefore, run.cookiesAfter)),
         cspBlocks,
         dlEvents: lastDlEvents(run).slice(-5)
@@ -616,12 +631,12 @@ class UltimateWebsiteScanner {
       name: 'Google Tag Manager',
       modes: gtmPerMode,
       howToVerify: [
-        'DevTools → Sources → prüfen ob gtm.js geladen wird',
-        'Console: `window.dataLayer?.slice(-10)` → Consent-Events sichtbar?',
-        'GTM-Preview nutzen: prüfen, ob Tags Consent-Checks besitzen'
+        'DevTools → Sources → prüfen, ob gtm.js geladen wird.',
+        'Konsole: `window.dataLayer?.slice(-10)` → Sind Einwilligungs-Events sichtbar?',
+        'GTM-Preview nutzen: Haben Tags Einwilligungs-Prüfungen?'
       ],
-      nonTechMeaning: 'GTM ist der Container für Marketing-Tags. Er selbst trackt nicht, entscheidet aber wann andere Tools feuern.',
-      nonTechFix: 'Sicherstellen, dass in GTM Consent Checks aktiv sind und ein Consent-Initialisierungstag „default denied“ vor allen Tags läuft.'
+      nonTechMeaning: 'GTM ist der Container für Marketing-Tags. Er selbst misst nicht, steuert aber, wann andere Tools auslösen.',
+      nonTechFix: 'Sicherstellen, dass in GTM Einwilligungs-Prüfungen aktiv sind und ein Consent-Initialisierungstag („abgelehnt“ als Standard) vor allen Tags läuft.'
     };
 
     this.evidence = {
@@ -633,56 +648,56 @@ class UltimateWebsiteScanner {
 
   nonTechMeaningText(name) {
     const map = {
-      'Google Analytics 4': 'Misst Besucher & Seitenaufrufe. Ohne Einwilligung dürfen keine Mess-Hits gesendet werden.',
-      'Google Analytics (UA)': 'Ältere Google Analytics-Version. Gleiches Prinzip: ohne Einwilligung keine Hits.',
-      'Google Ads': 'Misst Anzeigen-Erfolge (Conversions). Ohne Einwilligung keine Conversion-Hits.',
-      'Meta Pixel': 'Misst Facebook/Instagram-Kampagnen. Ohne Einwilligung keine Pixel-Hits/Retargeting.',
-      'TikTok Pixel': 'Misst TikTok-Kampagnen. Ohne Einwilligung keine Pixel-Hits.',
-      'Hotjar': 'Aufzeichnungen/Heatmaps. Ohne Einwilligung keine Tracking-Requests.',
-      'CrazyEgg': 'Heatmaps/Scrollmaps. Ohne Einwilligung keine Tracking-Requests.'
+      'Google Analytics 4': 'Misst Besucher & Seitenaufrufe. Ohne Einwilligung dürfen keine Daten an Google gesendet werden.',
+      'Google Analytics (UA)': 'Ältere Google Analytics-Version. Gleiches Prinzip: ohne Einwilligung keine Datenübertragung.',
+      'Google Ads': 'Misst Anzeigen-Erfolge (Conversions). Ohne Einwilligung keine Conversion-Daten.',
+      'Meta Pixel (Facebook/Instagram)': 'Misst Facebook/Instagram-Kampagnen. Ohne Einwilligung keine Pixel-Daten/Retargeting.',
+      'TikTok Pixel': 'Misst TikTok-Kampagnen. Ohne Einwilligung keine Pixel-Daten.',
+      'Hotjar': 'Erstellt Aufzeichnungen/Heatmaps. Ohne Einwilligung keine Übertragung.',
+      'CrazyEgg': 'Heatmaps/Scrollmaps. Ohne Einwilligung keine Übertragung.'
     };
-    return map[name] || 'Marketing-/Analyse-Tool. Ohne Einwilligung dürfen keine Tracking-Anfragen gesendet werden.';
+    return map[name] || 'Marketing-/Analyse-Tool. Ohne Einwilligung dürfen keine Tracking-Daten gesendet werden.';
   }
 
   nonTechFixText(name) {
     const map = {
-      'Google Analytics 4': 'Im Tag Manager/CMP sicherstellen: Consent Mode v2 aktiv, `analytics_storage` vor Einwilligung = denied. GA4-Tag nur feuern bei Consent.',
-      'Google Analytics (UA)': 'UA ist veraltet. Besser GA4 verwenden. Bis dahin: Tag nur bei Einwilligung feuern.',
-      'Google Ads': 'Conversion-Tags nur bei Einwilligung feuern. Consent Mode v2 anwenden (ad_storage=denied vor Consent).',
-      'Meta Pixel': 'Pixel über GTM mit Consent-Regel ausspielen. Kein Hart-Coden im HTML. Blockierte Pixel-Requests durch CSP freigeben, wenn rechtlich gewünscht.',
-      'TikTok Pixel': 'Nur bei Einwilligung feuern. In GTM Consent-Check setzen.',
-      'Hotjar': 'Nur bei Einwilligung laden. In GTM/CMP verknüpfen.',
-      'CrazyEgg': 'Nur bei Einwilligung laden. In GTM/CMP verknüpfen.'
+      'Google Analytics 4': 'Im Tag Manager/CMP sicherstellen: Consent Mode aktiv, „analytics_storage“ vor Einwilligung = „abgelehnt“. GA4-Tag nur nach Einwilligung auslösen.',
+      'Google Analytics (UA)': 'UA ist veraltet. Besser GA4 verwenden. Bis dahin: Tag nur nach Einwilligung auslösen.',
+      'Google Ads': 'Conversion-Tags nur nach Einwilligung auslösen. Consent Mode anwenden (ad_storage vor Einwilligung = „abgelehnt“).',
+      'Meta Pixel (Facebook/Instagram)': 'Pixel über GTM mit Einwilligungs-Regel ausspielen. Nicht fest ins HTML einbauen. Falls Sicherheitsregeln blockieren, Domain erlauben (wenn rechtlich gewünscht).',
+      'TikTok Pixel': 'Nur nach Einwilligung auslösen. In GTM Einwilligungs-Prüfung setzen.',
+      'Hotjar': 'Nur nach Einwilligung laden. In GTM/CMP verknüpfen.',
+      'CrazyEgg': 'Nur nach Einwilligung laden. In GTM/CMP verknüpfen.'
     };
-    return map[name] || 'Über GTM/CMP so konfigurieren, dass das Tool nur nach Einwilligung feuert (und bei „Reject“ sicher nicht).';
+    return map[name] || 'Über GTM/CMP so konfigurieren, dass das Tool nur nach Einwilligung auslöst (und bei „Ablehnen“ sicher nicht).';
   }
 
   /* -------------------------------- Business etc. --------------------------- */
   getBusinessImpact(tagName, compliance) {
     const impacts = {
       'Google Analytics 4': {
-        perfect: 'Besucherdaten werden DSGVO-konform erfasst',
-        good: 'Tracking läuft, aber rechtliches Risiko',
-        bad: 'Abmahnrisiko durch Consent-Ignorierung',
-        missing: 'Keine Besucherdaten → Marketing fliegt blind',
-        inconsistent: 'Tracking-Verhalten inkonsistent – Datenqualität fraglich'
+        perfect: 'Besucherdaten werden DSGVO-konform erfasst.',
+        good: 'Tracking läuft, aber rechtliches Risiko.',
+        bad: 'Rechtliches Risiko, weil Einwilligung ignoriert wird.',
+        missing: 'Keine Besucherdaten → Marketing arbeitet im Blindflug.',
+        inconsistent: 'Uneinheitliche Daten → Qualität fraglich.'
       },
-      'Google Ads Tracking': {
-        perfect: 'Conversion-Tracking DSGVO-konform',
-        good: 'ROI messbar, aber rechtliches Risiko',
-        bad: 'Abmahnrisiko + ungenaue Kampagnen-Daten',
-        missing: 'Werbebudget-Verschwendung durch fehlende Messung',
-        inconsistent: 'Conversions werden inkonsistent erfasst – Optimierung leidet'
+      'Google Ads': {
+        perfect: 'Conversion-Tracking DSGVO-konform.',
+        good: 'ROI messbar, aber rechtliches Risiko.',
+        bad: 'Rechtliches Risiko + ungenaue Kampagnen-Daten.',
+        missing: 'Werbebudget ohne Messung → Verschwendung möglich.',
+        inconsistent: 'Conversions werden uneinheitlich erfasst → Optimierung leidet.'
       },
       'Meta Pixel (Facebook/Instagram)': {
-        perfect: 'Social Media ROI DSGVO-konform messbar',
-        good: 'Retargeting funktioniert, rechtliches Risiko',
-        bad: 'Abmahnrisiko bei Facebook/Instagram Ads',
-        missing: 'Facebook/Instagram Ads laufen blind',
-        inconsistent: 'Events feuern inkonsistent – Zielgruppenaufbau gestört'
+        perfect: 'Social ROI DSGVO-konform messbar.',
+        good: 'Retargeting funktioniert, rechtliches Risiko.',
+        bad: 'Rechtliches Risiko bei Facebook/Instagram Ads.',
+        missing: 'Social Ads laufen ohne Messung.',
+        inconsistent: 'Events uneinheitlich → Zielgruppenaufbau gestört.'
       }
     };
-    return impacts[tagName]?.[compliance] || 'Unbekannter Business-Impact';
+    return impacts[tagName]?.[compliance] || 'Business-Impact unklar';
   }
 
   classifyErrorPriority(message) {
@@ -698,49 +713,49 @@ class UltimateWebsiteScanner {
   }
   translateError(errorMessage) {
     const m = {
-      'net::ERR_BLOCKED_BY_CLIENT': '🚫 AdBlocker verhindert Marketing-Tracking - Umsatzverlust möglich',
-      'Content Security Policy': '🔒 Sicherheitseinstellungen blockieren kritische Marketing-Scripts',
-      'googleadservices': '🎯 Google Ads Conversion-Tracking blockiert - ROI nicht messbar, Budget-Optimierung unmöglich',
-      'connect.facebook.net': '📱 Meta Pixel blockiert - Facebook/Instagram Ads Performance unbekannt',
-      'googletagmanager': '📊 Google Tag Manager blockiert - alle Marketing-Tags betroffen',
-      'analytics.tiktok.com': '🎵 TikTok Pixel blockiert - TikTok Ads ROI unbekannt',
-      'static.hotjar.com': '🖱️ Hotjar Heatmap-Tracking blockiert - Nutzerverhalten unbekannt',
-      'script.hotjar.com': '🖱️ Hotjar Heatmap-Tracking blockiert - Nutzerverhalten unbekannt',
-      'CORS': '🌐 Cross-Origin Problem - externes Marketing-Script nicht ladbar',
-      'ERR_NAME_NOT_RESOLVED': '🌐 DNS-Problem - Marketing-Service nicht erreichbar',
-      'ERR_INTERNET_DISCONNECTED': '📡 Internetverbindung unterbrochen'
+      'net::ERR_BLOCKED_BY_CLIENT': 'Ein Browser-Blocker verhindert die Messung.',
+      'Content Security Policy': 'Sicherheits­einstellungen blockieren wichtige Verbindungen.',
+      'googleadservices': 'Google Ads Tracking blockiert.',
+      'connect.facebook.net': 'Meta Pixel blockiert.',
+      'googletagmanager': 'Tag Manager blockiert.',
+      'analytics.tiktok.com': 'TikTok Pixel blockiert.',
+      'static.hotjar.com': 'Hotjar blockiert.',
+      'script.hotjar.com': 'Hotjar blockiert.',
+      'CORS': 'Cross-Origin-Problem: externe Datei nicht ladbar.',
+      'ERR_NAME_NOT_RESOLVED': 'DNS-Problem: Dienst nicht erreichbar.',
+      'ERR_INTERNET_DISCONNECTED': 'Internetverbindung unterbrochen.'
     };
     for (const [k,v] of Object.entries(m)) if (errorMessage.includes(k)) return v;
-    return '⚠️ Technischer Fehler gefunden - kann Marketing-Performance beeinträchtigen';
+    return 'Fehler, der Funktionen/Tracking beeinträchtigen kann.';
   }
   translateNetworkIssue(url, status) {
-    if (url.includes('googleadservices') || url.includes('googlesyndication')) return `🎯 Google Ads (${status}) - Conversion-Tracking gestört, Budget-Verschwendung wahrscheinlich`;
-    if (url.includes('facebook.net') || url.includes('facebook.com') || url.includes('meta')) return `📱 Meta Pixel (${status}) - Social Media ROI unbekannt, Retargeting unmöglich`;
-    if (url.includes('analytics') && url.includes('google')) return `📊 Google Analytics (${status}) - Besucherdaten verloren, Optimierung unmöglich`;
-    if (url.includes('tiktok')) return `🎵 TikTok Pixel (${status}) - TikTok Kampagnen laufen unoptimiert`;
-    if (url.includes('hotjar')) return `🖱️ Hotjar (${status}) - Nutzerverhalten-Analyse nicht möglich`;
-    return `⚠️ Marketing-Tool blockiert (${status}) - Performance-Impact unbekannt`;
+    if (url.includes('googleadservices') || url.includes('googlesyndication')) return `Google Ads (${status}) – Conversion-Tracking gestört.`;
+    if (url.includes('facebook.net') || url.includes('facebook.com') || url.includes('meta')) return `Meta Pixel (${status}) – Social ROI unbekannt.`;
+    if (url.includes('analytics') && url.includes('google')) return `Google Analytics (${status}) – Besucherdaten fehlen.`;
+    if (url.includes('tiktok')) return `TikTok Pixel (${status}) – Kampagnen laufen unoptimiert.`;
+    if (url.includes('hotjar')) return `Hotjar (${status}) – Nutzerverhalten nicht analysierbar.`;
+    return `Externer Dienst (${status}) – Funktion möglicherweise eingeschränkt.`;
   }
   suggestFix(errorMessage) {
-    if (errorMessage.includes('googleadservices')) return `CSP erweitern:\nContent-Security-Policy:\n  script-src ... https://www.googleadservices.com;\n  connect-src ... https://www.googleadservices.com;`;
-    if (errorMessage.includes('connect.facebook.net')) return `CSP erweitern:\nContent-Security-Policy:\n  script-src ... https://connect.facebook.net;\n  connect-src ... https://connect.facebook.net;`;
-    if (errorMessage.includes('googletagmanager')) return `CSP erweitern:\nContent-Security-Policy:\n  script-src ... https://www.googletagmanager.com;\n  connect-src ... https://www.googletagmanager.com;`;
-    if (errorMessage.includes('static.hotjar.com') || errorMessage.includes('script.hotjar.com')) return `CSP erweitern:\nContent-Security-Policy:\n  script-src ... https://static.hotjar.com https://script.hotjar.com;\n  connect-src ... https://*.hotjar.com wss://*.hotjar.com;`;
-    if (errorMessage.includes('Content Security Policy')) return 'CSP-Header überprüfen und alle Marketing-Domains in script-src und connect-src whitelisten';
-    return 'Entwickler-Konsole öffnen, Fehlerstack analysieren, betroffene Datei reparieren';
+    if (errorMessage.includes('googleadservices')) return `Sicherheits­richtlinie erweitern (CSP):\nscript-src ... https://www.googleadservices.com;\nconnect-src ... https://www.googleadservices.com;`;
+    if (errorMessage.includes('connect.facebook.net')) return `Sicherheits­richtlinie erweitern (CSP):\nscript-src ... https://connect.facebook.net;\nconnect-src ... https://connect.facebook.net;`;
+    if (errorMessage.includes('googletagmanager')) return `Sicherheits­richtlinie erweitern (CSP):\nscript-src ... https://www.googletagmanager.com;\nconnect-src ... https://www.googletagmanager.com;`;
+    if (errorMessage.includes('static.hotjar.com') || errorMessage.includes('script.hotjar.com')) return `Sicherheits­richtlinie erweitern (CSP):\nscript-src ... https://static.hotjar.com https://script.hotjar.com;\nconnect-src ... https://*.hotjar.com wss://*.hotjar.com;`;
+    if (errorMessage.includes('Content Security Policy')) return 'CSP-Header prüfen und notwendige Domains in script-src/connect-src erlauben.';
+    return 'Fehlermeldung in der Browser-Konsole prüfen und beheben.';
   }
   suggestFixForUrl(url, error) {
     try {
       const domain = new URL(url).hostname;
-      if (error?.includes('CSP') || /BLOCKED/i.test(error || '')) return `CSP-Header erweitern:\nContent-Security-Policy:\n  script-src ... https://${domain};\n  connect-src ... https://${domain};`;
-      if (error?.includes('CORS')) return `CORS-Header vom Server ${domain} konfigurieren:\nAccess-Control-Allow-Origin: ${new URL(url).origin}`;
+      if (error?.includes('CSP') || /BLOCKED/i.test(error || '')) return `Sicherheits­richtlinie (CSP) erweitern:\nscript-src ... https://${domain};\nconnect-src ... https://${domain};`;
+      if (error?.includes('CORS')) return `CORS-Header vom Server ${domain} konfigurieren:\nAccess-Control-Allow-Origin: <Ihre Domain>`;
       if (error?.includes('DNS') || error?.includes('NAME_NOT_RESOLVED')) return `DNS-Konfiguration prüfen: nslookup ${domain}`;
       return `Server-Erreichbarkeit von ${domain} prüfen: curl -I https://${domain}`;
     } catch { return 'URL-Format prüfen und Server-Konnektivität testen'; }
   }
   suggestCSPFix(violation) {
-    try { const domain = new URL(violation.blockedURI).hostname; const directive = violation.violatedDirective; return `CSP-Directive erweitern:\nContent-Security-Policy:\n  ${directive} ... https://${domain};`; }
-    catch { return `CSP-Policy überprüfen: ${violation.violatedDirective} für ${violation.blockedURI}`; }
+    try { const domain = new URL(violation.blockedURI).hostname; const directive = violation.violatedDirective; return `Sicherheits­richtlinie (CSP) anpassen:\n${directive} ... https://${domain};`; }
+    catch { return `CSP-Policy prüfen: ${violation.violatedDirective} für ${violation.blockedURI}`; }
   }
 
   /* ------------------------------- API payload ------------------------------ */
@@ -782,7 +797,7 @@ class UltimateWebsiteScanner {
         networkIssues: allNetworkIssues,
         cspViolations: allCSPViolations
       },
-      evidence: this.evidence || null, // <-- NEU: Beleg/Quellen
+      evidence: this.evidence || null,
       rawResults: this.results
     };
   }
@@ -803,7 +818,8 @@ app.post('/scan', async (req, res) => {
     res.status(500).json({ error: 'Scan failed', details: error.message, timestamp: new Date().toISOString() });
   }
 });
-// NEU: Einfacher Manager-Report im Klartext-Format (zusätzlich zu deinem bestehenden /scan)
+
+// Optional: Manager-Report im Klartext-Format (nutzt deine beiden Module)
 app.post('/scan-v2', async (req, res) => {
   const { url } = req.body || {};
   if (!url) return res.status(400).json({ error: 'Missing URL' });
@@ -814,22 +830,18 @@ app.post('/scan-v2', async (req, res) => {
 
   const findings = [];
   try {
-    // 1) Ohne Consent
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
     const s1 = await collectAllForCurrentState(page, context, { sessionLabel: 'ohne-consent' });
     findings.push(...s1.findings);
 
-    // 2) Mit Accept (hier nur Reload – dein bestehender /scan macht ja die komplexe Consent-Logik)
     await page.reload({ waitUntil: 'domcontentloaded', timeout: 45000 });
     const s2 = await collectAllForCurrentState(page, context, { sessionLabel: 'accept' });
     findings.push(...s2.findings);
 
-    // 3) Mit Reject (ebenfalls Reload)
     await page.reload({ waitUntil: 'domcontentloaded', timeout: 45000 });
     const s3 = await collectAllForCurrentState(page, context, { sessionLabel: 'reject' });
     findings.push(...s3.findings);
 
-    // Manager-freundliche Textblöcke erzeugen
     const report = findings.map(f => formatReport(f));
 
     res.json({
@@ -861,7 +873,6 @@ app.get('/', (req, res) => {
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ultimate Website Scanner - DSGVO & Marketing Check</title>
 <style>
-/* ... (identisch wie zuvor, gekürzt nur aus Platzgründen) ... */
 *{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;color:#333;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;padding:20px}
 .container{max-width:1200px;margin:0 auto;background:#fff;border-radius:16px;box-shadow:0 25px 50px rgba(0,0,0,.15);overflow:hidden}
 .header{background:linear-gradient(135deg,#2d3748 0%,#1a202c 100%);color:#fff;padding:50px 30px;text-align:center}
@@ -899,8 +910,8 @@ input[type="url"]:focus{border-color:#667eea;outline:none;box-shadow:0 0 0 3px r
 <div class="container">
   <div class="header">
     <h1>🔍 Website-Scanner: DSGVO & Marketing Check</h1>
-    <p>Finde sofort heraus, ob deine Website rechtssicher funktioniert und wo du Umsatz verlierst</p>
-    <p style="font-size:.95em;opacity:.8;">Unser 3-Session-Test prüft Cookie-Banner, Marketing-Tags und CSP-Einstellungen</p>
+    <p>Finde heraus, ob deine Website rechtssicher funktioniert und wo du Umsatz verlierst.</p>
+    <p style="font-size:.95em;opacity:.8;">Der 3-Session-Test prüft Cookie-Banner, Marketing-Tags und Sicherheits­einstellungen</p>
   </div>
 
   <div class="form-section">
@@ -916,7 +927,7 @@ input[type="url"]:focus{border-color:#667eea;outline:none;box-shadow:0 0 0 3px r
     </form>
 
     <div class="loading" id="loading">
-      <h3>⏳ DSGVO & Marketing-Analyse läuft…</h3>
+      <h3>⏳ Analyse läuft…</h3>
       <div class="progress-container"><div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div></div>
       <p id="loadingText">Initialisiere Browser…</p><p><small>Das kann 60–90 Sekunden dauern</small></p>
     </div>
@@ -940,7 +951,7 @@ input[type="url"]:focus{border-color:#667eea;outline:none;box-shadow:0 0 0 3px r
   const loadingText = document.getElementById('loadingText');
   const urlValidation = document.getElementById('urlValidation');
 
-  const steps = ['Initialisiere Browser…','Scanne ohne Consent…','Scanne mit Accept…','Scanne mit Reject…','Analysiere Ergebnisse…','Generiere Report…'];
+  const steps = ['Initialisiere Browser…','Scanne ohne Einwilligung…','Scanne mit Einwilligung…','Scanne bei Ablehnen…','Analysiere Ergebnisse…','Generiere Report…'];
   let currentStep = 0, progressInterval;
 
   urlInput.addEventListener('input', e => {
@@ -975,16 +986,17 @@ input[type="url"]:focus{border-color:#667eea;outline:none;box-shadow:0 0 0 3px r
 
   function renderResults(data){
     let html = '';
-    const riskLevel = data.summary.highPriorityIssues>0?'high':(data.summary.totalIssues>0?'medium':'low');
-    const riskText  = data.summary.highPriorityIssues>0?'Hohes Risiko 🚨':(data.summary.totalIssues>0?'Mittleres Risiko 🟡':'Niedriges Risiko ✅');
-    html += \`<div class="risk-indicator risk-\${riskLevel}"><h2>\${riskText}</h2><p>Gefundene Probleme: \${data.summary.totalIssues} (davon \${data.summary.highPriorityIssues} kritisch)</p></div>\`;
+    const countIssues = data.details.errors.length + data.details.networkIssues.length + data.details.cspViolations.length;
+    const riskLevel = data.summary.highPriorityIssues>0?'high':(countIssues>0?'medium':'low');
+    const riskText  = data.summary.highPriorityIssues>0?'Hohes Risiko 🚨':(countIssues>0?'Mittleres Risiko 🟡':'Niedriges Risiko ✅');
+    html += \`<div class="risk-indicator risk-\${riskLevel}"><h2>\${riskText}</h2><p>Gefundene Probleme: \${countIssues} (davon \${data.summary.highPriorityIssues} kritisch)</p></div>\`;
 
     html += '<h2>Marketing & DSGVO Compliance</h2>';
     data.summary.marketingTags.forEach(tag => {
       html += renderCompliance(tag, data.evidence?.evidence || {});
     });
 
-    html += \`<h2>Technische Probleme (\${data.details.errors.length + data.details.networkIssues.length + data.details.cspViolations.length})</h2>\`;
+    html += \`<h2>Fehler & Blockaden (Konsole · Netzwerk · Sicherheitsregeln) — \${countIssues} gefunden</h2>\`;
     html += renderErrors(data.details.errors);
     html += renderIssues(data.details.networkIssues);
     html += renderCSP(data.details.cspViolations);
@@ -994,24 +1006,42 @@ input[type="url"]:focus{border-color:#667eea;outline:none;box-shadow:0 0 0 3px r
 
   function renderCompliance(tag, evMap){
     const ev = evMap[tag.property] || null;
-    const badge = tag.compliance==='perfect'?'✅ Perfekt':tag.compliance==='bad'?'❌ Verstoß':tag.compliance==='good'?'🟡 Eingeschränkt':tag.compliance==='missing'?'❌ Fehlend':'🤔 Unklar';
+
+    const badgeMap = {
+      perfect: '✅ Einwilligung wird korrekt beachtet',
+      good: '🟡 Eingeschränkt korrekt',
+      bad: '❌ Einwilligung wird missachtet',
+      missing: '❌ Nicht aktiv / keine Daten',
+      inconsistent: '🤔 Uneinheitliches Verhalten'
+    };
+    const badge = badgeMap[tag.compliance] || 'Hinweis';
+
+    let humanTitle = tag.name || 'Tool';
+    let humanImpact = (tag.impact || 'Hinweis zur Einbindung.').replace(/HITs?/ig,'Datenübertragungen');
+    if (/Google Analytics 4/i.test(humanTitle) && /keine Datenübertragungen/i.test(humanImpact) === false && /keine/i.test(humanImpact)) {
+      humanImpact = 'Es wurden keine Besucherdaten an Google Analytics 4 gesendet.';
+    }
 
     return \`
       <div class="compliance-item compliance-\${tag.compliance}">
-        <h3>\${tag.name} <span class="badge">\${badge}</span></h3>
-        <p>\${tag.impact}</p>
+        <h3>\${humanTitle} <span class="badge">\${badge}</span></h3>
+        <p>\${humanImpact}</p>
+
         <div class="consent-matrix">
-          <div class="consent-result \${tag.withoutConsent ? 'consent-fail' : 'consent-pass'}">Ohne Consent: \${tag.withoutConsent ? 'HIT' : 'KEIN HIT'}</div>
-          <div class="consent-result \${tag.withAccept ? 'consent-pass' : 'consent-fail'}">Mit Accept: \${tag.withAccept ? 'HIT' : 'KEIN HIT'}</div>
-          <div class="consent-result \${tag.withReject ? 'consent-fail' : 'consent-pass'}">Mit Reject: \${tag.withReject ? 'HIT' : 'KEIN HIT'}</div>
+          <div class="consent-result \${tag.withoutConsent ? 'consent-fail' : 'consent-pass'}">Ohne Einwilligung: \${tag.withoutConsent ? 'Daten gesendet' : 'Keine Daten gesendet'}</div>
+          <div class="consent-result \${tag.withAccept ? 'consent-pass' : 'consent-fail'}">Mit Einwilligung: \${tag.withAccept ? 'Daten gesendet' : 'Keine Daten gesendet'}</div>
+          <div class="consent-result \${tag.withReject ? 'consent-fail' : 'consent-pass'}">Bei Ablehnen: \${tag.withReject ? 'Daten gesendet' : 'Keine Daten gesendet'}</div>
         </div>
+
         \${renderEvidence(ev)}
+
         <div class="evidence">
-          <h4>Was bedeutet das?</h4>
-          <p>\${ev?.nonTechMeaning || 'Dieses Tool sendet Tracking-Anfragen. Ohne Einwilligung dürfen diese nicht stattfinden.'}</p>
-          <h4>So fixen</h4>
+          <h4>Warum das wichtig ist</h4>
+          <p>\${ev?.nonTechMeaning || 'Ohne diese Daten können Besucherzahlen und Kampagnenerfolge nicht ausgewertet werden.'}</p>
+
+          <h4>Was die IT/Agentur jetzt tun soll</h4>
           <div class="fix-suggestion">
-            <code>\${ev?.nonTechFix || 'Im Tag Manager/CMP sicherstellen, dass das Tool nur nach Einwilligung feuert.'}</code>
+            <code>\${ev?.nonTechFix || 'Im Tag Manager/CMP sicherstellen, dass das Tool nur nach Einwilligung auslöst.'}</code>
             <button class="copy-button" onclick="navigator.clipboard.writeText(this.previousSibling.textContent)">Copy</button>
           </div>
         </div>
@@ -1024,56 +1054,135 @@ input[type="url"]:focus{border-color:#667eea;outline:none;box-shadow:0 0 0 3px r
     const m = ev.modes || {};
     const block = (label,key) => {
       const x = m[key] || {};
-      const hitList = (x.hits||[]).map(h => \`• \${h.url} (\${h.status||0})\`).join('<br>') || '– keine passenden Requests';
-      const cookies = (x.trackingCookies||[]).map(c => '• '+c).join('<br>') || '– keine relevanten Cookies';
-      const csps = (x.cspBlocks||[]).map(v => \`• \${v.message}\`).join('<br>') || '– keine CSP-Blocks';
-      const dls = (x.dlEvents||[]).map(e => '• '+e).join('<br>') || '– keine dataLayer-Events';
+      const hitList = (x.hits||[]).map(h => \`• \${h.url} (\${h.status||0})\`).join('<br>') || '– keine Datenübertragungen sichtbar';
+      const cookies = (x.trackingCookies||[]).map(c => '• '+c).join('<br>') || '– keine neuen Einträge';
+      const csps = (x.cspBlocks||[]).map(v => \`• \${v.message}\`).join('<br>') || '– keine Verbindungen durch Sicherheitsregeln verhindert';
+      const dls = (x.dlEvents||[]).map(e => '• '+e).join('<br>') || '– keine Einträge vorhanden';
       return \`
         <div class="evidence">
-          <h4>Beleg – \${label}</h4>
-          <strong>Beispiel-Requests:</strong>
+          <h4>Nachweis – \${label}</h4>
+          <strong>Nachweis im Browser (Network):</strong>
           <pre>\${hitList}</pre>
-          <strong>Neu gesetzte Cookies:</strong>
+          <strong>Neue Einträge im Browser-Speicher:</strong>
           <pre>\${cookies}</pre>
-          <strong>CSP-Blockaden:</strong>
+          <strong>Sicherheitsregeln haben Verbindungen verhindert:</strong>
           <pre>\${csps}</pre>
-          <strong>dataLayer (Auszug):</strong>
+          <strong>Interne Ereignisliste (für IT):</strong>
           <pre>\${dls}</pre>
         </div>\`;
     };
-    const howto = (ev.howToVerify||[]).map(s=>'• '+s).join('<br>');
+    const howto = (ev.howToVerify||[]).map(s=>'• '+s.replace(/Beispiel-Requests/i,'Nachweis im Browser').replace(/HITs?/ig,'Datenübertragungen')).join('<br>');
     return \`
-      \${block('Ohne Consent','withoutConsent')}
-      \${block('Mit Accept','withConsent')}
-      \${block('Mit Reject','withReject')}
+      \${block('Ohne Einwilligung','withoutConsent')}
+      \${block('Mit Einwilligung','withConsent')}
+      \${block('Bei Ablehnen','withReject')}
       <div class="evidence">
-        <h4>So haben wir getestet (nachvollziehbar)</h4>
-        <pre>\${howto}</pre>
+        <h4>Wo finde ich das im Browser?</h4>
+        <pre>\${howto || '• Browser-Werkzeuge öffnen → „Network/Netzwerk“\\n• Nach dem Dienstnamen suchen (z. B. „google-analytics“)\\n• Seite neu laden und prüfen, ob Datenübertragungen erscheinen'}</pre>
       </div>
     \`;
   }
 
-  function renderErrors(arr){ if(!arr||!arr.length) return ''; return arr.map(e=>\`
-    <div class="evidence">
-      <h4>\${e.type}</h4>
-      <p><strong>Problem:</strong> \${e.translation}</p>
-      <pre>\${e.message}</pre>
-      <div class="fix-suggestion"><code>\${e.techFix}</code><button class="copy-button" onclick="navigator.clipboard.writeText(this.previousSibling.textContent)">Copy</button></div>
-    </div>\`).join(''); }
-  function renderIssues(arr){ if(!arr||!arr.length) return ''; return arr.map(i=>\`
-    <div class="evidence">
-      <h4>Netzwerk Problem</h4>
-      <p><strong>Problem:</strong> \${i.translation}</p>
-      <pre>URL: \${i.url}\nStatus: \${i.status}</pre>
-      <div class="fix-suggestion"><code>\${i.techFix}</code><button class="copy-button" onclick="navigator.clipboard.writeText(this.previousSibling.textContent)">Copy</button></div>
-    </div>\`).join(''); }
-  function renderCSP(arr){ if(!arr||!arr.length) return ''; return arr.map(v=>\`
-    <div class="evidence">
-      <h4>\${v.type}</h4>
-      <p><strong>Problem:</strong> \${v.translation}</p>
-      <pre>\${v.message}</pre>
-      <div class="fix-suggestion"><code>\${v.techFix}</code><button class="copy-button" onclick="navigator.clipboard.writeText(this.previousSibling.textContent)">Copy</button></div>
-    </div>\`).join(''); }
+  function renderErrors(arr){
+    if(!arr||!arr.length) return '';
+    return arr.map(e=>{
+      const problem   = (e.translation || 'Auf der Website ist ein Fehler aufgetreten.').replace(/HITs?/ig,'Datenübertragungen');
+      const tech      = e.message || '';
+      const loesung   = e.techFix || 'Die IT soll die Fehlermeldung in der Browser-Konsole prüfen und beheben.';
+      const fundort   = \`Sie finden den Fehler in der Browser-Werkzeugleiste:
+1) Rechtsklick → „Untersuchen“
+2) Tab „Konsole“ anklicken
+3) Die Meldung ist rot (Fehler) oder gelb (Warnung)\`;
+
+      const auswirkung = /CSP|security|blocked|googletagmanager|googleadservices|facebook|tiktok|hotjar/i.test(tech)
+        ? 'Marketing- oder Mess-Dienst funktioniert nicht; Auswertungen sind lückenhaft.'
+        : 'Funktionen der Seite können ausfallen; Mess- oder Marketingdaten können fehlen.';
+
+      return \`
+        <div class="evidence">
+          <h4>Fehler in der Website (Konsole)</h4>
+          <p><strong>Problem (verständlich):</strong> \${problem}</p>
+          <p><strong>Wo finde ich das im Browser?</strong><br><pre>\${fundort}</pre></p>
+          <p><strong>Technischer Fehler (für IT):</strong></p>
+          <pre>\${tech}</pre>
+          <p><strong>Auswirkung fürs Business:</strong> \${auswirkung}</p>
+          <h4>Empfohlene Lösung</h4>
+          <div class="fix-suggestion">
+            <code>\${loesung}</code>
+            <button class="copy-button" onclick="navigator.clipboard.writeText(this.previousSibling.textContent)">Copy</button>
+          </div>
+        </div>\`;
+    }).join('');
+  }
+
+  function renderIssues(arr){
+    if(!arr||!arr.length) return '';
+    return arr.map(i=>{
+      const problem = (i.translation || 'Eine Verbindung zu einem externen Dienst hat nicht funktioniert.').replace(/HITs?/ig,'Datenübertragungen');
+      const fundort = \`Sie finden die Blockade in den Browser-Werkzeugen:
+1) „Untersuchen“ → Tab „Network/Netzwerk“
+2) Seite neu laden
+3) Oben im Filter den Dienstnamen eingeben (z. B. „google-analytics“, „facebook“, „kameleoon“)
+4) Fehlgeschlagene Einträge sind rot/abgebrochen.\`;
+      const tech = \`URL: \${i.url || '-'}\\nStatus: \${i.status ?? '-'}\`;
+      const loesung = i.techFix || 'IT prüfen: Ist die Domain erlaubt (Sicherheits­richtlinie/CSP), erreichbar (DNS/Firewall) und korrekt eingebunden?';
+
+      const auswirkung = /google-analytics|g\/collect|collect\?v=2/i.test(i.url||'')
+        ? 'Besucherdaten werden nicht übertragen → Auswertungen fehlen.'
+        : /googleadservices|facebook\\.com|tiktok|hotjar|kameleoon/i.test(i.url||'')
+        ? 'Kampagnen-Tracking / Tests / Heatmaps funktionieren nicht.'
+        : 'Externer Dienst funktioniert nicht vollständig.';
+
+      return \`
+        <div class="evidence">
+          <h4>Verbindung zu externem Dienst fehlgeschlagen (Network)</h4>
+          <p><strong>Problem (verständlich):</strong> \${problem}</p>
+          <p><strong>Wo finde ich das im Browser?</strong><br><pre>\${fundort}</pre></p>
+          <p><strong>Technischer Fehler (für IT):</strong></p>
+          <pre>\${tech}</pre>
+          <p><strong>Auswirkung fürs Business:</strong> \${auswirkung}</p>
+          <h4>Empfohlene Lösung</h4>
+          <div class="fix-suggestion">
+            <code>\${loesung}</code>
+            <button class="copy-button" onclick="navigator.clipboard.writeText(this.previousSibling.textContent)">Copy</button>
+          </div>
+        </div>\`;
+    }).join('');
+  }
+
+  function renderCSP(arr){
+    if(!arr||!arr.length) return '';
+    return arr.map(v=>{
+      const problem = 'Die Sicherheits­einstellungen der Website lassen diese Verbindung nicht zu.';
+      const fundort = \`Sie finden den Blocker in der Browser-Werkzeugleiste:
+1) „Untersuchen“ → Tab „Konsole“
+2) Meldung in Rot: „Verbindung blockiert … (Content-Security-Policy)“
+3) Die blockierte Internetadresse steht in der Meldung.\`;
+      const tech = v.message || '';
+      const loesung = v.techFix || 'Die IT muss die Content-Security-Policy so anpassen, dass die benötigte Domain in der passenden Directive erlaubt ist (z. B. connect-src/script-src).';
+
+      const blocked = (tech.match(/https?:\\/\\/[^ ]+/) || [])[0] || '';
+      let auswirkung = 'Betroffener Dienst kann keine Daten senden bzw. laden.';
+      if (/kameleoon/i.test(blocked)) auswirkung = 'A/B-Tests und Personalisierungen werden nicht ausgewertet.';
+      else if (/google-analytics|g\\/collect|collect\\?v=2/i.test(blocked)) auswirkung = 'Besucherdaten werden nicht an GA4 übertragen.';
+      else if (/googleadservices|facebook\\.com|tiktok/i.test(blocked)) auswirkung = 'Kampagnen-Tracking / Remarketing funktioniert nicht.';
+
+      return \`
+        <div class="evidence">
+          <h4>Verbindung durch Sicherheitsregeln blockiert (CSP)</h4>
+          <p><strong>Problem (verständlich):</strong> \${problem}</p>
+          <p><strong>Wo finde ich das im Browser?</strong><br><pre>\${fundort}</pre></p>
+          <p><strong>Technischer Fehler (für IT):</strong></p>
+          <pre>\${tech}</pre>
+          <p><strong>Auswirkung fürs Business:</strong> \${auswirkung}</p>
+          <h4>Empfohlene Lösung</h4>
+          <div class="fix-suggestion">
+            <code>\${loesung}</code>
+            <button class="copy-button" onclick="navigator.clipboard.writeText(this.previousSibling.textContent)">Copy</button>
+          </div>
+        </div>\`;
+    }).join('');
+  }
 })();
 </script>
 </body></html>`);
@@ -1092,5 +1201,3 @@ const graceful = (sig) => async () => {
 };
 process.on('SIGINT', graceful('SIGINT'));
 process.on('SIGTERM', graceful('SIGTERM'));
-
-
