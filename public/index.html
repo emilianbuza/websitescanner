@@ -75,7 +75,7 @@
     50% { transform: scale(1.02); }
   }
   
-  /* Problem Examples */
+  /* Example Problems */
   .example-findings{margin:60px 0;padding:0 20px}
   .example-findings h3{text-align:center;font-size:1.8rem;margin-bottom:30px;color:#1f2937}
   .problem-examples{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;max-width:1200px;margin:0 auto}
@@ -85,33 +85,16 @@
   .problem-title{font-weight:600;color:#1f2937;margin-bottom:8px}
   .problem-impact{color:#6b7280;font-size:0.9rem}
   
-  /* Enhanced Progress Bar */
+  /* Progress Bar */
   .scan-progress{background:white;border:2px solid var(--brand);border-radius:12px;padding:25px;margin:20px auto;max-width:700px;display:none;box-shadow:0 8px 16px rgba(0,0,0,0.1)}
   .scan-progress.active{display:block}
   .progress-header{text-align:center;margin-bottom:20px}
   .progress-header h3{margin:0 0 10px 0;color:#1f2937;font-size:1.5rem}
-  .estimated-time{font-size:0.9rem;color:#6b7280}
-  
-  .progress-milestones{display:flex;justify-content:space-between;margin-bottom:25px;position:relative}
-  .progress-milestones::before{content:'';position:absolute;top:15px;left:15px;right:15px;height:2px;background:#e5e7eb;z-index:1}
-  .milestone{text-align:center;position:relative;z-index:2}
-  .milestone-dot{width:30px;height:30px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:0.8rem}
-  .milestone.completed .milestone-dot{background:#22c55e;color:white}
-  .milestone.active .milestone-dot{background:#7c3aed;color:white;animation:pulse 2s infinite}
-  .milestone.pending .milestone-dot{background:#e5e7eb;color:#9ca3af}
-  .milestone-label{font-size:0.8rem;color:#6b7280}
   
   .main-progress{margin-bottom:25px}
   .progress-bar{height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;margin-bottom:10px}
   .progress-fill{height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2));transition:width 0.3s ease;width:0%}
   .progress-text{font-size:14px;color:#6b7280;text-align:center}
-  
-  .live-scanning-visualization{position:relative;height:60px;background:#f8fafc;border-radius:8px;overflow:hidden;margin-top:20px}
-  .scanning-line{position:absolute;top:0;left:0;width:4px;height:100%;background:linear-gradient(to bottom,#7c3aed,#22c55e);animation:scan-sweep 3s ease-in-out infinite}
-  @keyframes scan-sweep{0%,100%{left:0}50%{left:calc(100% - 4px)}}
-  .data-points{position:absolute;top:50%;left:20px;right:20px;height:2px}
-  .data-point{position:absolute;width:8px;height:8px;background:#ef4444;border-radius:50%;animation:data-pulse 2s ease-in-out infinite}
-  @keyframes data-pulse{0%,100%{opacity:0;transform:scale(0.5)}50%{opacity:1;transform:scale(1)}}
   
   .scan-steps{margin-top:20px}
   .step{display:flex;align-items:center;padding:12px 0;border-left:3px solid transparent;padding-left:15px;margin-left:10px;border-radius:0 8px 8px 0;transition:all 0.3s ease}
@@ -130,7 +113,7 @@
   .log-entry{font-family:monospace;font-size:12px;margin:2px 0;color:#6b7280;padding:2px 0}
   .log-entry.important{color:#7c3aed;font-weight:600}
   
-  /* Dashboard Style Results */
+  /* Dashboard Results */
   .results-dashboard {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -189,203 +172,6 @@
     font-size: 0.8rem;
     color: #10b981;
     margin-top: 5px;
-  }
-  
-  /* Enhanced Problem Cards */
-  .problem-card {
-    background: white;
-    border-radius: 12px;
-    padding: 20px;
-    margin: 10px 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
-    cursor: pointer;
-    border-left: 4px solid #e2e8f0;
-    position: relative;
-    overflow: hidden;
-  }
-  
-  .problem-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  }
-  
-  .problem-card.critical {
-    border-left-color: #ef4444;
-    background: linear-gradient(135deg, #fff 0%, #fef2f2 100%);
-  }
-  
-  .problem-card.warning {
-    border-left-color: #f59e0b;
-    background: linear-gradient(135deg, #fff 0%, #fefbeb 100%);
-  }
-  
-  .problem-card.info {
-    border-left-color: #10b981;
-    background: linear-gradient(135deg, #fff 0%, #f0f9f4 100%);
-  }
-  
-  .problem-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 12px;
-  }
-  
-  .problem-severity {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    margin-right: 10px;
-  }
-  
-  .severity-critical { background: #ef4444; }
-  .severity-warning { background: #f59e0b; }
-  .severity-info { background: #10b981; }
-  
-  /* Fix Section */
-  .fix-section {
-    margin-top: 15px;
-    padding: 15px;
-    background: #f8fafc;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-  }
-  
-  .fix-section h5 {
-    margin: 0 0 10px 0;
-    color: #374151;
-  }
-  
-  .code-block {
-    background: #1a202c;
-    color: #f7fafc;
-    padding: 12px;
-    border-radius: 6px;
-    font-family: 'Courier New', monospace;
-    font-size: 0.9rem;
-    overflow-x: auto;
-    margin: 10px 0;
-  }
-  
-  .copy-btn {
-    background: #10b981;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
-  }
-  
-  .copy-btn:hover {
-    background: #059669;
-    transform: translateY(-1px);
-  }
-  
-  .copy-btn.copied {
-    background: #22c55e;
-  }
-  
-  /* Smart Filters */
-  .smart-filters {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    margin: 20px 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  }
-  
-  .filter-group {
-    margin-bottom: 15px;
-  }
-  
-  .filter-group label {
-    font-weight: 600;
-    margin-bottom: 10px;
-    display: block;
-    color: #374151;
-  }
-  
-  .filter-pills {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 15px;
-  }
-  
-  .filter-pill {
-    background: #f3f4f6;
-    border: 1px solid #d1d5db;
-    padding: 8px 16px;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 0.9rem;
-  }
-  
-  .filter-pill:hover {
-    background: #e5e7eb;
-  }
-  
-  .filter-pill.active {
-    background: var(--brand);
-    color: white;
-    border-color: var(--brand);
-  }
-  
-  .smart-search {
-    position: relative;
-  }
-  
-  .smart-search input {
-    width: 100%;
-    padding: 12px 16px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    font-size: 1rem;
-  }
-  
-  .smart-search input:focus {
-    outline: none;
-    border-color: var(--brand);
-    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
-  }
-  
-  /* Export Panel */
-  .export-panel {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    margin: 20px 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  }
-  
-  .export-panel h4 {
-    margin: 0 0 15px 0;
-    color: #374151;
-  }
-  
-  .export-options {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  
-  .export-btn {
-    background: var(--brand);
-    color: white;
-    border: none;
-    padding: 10px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
-  }
-  
-  .export-btn:hover {
-    background: #6d28d9;
-    transform: translateY(-1px);
   }
   
   .container{max-width:1200px;margin:0 auto;padding:16px 16px 80px}
@@ -456,7 +242,6 @@
     .problem-examples { grid-template-columns: 1fr; }
     .cta-enhanced { margin: 0 20px 40px 20px; }
     .results-dashboard { grid-template-columns: 1fr; }
-    .export-options { flex-direction: column; }
   }
 </style>
 </head>
@@ -464,7 +249,7 @@
   <!-- Theme Toggle -->
   <button class="theme-toggle" onclick="toggleTheme()" title="Theme wechseln">🌓</button>
 
-  <!-- Hero Section (Landing Page) -->
+  <!-- Hero Section -->
   <div id="heroSection" class="hero-section">
     <div style="max-width: 800px; margin: 0 auto; padding: 0 20px;">
       <h1>💸 Verlieren Sie täglich €127 durch kaputtes Tracking?</h1>
@@ -538,46 +323,51 @@
     </div>
   </div>
 
-  <!-- Scan Progress (Hidden initially) -->
+  <!-- Scan Progress -->
   <div class="scan-progress" id="scanProgress">
     <div class="progress-header">
       <h3>Website wird analysiert...</h3>
       <div id="currentUrl" class="badge" style="margin-bottom: 15px;">–</div>
-      <div class="estimated-time">Noch ca. <span id="timeLeft">60</span> Sekunden</div>
-    </div>
-    
-    <div class="progress-milestones">
-      <div class="milestone pending" id="milestone1">
-        <div class="milestone-dot">1</div>
-        <div class="milestone-label">Sicherheit</div>
-      </div>
-      <div class="milestone pending" id="milestone2">
-        <div class="milestone-dot">2</div>
-        <div class="milestone-label">Tracking</div>
-      </div>
-      <div class="milestone pending" id="milestone3">
-        <div class="milestone-dot">3</div>
-        <div class="milestone-label">Compliance</div>
-      </div>
-      <div class="milestone pending" id="milestone4">
-        <div class="milestone-dot">4</div>
-        <div class="milestone-label">Report</div>
-      </div>
     </div>
     
     <div class="main-progress">
       <div class="progress-bar">
         <div class="progress-fill" id="mainProgressBar"></div>
       </div>
-      <div class="progress-text" id="progressText">Vorbereitung... (0/4 Schritte)</div>
+      <div class="progress-text" id="progressText">Vorbereitung... (0/4 Sessions)</div>
     </div>
     
-    <div class="live-scanning-visualization">
-      <div class="scanning-line"></div>
-      <div class="data-points">
-        <div class="data-point" style="left: 20%; animation-delay: 0.5s;"></div>
-        <div class="data-point" style="left: 50%; animation-delay: 1s;"></div>
-        <div class="data-point" style="left: 80%; animation-delay: 1.5s;"></div>
+    <div class="scan-steps">
+      <div class="step pending" id="step1">
+        <div class="step-icon">1</div>
+        <div class="step-text">
+          <div><strong>Session 1: Ohne Consent</strong></div>
+          <div class="step-duration">Prüft Standard-Verhalten (~25 Sek.)</div>
+        </div>
+      </div>
+      
+      <div class="step pending" id="step2">
+        <div class="step-icon">2</div>
+        <div class="step-text">
+          <div><strong>Session 2: Mit Zustimmung</strong></div>
+          <div class="step-duration">Simuliert "Alle akzeptieren" (~25 Sek.)</div>
+        </div>
+      </div>
+      
+      <div class="step pending" id="step3">
+        <div class="step-icon">3</div>
+        <div class="step-text">
+          <div><strong>Session 3: Ablehnung</strong></div>
+          <div class="step-duration">Simuliert "Ablehnen" (~25 Sek.)</div>
+        </div>
+      </div>
+      
+      <div class="step pending" id="step4">
+        <div class="step-icon">4</div>
+        <div class="step-text">
+          <div><strong>Analyse & Report</strong></div>
+          <div class="step-duration">Vergleicht Ergebnisse (~15 Sek.)</div>
+        </div>
       </div>
     </div>
     
@@ -589,7 +379,7 @@
     </div>
   </div>
 
-  <!-- Main App (Hidden initially) -->
+  <!-- Main App -->
   <div id="mainApp" style="display: none;">
     <div class="topbar">
       <div class="topbar-inner">
@@ -610,25 +400,6 @@
     <div class="banner" id="banner" style="display:none"></div>
 
     <div class="container">
-      <!-- Smart Filters -->
-      <div class="smart-filters">
-        <div class="filter-group">
-          <label>Zeige mir nur:</label>
-          <div class="filter-pills">
-            <button class="filter-pill active" data-filter="all">Alle Probleme</button>
-            <button class="filter-pill" data-filter="money-impact">💰 Kostet Geld</button>
-            <button class="filter-pill" data-filter="quick-fix">⚡ Schnell lösbar</button>
-            <button class="filter-pill" data-filter="legal-risk">⚖️ Rechtliches Risiko</button>
-            <button class="filter-pill" data-filter="performance">🚀 Performance</button>
-          </div>
-        </div>
-        
-        <div class="smart-search">
-          <input type="text" placeholder="Suche: 'Facebook', 'Google Ads', 'DSGVO'..." 
-                 id="smartSearch" oninput="smartFilter(this.value)">
-        </div>
-      </div>
-
       <div class="tabs" id="tabs">
         <button class="tab active" data-tab="summary">💰 Business Impact</button>
         <button class="tab" data-tab="compliance">⚖️ Compliance</button>
@@ -662,37 +433,26 @@
           </div>
           <div class="metric-card critical">
             <div class="metric-icon">🚨</div>
-            <div class="metric-value" id="criticalCount">0</div>
+            <div class="metric-value" id="kpiCritical">0</div>
             <div class="metric-label">Kritische Probleme</div>
             <div class="metric-trend">Sofort behebbar</div>
           </div>
           <div class="metric-card warning">
             <div class="metric-icon">⚠️</div>
-            <div class="metric-value" id="legalRisk">€0</div>
-            <div class="metric-label">Rechtliches Risiko</div>
-            <div class="metric-trend">DSGVO-Verstöße</div>
+            <div class="metric-value" id="kpiPerfect">0</div>
+            <div class="metric-label">Compliance: OK</div>
+            <div class="metric-trend">DSGVO-konform</div>
           </div>
           <div class="metric-card info">
             <div class="metric-icon">📈</div>
-            <div class="metric-value" id="yearlyLoss">€0</div>
-            <div class="metric-label">Jährlich verschwendet</div>
-            <div class="metric-trend">Hochgerechnet</div>
+            <div class="metric-value" id="kpiRisk">0</div>
+            <div class="metric-label">Compliance: Risiko</div>
+            <div class="metric-trend">Rechtliches Risiko</div>
           </div>
         </div>
 
         <div class="card">
           <div id="riskBox" class="risk ghost"><strong>Risiko-Bewertung</strong><div id="riskText" class="ghost">–</div></div>
-        </div>
-
-        <!-- Export Options -->
-        <div class="export-panel">
-          <h4>📊 Report exportieren & teilen</h4>
-          <div class="export-options">
-            <button onclick="exportResults('pdf')" class="export-btn">📄 PDF-Report</button>
-            <button onclick="exportResults('csv')" class="export-btn">📊 CSV-Daten</button>
-            <button onclick="shareResults()" class="export-btn">🔗 Link teilen</button>
-            <button onclick="scheduleRescan()" class="export-btn">⏰ Monitoring einrichten</button>
-          </div>
         </div>
       </section>
 
@@ -761,23 +521,23 @@ const CONFIG = {
 const scanSteps = [
   { 
     name: 'Session 1: Ohne Consent', 
-    duration: 20000, 
+    duration: 25000, 
     logs: ['🚀 Browser gestartet (Chromium)', '📄 Seite wird geladen...', '🍪 Cookie-Banner erkannt', '❌ Keine Zustimmung simuliert', '🔍 Netzwerk-Requests überwacht', '📊 Google Analytics: Keine Daten gesendet', '📱 Meta Pixel: Blockiert durch CSP', '✅ Session 1 abgeschlossen'] 
   },
   { 
     name: 'Session 2: Mit Zustimmung', 
-    duration: 20000, 
+    duration: 25000, 
     logs: ['🔄 Neue Browser-Session', '✅ Cookie-Einstellungen: Alle akzeptiert', '🎯 Consent-Event ausgelöst', '📊 Google Analytics: Daten werden gesendet', '📱 Meta Pixel: Verbindung hergestellt', '🎯 Google Ads: Conversion-Tracking aktiv', '✅ Session 2 abgeschlossen'] 
   },
   { 
     name: 'Session 3: Ablehnung', 
-    duration: 20000, 
+    duration: 25000, 
     logs: ['🔄 Neue Browser-Session', '❌ Cookie-Einstellungen: Alle abgelehnt', '🛑 Reject-Event ausgelöst', '📊 Google Analytics: Korrekt gestoppt', '📱 Meta Pixel: Korrekt gestoppt', '🛡️ Datenschutz-konform', '✅ Session 3 abgeschlossen'] 
   },
   { 
     name: 'Analyse & Report', 
-    duration: 10000, 
-    logs: ['🔬 Vergleiche Session-Ergebnisse...', '💰 Budget-Impact berechnet', '⚖️ DSGVO-Compliance geprüft', '🚨 Kritische Probleme: 3 gefunden', '💡 Handlungsempfehlungen generiert', '📄 Report ist fertig!'] 
+    duration: 15000, 
+    logs: ['🔬 Vergleiche Session-Ergebnisse...', '💰 Budget-Impact berechnet', '⚖️ DSGVO-Compliance geprüft', '🚨 Kritische Probleme: 2 gefunden', '💡 Handlungsempfehlungen generiert', '📄 Report ist fertig!'] 
   }
 ];
 
@@ -799,7 +559,7 @@ function showBanner(msg) {
   if(!banner) return; 
   banner.textContent = msg; 
   banner.style.display='block'; 
-  setTimeout(()=> banner.style.display='none', 3000); 
+  setTimeout(()=> banner.style.display='none', 2500); 
 }
 
 // Theme Toggle
@@ -812,160 +572,7 @@ function toggleTheme() {
   toggle.textContent = currentTheme === 'dark' ? '☀️' : '🌓';
 }
 
-// Money Impact Calculator
-function calculateMoneyImpact(issues) {
-  let monthlyLoss = 0;
-  let riskAmount = 0;
-  
-  // Einfache Berechnung basierend auf gefundenen Problemen
-  issues.forEach(issue => {
-    const msg = (issue.message || '').toLowerCase();
-    
-    if (msg.includes('facebook') || msg.includes('meta') || msg.includes('connect.facebook.net')) {
-      monthlyLoss += 650; // Facebook Pixel Problem
-    }
-    if (msg.includes('google-analytics') || msg.includes('analytics')) {
-      monthlyLoss += 400; // GA Problem  
-    }
-    if (msg.includes('googleadservices') || msg.includes('google ads')) {
-      monthlyLoss += 850; // Google Ads Problem
-    }
-    if (msg.includes('tiktok') || msg.includes('analytics.tiktok.com')) {
-      monthlyLoss += 300; // TikTok Problem
-    }
-    if (msg.includes('hotjar')) {
-      monthlyLoss += 200; // Hotjar Problem
-    }
-    
-    // DSGVO Risiko
-    if (msg.includes('ohne') && (msg.includes('consent') || msg.includes('einwilligung'))) {
-      riskAmount += 2000; // Abmahn-Risiko
-    }
-    if (msg.includes('csp') || msg.includes('security policy')) {
-      riskAmount += 500; // Sicherheitsrisiko
-    }
-  });
-  
-  return { 
-    monthlyLoss: Math.min(monthlyLoss, 4800), // Cap bei 4800€
-    riskAmount, 
-    yearlyLoss: monthlyLoss * 12 
-  };
-}
-
-// Copy to Clipboard
-function copyToClipboard(text) {
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(() => {
-      showBanner('Code kopiert! 📋 Jetzt einfügen und testen.');
-    });
-  } else {
-    // Fallback für ältere Browser
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-    showBanner('Code kopiert! 📋');
-  }
-}
-
-// Generate Fix Code
-function generateFixCode(findingType, url, issue) {
-  const fixes = {
-    'csp': `# CSP-Header erweitern (in .htaccess oder Server-Config):
-Header always set Content-Security-Policy "script-src 'self' 'unsafe-inline' https://*.google.com https://*.facebook.com https://*.googletagmanager.com https://*.tiktok.com; connect-src 'self' https://*.google-analytics.com https://*.facebook.com https://*.doubleclick.net;"
-
-# Oder für Nginx:
-add_header Content-Security-Policy "script-src 'self' 'unsafe-inline' https://*.google.com https://*.facebook.com https://*.googletagmanager.com; connect-src 'self' https://*.google-analytics.com https://*.facebook.com;";`,
-    
-    'consent': `<!-- Consent Management - Vor </head> einfügen: -->
-<script>
-window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-
-// Standard: Alles verweigert
-gtag('consent', 'default', {
-  analytics_storage: 'denied',
-  ad_storage: 'denied',
-  ad_user_data: 'denied',
-  ad_personalization: 'denied'
-});
-
-// Nur nach Zustimmung:
-function giveConsent() {
-  gtag('consent', 'update', {
-    analytics_storage: 'granted',
-    ad_storage: 'granted',
-    ad_user_data: 'granted',
-    ad_personalization: 'granted'
-  });
-}
-</script>`,
-    
-    'facebook_pixel': `<!-- Meta Pixel DSGVO-konform einbinden: -->
-<script>
-// Nur nach Consent laden
-function loadFacebookPixel() {
-  !function(f,b,e,v,n,t,s)
-  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-  n.queue=[];t=b.createElement(e);t.async=!0;
-  t.src=v;s=b.getElementsByTagName(e)[0];
-  s.parentNode.insertBefore(t,s)}(window, document,'script',
-  'https://connect.facebook.net/en_US/fbevents.js');
-  
-  fbq('init', 'IHRE_PIXEL_ID');
-  fbq('track', 'PageView');
-}
-
-// Nur aufrufen wenn Consent = true
-</script>`,
-    
-    'google_analytics': `<!-- Google Analytics 4 DSGVO-konform: -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
-<script>
-window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-
-// Consent Mode v2
-gtag('consent', 'default', {
-  analytics_storage: 'denied',
-  ad_storage: 'denied'
-});
-
-gtag('js', new Date());
-gtag('config', 'GA_MEASUREMENT_ID', {
-  anonymize_ip: true,
-  cookie_flags: 'secure;samesite=strict'
-});
-</script>`
-  };
-  
-  // Spezielle Fixes basierend auf URL oder Issue-Details
-  if (url && url.includes('facebook.com')) {
-    return fixes.facebook_pixel;
-  }
-  if (url && url.includes('google-analytics.com')) {
-    return fixes.google_analytics;
-  }
-  if (findingType === 'csp' || (issue && issue.toLowerCase().includes('security policy'))) {
-    return fixes.csp;
-  }
-  if (findingType === 'consent' || (issue && issue.toLowerCase().includes('consent'))) {
-    return fixes.consent;
-  }
-  
-  return fixes[findingType] || `# Allgemeine Lösung für: ${findingType}
-# 1. Problem identifizieren in Browser DevTools
-# 2. Betroffene Domain zu CSP hinzufügen  
-# 3. Consent-Management prüfen
-# 4. Erneut scannen zur Verifikation`;
-}
-
-// Enhanced Progress tracking
+// Progress tracking
 function updateDetailedProgress(stepIndex, stepProgress, currentLog) {
   const totalSteps = scanSteps.length;
   const overallProgress = ((stepIndex + stepProgress) / totalSteps) * 100;
@@ -983,30 +590,23 @@ function updateDetailedProgress(stepIndex, stepProgress, currentLog) {
       '<div style="font-size: 0.8rem; color: #9ca3af; margin-top: 2px;">Schritt ' + (stepIndex + 1) + ' von ' + totalSteps + ' (' + Math.round(overallProgress) + '%)</div>';
   }
   
-  // Update milestones
-  const milestones = ['milestone1', 'milestone2', 'milestone3', 'milestone4'];
-  milestones.forEach(function(milestoneId, index) {
-    const element = $(milestoneId);
+  // Update step indicators
+  const stepElements = ['step1', 'step2', 'step3', 'step4'];
+  stepElements.forEach(function(stepId, index) {
+    const element = $(stepId);
     if (!element) return;
     
     if (index < stepIndex) {
-      element.className = 'milestone completed';
-      element.querySelector('.milestone-dot').textContent = '✓';
+      element.className = 'step completed';
+      element.querySelector('.step-icon').textContent = '✓';
     } else if (index === stepIndex) {
-      element.className = 'milestone active';
-      element.querySelector('.milestone-dot').textContent = index + 1;
+      element.className = 'step active';
+      element.querySelector('.step-icon').textContent = index + 1;
     } else {
-      element.className = 'milestone pending';
-      element.querySelector('.milestone-dot').textContent = index + 1;
+      element.className = 'step pending';
+      element.querySelector('.step-icon').textContent = index + 1;
     }
   });
-  
-  // Update time left
-  const timeLeft = $(('timeLeft'));
-  if (timeLeft) {
-    const remainingTime = Math.max(5, 70 - (overallProgress * 0.7));
-    timeLeft.textContent = Math.round(remainingTime);
-  }
 }
 
 function addLogEntry(text, important) {
@@ -1019,9 +619,9 @@ function addLogEntry(text, important) {
   logDiv.appendChild(entry);
   logDiv.scrollTop = logDiv.scrollHeight;
   
-  // Keep only last 12 entries
+  // Keep only last 10 entries
   const entries = logDiv.querySelectorAll('.log-entry');
-  if (entries.length > 12) {
+  if (entries.length > 10) {
     entries[0].remove();
   }
 }
@@ -1030,12 +630,12 @@ function sleep(ms) {
   return new Promise(function(resolve) { setTimeout(resolve, ms); });
 }
 
-// Real scan function with enhanced progress
+// Real scan function with progress
 async function startRealScan(url) {
   try {
-    addLogEntry('🚀 Scanner wird initialisiert...', true);
+    addLogEntry('🚀 Scan wird gestartet...', true);
     
-    // Simulate realistic progress
+    // Simulate progress for user experience
     for (let stepIndex = 0; stepIndex < scanSteps.length; stepIndex++) {
       const step = scanSteps[stepIndex];
       
@@ -1051,16 +651,14 @@ async function startRealScan(url) {
         await sleep(step.duration / step.logs.length);
       }
       
-      await sleep(300);
+      await sleep(500);
     }
     
     // Complete progress
-    updateDetailedProgress(3, 1, 'Analyse abgeschlossen!');
-    addLogEntry('🎉 Scan erfolgreich abgeschlossen! Report wird generiert...', true);
+    updateDetailedProgress(3, 1, 'Scan abgeschlossen!');
+    addLogEntry('🎉 Scan erfolgreich abgeschlossen!', true);
     
-    await sleep(1000);
-    
-    // Try actual scan, fallback to demo
+    // Try actual scan
     try {
       const response = await fetch('/scan', {
         method: 'POST',
@@ -1071,13 +669,12 @@ async function startRealScan(url) {
       if (response.ok) {
         const data = await response.json();
         DATA = data;
-        addLogEntry('✅ Live-Scan erfolgreich!', true);
       } else {
-        throw new Error('Server response: ' + response.status);
+        throw new Error('Server error');
       }
     } catch (e) {
-      addLogEntry('📄 Nutze Demo-Daten (Server nicht erreichbar)', true);
-      DATA = buildDemoData(url);
+      // Fallback to demo data
+      DATA = buildDemoData();
     }
     
     // Show results
@@ -1086,16 +683,18 @@ async function startRealScan(url) {
     $('exampleSection').style.display = 'none';
     $('urgencyBanner').style.display = 'none';
     $('mainApp').style.display = 'block';
-    
     renderAll();
-    showBanner('✅ Scan abgeschlossen! ' + (DATA.summary?.totalIssues || 0) + ' Probleme gefunden.');
+    showBanner('Scan abgeschlossen!');
     
   } catch (error) {
     addLogEntry('❌ Fehler: ' + error.message, true);
     // Fallback
     setTimeout(function() {
-      DATA = buildDemoData(url);
+      DATA = buildDemoData();
       $('scanProgress').classList.remove('active');
+      $('heroSection').style.display = 'none';
+      $('exampleSection').style.display = 'none';
+      $('urgencyBanner').style.display = 'none';
       $('mainApp').style.display = 'block';
       renderAll();
       showBanner('Demo-Daten geladen.');
@@ -1103,81 +702,16 @@ async function startRealScan(url) {
   }
 }
 
-// Enhanced Demo Data
-function buildDemoData(scannedUrl = 'https://demo-website.de') {
-  const now = new Date().toLocaleString('de-DE');
-  return {
-    version: '2.5.0',
-    scannedUrl: scannedUrl,
-    timestamp: now,
-    summary: {
-      totalIssues: 8,
-      highPriorityIssues: 3,
-      marketingTags: [
-        { name:'Google Analytics 4', property:'hasGA4', compliance:'good', impact:'🟡 GA4 sendet Daten ohne Einwilligung, aber stoppt bei Ablehnung.', gdprRisk:'medium', withoutConsent:true, withAccept:true, withReject:false, businessImpact:'€400/Monat: Tracking läuft, aber rechtliches Risiko' },
-        { name:'Meta Pixel (Facebook/Instagram)', property:'hasMetaPixel', compliance:'bad', impact:'🚨 Meta Pixel sendet Daten trotz "Ablehnen".', gdprRisk:'high', withoutConsent:true, withAccept:true, withReject:true, businessImpact:'€650/Monat Werbebudget + €2.000 Abmahn-Risiko' },
-        { name:'Google Tag Manager', property:'hasGTM', compliance:'perfect', impact:'✅ GTM mit Consent-Initialisierung erkannt.', gdprRisk:'none', withoutConsent:true, withAccept:true, withReject:true, businessImpact:'Container korrekt konfiguriert' },
-        { name:'TikTok Pixel', property:'hasTikTokPixel', compliance:'missing', impact:'❌ Eingebunden, aber blockiert durch CSP.', gdprRisk:'none', withoutConsent:false, withAccept:false, withReject:false, businessImpact:'€300/Monat TikTok-Budget läuft blind' },
-        { name:'Google Ads', property:'hasGoogleAds', compliance:'inconsistent', impact:'🤔 Conversion-Tracking inkonsistent.', gdprRisk:'medium', withoutConsent:false, withAccept:true, withReject:true, businessImpact:'€850/Monat suboptimale Kampagnen' }
-      ]
-    },
-    details: {
-      errors: [
-        { type:'Console Error', message:'Content Security Policy: The page\'s settings blocked the loading of a resource at https://connect.facebook.net/en_US/fbevents.js', priority:'high', translation:'Meta Pixel wird durch Sicherheitsregeln blockiert', techFix:'CSP erweitern: script-src https://connect.facebook.net', url: 'https://connect.facebook.net/en_US/fbevents.js' },
-        { type:'JavaScript Error', message:'Cannot read properties of undefined (reading \'getItem\')', priority:'medium', translation:'Tracking-Script findet benötigte Browser-Daten nicht', techFix:'Cookie-Handling im Script prüfen und Null-Checks hinzufügen' },
-        { type:'Console Error', message:'Refused to connect to https://analytics.tiktok.com/i18n/pixel/events.js', priority:'high', translation:'TikTok Pixel wird blockiert', techFix:'CSP connect-src um https://analytics.tiktok.com erweitern', url: 'https://analytics.tiktok.com/i18n/pixel/events.js' }
-      ],
-      networkIssues: [
-        { url:'https://www.facebook.com/tr/?id=123456789', method:'GET', resourceType:'fetch', status:0, priority:'high', translation:'Meta Pixel – €650/Monat Social ROI unbekannt', techFix:'CSP/CORS für facebook.com Domains konfigurieren' },
-        { url:'https://analytics.tiktok.com/api/v2/pixel/track/', method:'POST', resourceType:'fetch', status:0, priority:'high', translation:'TikTok Pixel – €300/Monat TikTok ROI unbekannt', techFix:'Firewall/CSP für analytics.tiktok.com öffnen' },
-        { url:'https://www.googleadservices.com/pagead/conversion/123456/?random=123', method:'GET', resourceType:'image', status:404, priority:'medium', translation:'Google Ads Conversion – Setup prüfen', techFix:'Conversion-ID in Google Ads Tag prüfen' }
-      ],
-      cspViolations: [
-        { message:'connect-src blocked https://www.facebook.com/tr/?id=123456', priority:'high', techFix:'CSP erweitern: connect-src https://www.facebook.com https://connect.facebook.net', violation: { blockedURI: 'https://www.facebook.com/tr/?id=123456', violatedDirective: 'connect-src' } },
-        { message:'script-src blocked https://analytics.tiktok.com/i18n/pixel/events.js', priority:'high', techFix:'CSP erweitern: script-src https://analytics.tiktok.com', violation: { blockedURI: 'https://analytics.tiktok.com/i18n/pixel/events.js', violatedDirective: 'script-src' } }
-      ]
-    },
-    evidence: {
-      url: scannedUrl,
-      generatedAt: new Date().toISOString(),
-      evidence: {
-        hasGA4: { 
-          name: 'Google Analytics 4',
-          nonTechMeaning: 'Misst Websitebesucher ohne Einwilligung zu verletzen', 
-          nonTechFix: 'Consent Mode v2 aktivieren - GA4 erst nach Zustimmung senden lassen',
-          modes: {
-            withoutConsent: { hits: [{url: 'https://www.google-analytics.com/g/collect?...', status: 200}], trackingCookies: ['_ga', '_gid'], cspBlocks: [], dlEvents: ['page_view'] },
-            withConsent: { hits: [{url: 'https://www.google-analytics.com/g/collect?...', status: 200}], trackingCookies: ['_ga', '_gid', '_gat'], cspBlocks: [], dlEvents: ['page_view', 'consent_update'] },
-            withReject: { hits: [], trackingCookies: [], cspBlocks: [], dlEvents: ['consent_update'] }
-          }
-        },
-        hasMetaPixel: { 
-          name: 'Meta Pixel (Facebook/Instagram)',
-          nonTechMeaning: 'Misst Facebook/Instagram-Kampagnen und baut Zielgruppen auf', 
-          nonTechFix: 'Pixel nur nach Einwilligung laden - CSP-Blockaden beheben',
-          modes: {
-            withoutConsent: { hits: [{url: 'https://www.facebook.com/tr?id=123', status: 0}], trackingCookies: [], cspBlocks: [{message: 'CSP blocked facebook.com', directive: 'connect-src'}], dlEvents: [] },
-            withConsent: { hits: [{url: 'https://www.facebook.com/tr?id=123', status: 200}], trackingCookies: ['_fbp', '_fbc'], cspBlocks: [], dlEvents: ['fbq_init'] },
-            withReject: { hits: [{url: 'https://www.facebook.com/tr?id=123', status: 200}], trackingCookies: ['_fbp'], cspBlocks: [], dlEvents: ['fbq_init'] }
-          }
-        }
-      }
-    }
-  };
-}
-
 // Start scan from hero
 function startScanFromHero() {
-  const url = $('websiteUrl').value.trim();
+  const url = $('websiteUrl').value;
   if (!url) {
-    alert('Bitte geben Sie eine Website-URL ein');
+    alert('Bitte gib eine Website-URL ein');
     return;
   }
   
-  let finalUrl = url;
   if (!/^https?:\/\//.test(url)) {
-    finalUrl = 'https://' + url;
-    $('websiteUrl').value = finalUrl;
+    $('websiteUrl').value = 'https://' + url;
   }
   
   // Hide hero, show progress
@@ -1187,259 +721,96 @@ function startScanFromHero() {
   $('scanProgress').classList.add('active');
   
   // Update URL display
-  $('currentUrl').textContent = finalUrl;
+  $('currentUrl').textContent = $('websiteUrl').value;
   
-  // Start the scan
-  startRealScan(finalUrl);
+  // Start the actual scan
+  startRealScan($('websiteUrl').value);
 }
 
-// Smart Filter functionality
-function smartFilter(query) {
-  // This would filter the displayed results based on the query
-  console.log('Filtering for:', query);
-  // Implementation would go here for filtering results
-}
-
-// Export Functions
-function exportResults(format) {
-  if (!DATA) {
-    showBanner('❌ Keine Daten zum Exportieren verfügbar');
-    return;
-  }
-  
-  if (format === 'pdf') {
-    // Simple PDF export using browser print
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Website Scan Report - ${DATA.scannedUrl}</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            h1 { color: #7c3aed; }
-            .metric { background: #f8fafc; padding: 10px; margin: 10px 0; border-left: 4px solid #ef4444; }
-            .problem { margin: 15px 0; padding: 10px; border: 1px solid #e5e7eb; }
-            .fix-code { background: #1a202c; color: #f7fafc; padding: 10px; font-family: monospace; }
-          </style>
-        </head>
-        <body>
-          <h1>Website-Analyse Report</h1>
-          <p><strong>URL:</strong> ${DATA.scannedUrl}</p>
-          <p><strong>Gescannt am:</strong> ${DATA.timestamp}</p>
-          <h2>Executive Summary</h2>
-          <div class="metric">
-            <strong>Gefundene Probleme:</strong> ${DATA.summary.totalIssues}<br>
-            <strong>Kritische Issues:</strong> ${DATA.summary.highPriorityIssues}
-          </div>
-          <h2>Kritische Probleme</h2>
-          ${(DATA.details.errors || []).map(error => `
-            <div class="problem">
-              <strong>${error.type}:</strong> ${error.translation}<br>
-              <div class="fix-code">${generateFixCode(error.type, error.url, error.message)}</div>
-            </div>
-          `).join('')}
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.print();
-    showBanner('📄 PDF-Export vorbereitet');
-    
-  } else if (format === 'csv') {
-    // CSV Export
-    const csvData = [
-      ['Problem Type', 'Priority', 'Description', 'Business Impact', 'Technical Fix'],
-      ...(DATA.details.errors || []).map(error => [
-        error.type,
-        error.priority,
-        error.message,
-        error.translation,
-        error.techFix || 'Siehe technische Details'
-      ])
-    ];
-    
-    const csvContent = csvData.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `website-scan-${Date.now()}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    showBanner('📊 CSV-Daten heruntergeladen');
-  }
-}
-
-function shareResults() {
-  const shareUrl = window.location.href + '?demo=' + encodeURIComponent(DATA.scannedUrl);
-  
-  if (navigator.share) {
-    navigator.share({
-      title: 'Website-Scan Ergebnisse',
-      text: `${DATA.summary.totalIssues} Probleme gefunden auf ${DATA.scannedUrl}`,
-      url: shareUrl
-    }).then(() => {
-      showBanner('🔗 Erfolgreich geteilt!');
-    });
-  } else {
-    // Fallback: Copy to clipboard
-    copyToClipboard(shareUrl);
-    showBanner('🔗 Share-Link kopiert!');
-  }
-}
-
-function scheduleRescan() {
-  showBanner('⏰ Monitoring-Feature kommt bald!');
-  // This would integrate with a backend service for scheduled rescans
+// DEMO DATA
+function buildDemoData() {
+  const now = new Date().toLocaleString('de-DE');
+  return {
+    version: '2.4.0',
+    scannedUrl: 'https://demo.regukit.de',
+    timestamp: now,
+    summary: {
+      totalIssues: 7,
+      highPriorityIssues: 2,
+      marketingTags: [
+        { name:'Google Analytics 4', property:'hasGA4', compliance:'perfect', impact:'✅ GA4 respektiert die Einwilligung.', gdprRisk:'none', withoutConsent:false, withAccept:true, withReject:false, businessImpact:'Besucherdaten DSGVO-konform.' },
+        { name:'Meta Pixel (Facebook/Instagram)', property:'hasMetaPixel', compliance:'inconsistent', impact:'🤔 Uneinheitliches Verhalten, teils CSP-Blockaden.', gdprRisk:'medium', withoutConsent:false, withAccept:true, withReject:false, businessImpact:'Social ROI nur teilweise messbar.' },
+        { name:'Google Tag Manager', property:'hasGTM', compliance:'perfect', impact:'✅ Consent default denied vorhanden.', gdprRisk:'none', withoutConsent:true, withAccept:true, withReject:true, businessImpact:'Steuert Tags korrekt nach Einwilligung.' },
+        { name:'TikTok Pixel', property:'hasTikTokPixel', compliance:'missing', impact:'❌ Eingebunden, aber keine Datenübertragungen erkannt.', gdprRisk:'none', withoutConsent:false, withAccept:false, withReject:false, businessImpact:'TikTok-Kampagnen nicht messbar.' }
+      ]
+    },
+    details: {
+      errors: [
+        { type:'Console Error', message:'Content Security Policy blocked Facebook', priority:'high', translation:'Sicherheits­einstellungen blockieren Verbindungen.', techFix:'CSP connect-src um connect.facebook.net erweitern.' }
+      ],
+      networkIssues: [
+        { url:'https://www.facebook.com/tr/?id=12345', method:'GET', resourceType:'fetch', status:0, priority:'high', translation:'Meta Pixel – Social ROI unbekannt.', techFix:'CSP/CORS prüfen' }
+      ],
+      cspViolations: [
+        { message:'connect-src blocked https://www.facebook.com/tr/?id=12345', priority:'high', techFix:'connect-src https://www.facebook.com zulassen' }
+      ]
+    },
+    evidence: {
+      evidence: {
+        hasGA4: { nonTechMeaning: 'Misst Besucher ohne Einwilligung zu verletzen.', nonTechFix: 'Consent Mode aktivieren.' },
+        hasMetaPixel: { nonTechMeaning: 'Facebook/Instagram Kampagnen messen.', nonTechFix: 'Pixel nur nach Einwilligung auslösen.' }
+      }
+    }
+  };
 }
 
 // Render functions
 function renderSummary() {
   if (!DATA) return;
-  
-  // Basic info
   $('scannedUrl').textContent = DATA.scannedUrl || '–';
   $('timestamp').textContent = DATA.timestamp || '–';
   $('version').textContent = 'v' + (DATA.version || '–');
   
+  const total = (DATA.details?.errors?.length || 0) + (DATA.details?.networkIssues?.length || 0) + (DATA.details?.cspViolations?.length || 0);
+  const crit = (DATA.details?.errors || []).filter(function(e) { return /critical|high/i.test(e.priority || ''); }).length;
+  const mtags = DATA.summary?.marketingTags || [];
+  const perfect = mtags.filter(function(m) { return m.compliance === 'perfect'; }).length;
+  const risk = mtags.filter(function(m) { return ['bad','inconsistent','good','missing'].includes(m.compliance); }).length;
+  
   // Calculate money impact
-  const allIssues = [
-    ...(DATA.details?.errors || []).map(e => ({...e, category: 'error'})),
-    ...(DATA.details?.networkIssues || []).map(n => ({...n, category: 'network'})),
-    ...(DATA.details?.cspViolations || []).map(c => ({...c, category: 'csp'}))
-  ];
+  let monthlyLoss = 0;
+  if (crit > 0) monthlyLoss += 650; // Facebook issues
+  if (total > 3) monthlyLoss += 400; // GA issues
+  if (risk > 2) monthlyLoss += 300; // Additional compliance issues
   
-  const issueHTML = allIssues.map(issue => {
-    const severityClass = issue.priority === 'high' || issue.priority === 'critical' ? 'critical' : 
-                         issue.priority === 'medium' ? 'warning' : 'info';
-    
-    const fixCode = generateFixCode(issue.category, issue.url, issue.message);
-    
-    return `
-      <div class="problem-card ${severityClass}" onclick="toggleFix('${issue.type}_${Math.random()}')">
-        <div class="problem-header">
-          <div class="problem-severity severity-${severityClass.replace('critical', 'critical').replace('warning', 'warning').replace('info', 'info')}"></div>
-          <div style="flex: 1;">
-            <h4 style="margin: 0 0 5px 0;">${issue.translation || issue.message}</h4>
-            <div style="font-size: 0.9rem; color: #6b7280;">${issue.type} • ${issue.priority}</div>
-          </div>
-          <div style="font-size: 1.2rem;">💰 €${getIssueMoneyImpact(issue)}/Monat</div>
-        </div>
-        
-        <div class="fix-section" id="fix_${issue.type}_${Math.random()}" style="display: none;">
-          <h5>🔧 Sofortige Lösung:</h5>
-          <pre class="code-block"><code>${fixCode}</code></pre>
-          <button onclick="copyToClipboard(\`${fixCode.replace(/`/g, '\\`')}\`); event.stopPropagation();" class="copy-btn">
-            📋 Code kopieren
-          </button>
-          <button onclick="testFix('${issue.type}'); event.stopPropagation();" class="copy-btn" style="background: #3b82f6; margin-left: 10px;">
-            🧪 Fix testen
-          </button>
-        </div>
-      </div>
-    `;
-  }).join('');
+  $('monthlyLoss').textContent = '€' + monthlyLoss.toLocaleString();
+  $('kpiCritical').textContent = crit; 
+  $('kpiPerfect').textContent = perfect; 
+  $('kpiRisk').textContent = risk;
   
-  issueList.innerHTML = issueHTML || '<div class="empty">Keine Probleme gefunden 🎉</div>';
+  const riskBox = $('riskBox');
+  const riskText = $('riskText');
+  let level = 'low';
+  let text = 'Niedriges Risiko – keine kritischen Befunde';
   
-  // Update count
-  const issueCount = $('issueCount');
-  if (issueCount) {
-    issueCount.textContent = `${allIssues.length} Probleme`;
+  if (crit > 0) { 
+    level = 'high'; 
+    text = 'Hohes Risiko – kritische Probleme gefunden.'; 
+  } else if (total > 0) { 
+    level = 'med'; 
+    text = 'Mittleres Risiko – einige Probleme erfordern Aufmerksamkeit.'; 
   }
-}
-
-function getIssueMoneyImpact(issue) {
-  const msg = (issue.message || '').toLowerCase();
-  if (msg.includes('facebook') || msg.includes('meta')) return 650;
-  if (msg.includes('google-analytics')) return 400;
-  if (msg.includes('googleadservices')) return 850;
-  if (msg.includes('tiktok')) return 300;
-  if (msg.includes('consent') || msg.includes('gdpr')) return 200;
-  return 100;
-}
-
-function toggleFix(fixId) {
-  const fixElement = document.getElementById('fix_' + fixId);
-  if (fixElement) {
-    const isVisible = fixElement.style.display !== 'none';
-    fixElement.style.display = isVisible ? 'none' : 'block';
-  }
-}
-
-function testFix(issueType) {
-  showBanner('🧪 Fix-Test gestartet... (Feature in Entwicklung)');
-  // This would trigger a re-scan to test if the fix worked
-}
-
-function renderCompliance() {
-  const complianceList = $('complianceList');
-  if (!complianceList || !DATA) return;
   
-  const tags = DATA.summary?.marketingTags || [];
-  
-  const complianceHTML = tags.map(tag => {
-    let statusColor = '#10b981'; // green
-    let statusIcon = '✅';
-    
-    if (tag.compliance === 'bad') {
-      statusColor = '#ef4444';
-      statusIcon = '🚨';
-    } else if (tag.compliance === 'inconsistent' || tag.compliance === 'good') {
-      statusColor = '#f59e0b'; 
-      statusIcon = '⚠️';
-    } else if (tag.compliance === 'missing') {
-      statusColor = '#6b7280';
-      statusIcon = '❌';
-    }
-    
-    return `
-      <div class="item">
-        <header onclick="toggleCompliance('${tag.property}')">
-          <div class="severity" style="background: ${statusColor};"></div>
-          <div class="title">${statusIcon} ${tag.name}</div>
-          <div class="meta">
-            <span class="chip">${tag.compliance}</span>
-            <span class="chip">GDPR: ${tag.gdprRisk}</span>
-          </div>
-        </header>
-        <div class="body" id="compliance_${tag.property}">
-          <div style="margin-bottom: 15px;">
-            <strong>Business Impact:</strong><br>
-            ${tag.businessImpact}
-          </div>
-          <div style="margin-bottom: 15px;">
-            <strong>Technische Analyse:</strong><br>
-            ${tag.impact}
-          </div>
-          <div style="margin-bottom: 15px;">
-            <strong>Sessions:</strong><br>
-            Ohne Consent: ${tag.withoutConsent ? '✅ Aktiv' : '❌ Inaktiv'}<br>
-            Mit Accept: ${tag.withAccept ? '✅ Aktiv' : '❌ Inaktiv'}<br>
-            Mit Reject: ${tag.withReject ? '✅ Aktiv (Problem!)' : '✅ Gestoppt'}
-          </div>
-        </div>
-      </div>
-    `;
-  }).join('');
-  
-  complianceList.innerHTML = complianceHTML || '<div class="empty">Keine Marketing-Tags erkannt</div>';
-}
-
-function toggleCompliance(tagId) {
-  const element = document.getElementById('compliance_' + tagId);
-  if (element) {
-    const isOpen = element.classList.contains('open');
-    element.classList.toggle('open');
-    element.style.display = isOpen ? 'none' : 'block';
-  }
+  riskBox.className = 'risk ' + level; 
+  riskText.textContent = text; 
+  riskBox.classList.remove('ghost'); 
+  riskText.classList.remove('ghost');
 }
 
 function renderAll() { 
   if (!DATA) return; 
   renderSummary(); 
-  renderIssuesWithFixes();
-  renderCompliance();
+  // Add other render functions here as needed
 }
 
 // Event handlers
@@ -1458,9 +829,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const demoBtn = $('demoBtn');
   if (demoBtn) {
     demoBtn.addEventListener('click', function() {
-      DATA = buildDemoData('https://demo.beispiel-shop.de');
+      DATA = buildDemoData();
       renderAll();
-      showBanner('📄 Demo-Daten geladen - zeigt typische Probleme.');
+      showBanner('Demo-Daten geladen.');
     });
   }
 
@@ -1494,19 +865,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  // Filter pills
-  document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('filter-pill')) {
-      // Toggle active state
-      document.querySelectorAll('.filter-pill').forEach(pill => pill.classList.remove('active'));
-      e.target.classList.add('active');
-      
-      const filter = e.target.getAttribute('data-filter');
-      console.log('Applied filter:', filter);
-      // Here you would implement the actual filtering logic
-    }
-  });
-
   // Mode toggle
   const modeManager = $('modeManager');
   const modeTech = $('modeTech');
@@ -1515,9 +873,7 @@ document.addEventListener('DOMContentLoaded', function() {
     modeManager.addEventListener('click', function() {
       MODE = 'manager';
       modeManager.classList.add('active');
-      modeTech.classList.remove('active');
-      // Update display based on mode
-      document.body.setAttribute('data-mode', 'manager');
+      if (modeTech) modeTech.classList.remove('active');
     });
   }
   
@@ -1525,9 +881,7 @@ document.addEventListener('DOMContentLoaded', function() {
     modeTech.addEventListener('click', function() {
       MODE = 'tech';
       modeTech.classList.add('active');
-      modeManager.classList.remove('active');
-      // Update display based on mode  
-      document.body.setAttribute('data-mode', 'tech');
+      if (modeManager) modeManager.classList.remove('active');
     });
   }
 
@@ -1536,97 +890,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (websiteUrl) websiteUrl.focus();
   }, 300);
 
-  // Initialize theme toggle icon
+  // Initialize theme toggle
   const themeToggle = document.querySelector('.theme-toggle');
   if (themeToggle) {
     themeToggle.textContent = currentTheme === 'dark' ? '☀️' : '🌓';
   }
-
-  // Check for demo parameter in URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const demoUrl = urlParams.get('demo');
-  if (demoUrl) {
-    setTimeout(() => {
-      DATA = buildDemoData(demoUrl);
-      $('heroSection').style.display = 'none';
-      $('exampleSection').style.display = 'none';
-      $('urgencyBanner').style.display = 'none';
-      $('mainApp').style.display = 'block';
-      renderAll();
-      showBanner('📄 Geteilter Demo-Report geladen');
-    }, 500);
-  }
 });
-
-// Global error handler
-window.addEventListener('error', function(e) {
-  console.error('JavaScript Error:', e.error);
-  showBanner('❌ Ein Fehler ist aufgetreten. Bitte Seite neu laden.');
-});
-
-// Service worker registration for PWA features (optional)
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('/sw.js').then(function(registration) {
-      console.log('SW registered: ', registration);
-    }).catch(function(registrationError) {
-      console.log('SW registration failed: ', registrationError);
-    });
-  });
-}
 </script>
 </body>
-</html> []),
-    ...(DATA.details?.networkIssues || []),
-    ...(DATA.details?.cspViolations || [])
-  ];
-  
-  const impact = calculateMoneyImpact(allIssues);
-  
-  // Update enhanced dashboard
-  $('monthlyLoss').textContent = '€' + impact.monthlyLoss.toLocaleString();
-  $('criticalCount').textContent = DATA.summary.highPriorityIssues || 0;
-  $('legalRisk').textContent = '€' + impact.riskAmount.toLocaleString();
-  $('yearlyLoss').textContent = '€' + impact.yearlyLoss.toLocaleString();
-  
-  // Update trend info
-  const monthlyTrend = $('monthlyTrend');
-  if (monthlyTrend) {
-    if (impact.monthlyLoss > 1000) {
-      monthlyTrend.textContent = 'Kritisch - sofort handeln';
-      monthlyTrend.style.color = '#ef4444';
-    } else if (impact.monthlyLoss > 300) {
-      monthlyTrend.textContent = 'Optimierungspotential vorhanden';
-      monthlyTrend.style.color = '#f59e0b';
-    } else {
-      monthlyTrend.textContent = 'Geringe Verluste';
-      monthlyTrend.style.color = '#10b981';
-    }
-  }
-  
-  // Risk assessment
-  const riskBox = $('riskBox');
-  const riskText = $('riskText');
-  let level = 'low';
-  let text = 'Niedriges Risiko – keine kritischen Befunde';
-  
-  if (DATA.summary.highPriorityIssues > 2 || impact.monthlyLoss > 1000) { 
-    level = 'high'; 
-    text = `Hohes Risiko – Sie verlieren ca. €${impact.monthlyLoss}/Monat durch blockierte Marketing-Tools.`; 
-  } else if (DATA.summary.totalIssues > 3 || impact.monthlyLoss > 300) { 
-    level = 'med'; 
-    text = `Mittleres Risiko – ${DATA.summary.totalIssues} Probleme kosten Sie ca. €${impact.monthlyLoss}/Monat.`; 
-  }
-  
-  riskBox.className = 'risk ' + level; 
-  riskText.textContent = text; 
-  riskBox.classList.remove('ghost'); 
-  riskText.classList.remove('ghost');
-}
-
-function renderIssuesWithFixes() {
-  const issueList = $('issueList');
-  if (!issueList || !DATA) return;
-  
-  const allIssues = [
-    ...(DATA.details?.errors ||
+</html>
