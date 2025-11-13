@@ -4,6 +4,8 @@ import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import { collectAllForCurrentState } from './ScannerModules.js';
 import { formatReport } from './ReportFormatter.js';
+import { saveScan, getScanHistory, getScansByUrl, getScanById, compareScans, getStats, deleteScan } from './database.js';
+import { generatePDF } from './pdfExport.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
@@ -799,6 +801,17 @@ app.post('/scan', async (req, res) => {
   try {
     console.log(`Starting scan for: ${url}`);
     const results = await scanner.scanWithRetry(url);
+
+    // Save scan to database
+    try {
+      const scanId = saveScan(url, results);
+      results.scanId = scanId;
+      console.log(`Scan saved with ID: ${scanId}`);
+    } catch (dbError) {
+      console.error('Failed to save scan:', dbError);
+      // Continue even if save fails
+    }
+
     res.json(results);
   } catch (error) {
     console.error('Scan failed:', error);
@@ -850,6 +863,111 @@ app.get('/health', (req, res) => {
 });
 app.get('/version', (req, res) => {
   res.json({ version: VERSION, buildTime: new Date().toISOString(), nodeVersion: process.version });
+});
+
+// NEW ENDPOINTS - History, Compare, PDF
+
+app.get('/api/history', (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 20;
+    const history = getScanHistory(limit);
+    res.json({ ok: true, history });
+  } catch (error) {
+    console.error('History fetch failed:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+app.get('/api/history/:url', (req, res) => {
+  try {
+    const url = decodeURIComponent(req.params.url);
+    const limit = parseInt(req.query.limit) || 10;
+    const scans = getScansByUrl(url, limit);
+    res.json({ ok: true, url, scans });
+  } catch (error) {
+    console.error('URL history fetch failed:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+app.get('/api/scan/:id', (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const scan = getScanById(id);
+    if (!scan) {
+      return res.status(404).json({ ok: false, error: 'Scan not found' });
+    }
+    res.json({ ok: true, scan });
+  } catch (error) {
+    console.error('Scan fetch failed:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+app.get('/api/compare/:id1/:id2', (req, res) => {
+  try {
+    const id1 = parseInt(req.params.id1);
+    const id2 = parseInt(req.params.id2);
+    const comparison = compareScans(id1, id2);
+    res.json({ ok: true, comparison });
+  } catch (error) {
+    console.error('Comparison failed:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+app.get('/api/stats', (req, res) => {
+  try {
+    const stats = getStats();
+    res.json({ ok: true, stats });
+  } catch (error) {
+    console.error('Stats fetch failed:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+app.delete('/api/scan/:id', (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    deleteScan(id);
+    res.json({ ok: true, message: 'Scan deleted' });
+  } catch (error) {
+    console.error('Scan deletion failed:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+// PDF Export
+app.post('/api/export/pdf', async (req, res) => {
+  try {
+    const { scanId } = req.body;
+    let scanData;
+
+    if (scanId) {
+      const scan = getScanById(scanId);
+      if (!scan) {
+        return res.status(404).json({ ok: false, error: 'Scan not found' });
+      }
+      scanData = scan.scan_data;
+    } else {
+      scanData = req.body.scanData;
+      if (!scanData) {
+        return res.status(400).json({ ok: false, error: 'No scan data provided' });
+      }
+    }
+
+    const pdfBuffer = await generatePDF(scanData);
+
+    const filename = `website-scan-${scanData.scannedUrl?.replace(/[^a-z0-9]/gi, '-') || 'report'}-${Date.now()}.pdf`;
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error('PDF generation failed:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
 });
 
 /* ----------------------------- Start & Shutdown ---------------------------- */

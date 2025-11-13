@@ -234,6 +234,28 @@
   .preview{margin-left:8px;font-size:.85rem;color:#7c3aed}
   .banner{margin:12px auto 0;max-width:1200px;background:#e0f2fe;border:1px solid #93c5fd;color:#1e3a8a;padding:10px 14px;border-radius:10px}
   .test{font-size:.85rem;color:#047857}
+
+  /* History & Charts */
+  .history-item{background:white;border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;cursor:pointer;transition:all 0.3s ease}
+  .history-item:hover{box-shadow:0 4px 12px rgba(0,0,0,0.1);transform:translateY(-2px)}
+  .history-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .history-url{font-weight:600;color:#1f2937}
+  .history-score{padding:4px 12px;border-radius:999px;font-weight:600;font-size:0.9rem}
+  .score-good{background:#d1fae5;color:#059669}
+  .score-medium{background:#fef3c7;color:#d97706}
+  .score-bad{background:#fee2e2;color:#dc2626}
+  .history-meta{display:flex;gap:12px;align-items:center;font-size:0.85rem;color:#6b7280}
+  .history-date{color:#9ca3af}
+  .history-actions{margin-left:auto;display:flex;gap:6px}
+  .btn-small{padding:6px 12px;border:1px solid var(--border);background:white;border-radius:8px;cursor:pointer;font-size:0.85rem}
+  .btn-small:hover{background:#f3f4f6}
+  .btn-danger{color:#dc2626;border-color:#dc2626}
+  .btn-danger:hover{background:#fee2e2}
+  .chart-container{background:white;border:1px solid var(--border);border-radius:12px;padding:20px;height:300px;margin-bottom:20px}
+  .stat-card{background:white;border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+  .stat-value{font-size:2rem;font-weight:bold;color:#1f2937}
+  .stat-label{color:#6b7280;font-size:0.9rem;margin-top:4px}
+  #statsOverview{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
   
   @media (max-width: 768px) {
     .hero-section h1 { font-size: 2.5rem; }
@@ -404,7 +426,9 @@
         <button class="tab active" data-tab="summary">💰 Business Impact</button>
         <button class="tab" data-tab="compliance">⚖️ Compliance</button>
         <button class="tab" data-tab="issues">🔧 Probleme & Fixes</button>
+        <button class="tab" data-tab="history">📜 Scan-History</button>
         <button class="tab" data-tab="evidence">📊 Technische Details</button>
+        <button id="exportPDFBtn" class="btn" style="margin-left:auto">📥 PDF Export</button>
       </div>
 
       <!-- SUMMARY -->
@@ -491,6 +515,38 @@
             </div>
           </div>
           <div class="list" id="issueList"></div>
+        </div>
+      </section>
+
+      <!-- HISTORY -->
+      <section id="tab-history" class="grid" style="display:none">
+        <div class="card">
+          <h3 style="margin:0 0 16px 0">Scan-Statistiken</h3>
+          <div id="statsOverview"></div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <h3 style="margin:0">Scan-Verlauf</h3>
+            <button onclick="loadHistory()" class="copy">🔄 Aktualisieren</button>
+          </div>
+          <div id="historyList">
+            <div class="empty">Lade History...</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin:0 0 16px 0">Compliance-Übersicht</h3>
+          <div class="chart-container">
+            <canvas id="complianceChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin:0 0 16px 0">Probleme nach Priorität</h3>
+          <div class="chart-container">
+            <canvas id="issuesChart"></canvas>
+          </div>
         </div>
       </section>
 
@@ -897,5 +953,11 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 </script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- Enhanced Dashboard Features -->
+<script src="/dashboard.js"></script>
+
 </body>
 </html>
