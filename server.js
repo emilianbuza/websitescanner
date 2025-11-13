@@ -474,6 +474,7 @@ class UltimateWebsiteScanner {
   }
 
   async checkMarketingTagsDeep(page, requestLog) {
+    console.log(`🔍 Checking ${requestLog.length} requests for marketing tags...`);
     const hasGA4_HIT = requestLog.some(r => /(www|region\d+)\.google-analytics\.com\/g\/collect/i.test(r.url));
     const hasGA4_LIB = requestLog.some(r => /gtag\/js\?id=G-/i.test(r.url));
     const hasUA_HIT  = requestLog.some(r => /google-analytics\.com\/collect(\?|$)/i.test(r.url));
@@ -537,6 +538,7 @@ class UltimateWebsiteScanner {
       ['CrazyEgg', 'hasCrazyEgg']
     ];
     this.marketingTags = defs.map(([n,p]) => this.analyzeTagCompliance(n,p)).filter(t => t.relevant);
+    console.log(`📊 Found ${this.marketingTags.length} relevant marketing tags:`, this.marketingTags.map(t => t.name));
   }
 
   analyzeTagCompliance(tagName, tagProperty) {
@@ -828,6 +830,11 @@ class UltimateWebsiteScanner {
     ];
     const totalIssues = allErrors.length + allNetworkIssues.length + allCSPViolations.length;
     const highPriorityIssues = [...allErrors, ...allNetworkIssues, ...allCSPViolations].filter(i => i.priority === 'high' || i.priority === 'critical').length;
+
+    console.log(`📈 Scan Results Summary:
+  - Marketing Tags: ${this.marketingTags.length}
+  - Total Issues: ${totalIssues} (${highPriorityIssues} high priority)
+  - Errors: ${allErrors.length}, Network Issues: ${allNetworkIssues.length}, CSP Violations: ${allCSPViolations.length}`);
 
     return {
       version: VERSION,
