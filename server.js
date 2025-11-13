@@ -8,6 +8,8 @@ import { saveScan, getScanHistory, getScansByUrl, getScanById, compareScans, get
 import { generatePDF } from './pdfExport.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
+import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
 
@@ -131,10 +133,19 @@ class UltimateWebsiteScanner {
     this.validateUrl(url);
     console.log(`🔍 Starting comprehensive scan of ${url}`);
 
-    const browser = await chromium.launch({
-      headless: true,
-      args: ['--no-sandbox','--disable-setuid-sandbox','--disable-dev-shm-usage','--disable-web-security','--disable-features=VizDisplayCompositor']
-    });
+    let browser;
+    try {
+      console.log('🌐 Launching Chromium browser...');
+      browser = await chromium.launch({
+        headless: true,
+        args: ['--no-sandbox','--disable-setuid-sandbox','--disable-dev-shm-usage','--disable-web-security','--disable-features=VizDisplayCompositor']
+      });
+      console.log('✅ Browser launched successfully');
+    } catch (launchError) {
+      console.error('❌ Failed to launch browser:', launchError.message);
+      console.error('Browser executable path:', chromium.executablePath());
+      throw new Error(`Browser launch failed: ${launchError.message}`);
+    }
 
     try {
       console.log('🚫 Run A: Scanning without consent (default denied)...');
@@ -970,11 +981,72 @@ app.post('/api/export/pdf', async (req, res) => {
   }
 });
 
+/* ------------------------- Playwright Browser Check ------------------------ */
+async function checkPlaywrightBrowsers() {
+  console.log('\n🔍 Checking Playwright browser installation...');
+
+  try {
+    // Check if Chromium executable exists
+    const playwrightCache = process.env.PLAYWRIGHT_BROWSERS_PATH ||
+                            path.join(process.env.HOME || '/opt/render', '.cache', 'ms-playwright');
+
+    console.log(`📁 PLAYWRIGHT_BROWSERS_PATH: ${process.env.PLAYWRIGHT_BROWSERS_PATH || 'not set'}`);
+    console.log(`📁 Cache directory: ${playwrightCache}`);
+
+    // List cache directory contents
+    if (fs.existsSync(playwrightCache)) {
+      const contents = fs.readdirSync(playwrightCache);
+      console.log(`📦 Cache contents (${contents.length} items):`, contents);
+    } else {
+      console.log('⚠️  Cache directory does not exist!');
+    }
+
+    // Try to launch a browser to verify it works
+    console.log('🧪 Testing browser launch...');
+    const testBrowser = await chromium.launch({
+      headless: true,
+      timeout: 10000
+    });
+    await testBrowser.close();
+    console.log('✅ Playwright browsers are installed and working!\n');
+    return true;
+  } catch (error) {
+    console.error('❌ Playwright browser check failed:', error.message);
+    console.log('\n🔧 Attempting to install browsers at runtime...');
+
+    try {
+      // Install browsers at runtime
+      console.log('Running: npx playwright install chromium --with-deps');
+      execSync('npx playwright install chromium --with-deps', {
+        stdio: 'inherit',
+        timeout: 180000 // 3 minutes timeout
+      });
+
+      // Verify installation
+      console.log('\n🧪 Re-testing browser launch...');
+      const testBrowser = await chromium.launch({
+        headless: true,
+        timeout: 10000
+      });
+      await testBrowser.close();
+      console.log('✅ Browser installation successful!\n');
+      return true;
+    } catch (installError) {
+      console.error('❌ Failed to install browsers at runtime:', installError.message);
+      console.error('⚠️  Scanner will not work until browsers are properly installed!');
+      return false;
+    }
+  }
+}
+
 /* ----------------------------- Start & Shutdown ---------------------------- */
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, async () => {
   console.log(`🚀 Website Scanner running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔍 Scanner UI:   http://localhost:${PORT}/`);
+
+  // Check Playwright browsers after server starts
+  await checkPlaywrightBrowsers();
 });
 const graceful = (sig) => async () => {
   console.log(`\nReceived ${sig}, shutting down gracefully...`);
