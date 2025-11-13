@@ -3,10 +3,12 @@ services:
     name: websitescanner
     env: node
     plan: starter
-    buildCommand: yarn install && npx playwright install --with-deps chromium
+    buildCommand: yarn install && PLAYWRIGHT_BROWSERS_PATH=/opt/render/project/src/.playwright-browsers npx playwright install --with-deps chromium
     startCommand: yarn start
     envVars:
       - key: NODE_VERSION
         value: 20.11.0
       - key: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD
         value: "0"
+      - key: PLAYWRIGHT_BROWSERS_PATH
+        value: /opt/render/project/src/.playwright-browsers

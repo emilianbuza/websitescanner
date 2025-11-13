@@ -1015,11 +1015,12 @@ async function checkPlaywrightBrowsers() {
     console.log('\n🔧 Attempting to install browsers at runtime...');
 
     try {
-      // Install browsers at runtime
-      console.log('Running: npx playwright install chromium --with-deps');
-      execSync('npx playwright install chromium --with-deps', {
+      // Install browsers at runtime (without --with-deps as system deps were installed during build)
+      console.log('Running: npx playwright install chromium');
+      execSync('npx playwright install chromium', {
         stdio: 'inherit',
-        timeout: 180000 // 3 minutes timeout
+        timeout: 180000, // 3 minutes timeout
+        env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH || '/opt/render/project/src/.playwright-browsers' }
       });
 
       // Verify installation
