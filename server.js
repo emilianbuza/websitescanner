@@ -13,6 +13,11 @@ import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
 
+// Set browser path BEFORE any Playwright operations
+const BROWSER_PATH = process.env.PLAYWRIGHT_BROWSERS_PATH || path.join(__dirname, '.playwright-browsers');
+process.env.PLAYWRIGHT_BROWSERS_PATH = BROWSER_PATH;
+console.log(`🎯 Setting PLAYWRIGHT_BROWSERS_PATH to: ${BROWSER_PATH}`);
+
 const app = express();
 app.set('trust proxy', 1);
 
@@ -984,21 +989,30 @@ app.post('/api/export/pdf', async (req, res) => {
 /* ------------------------- Playwright Browser Check ------------------------ */
 async function checkPlaywrightBrowsers() {
   console.log('\n🔍 Checking Playwright browser installation...');
+  console.log(`📁 PLAYWRIGHT_BROWSERS_PATH: ${process.env.PLAYWRIGHT_BROWSERS_PATH}`);
+  console.log(`📁 Current directory: ${__dirname}`);
 
   try {
-    // Check if Chromium executable exists
-    const playwrightCache = process.env.PLAYWRIGHT_BROWSERS_PATH ||
-                            path.join(process.env.HOME || '/opt/render', '.cache', 'ms-playwright');
+    // List browser cache directory
+    if (fs.existsSync(BROWSER_PATH)) {
+      const contents = fs.readdirSync(BROWSER_PATH);
+      console.log(`📦 Browser cache contents (${contents.length} items):`, contents);
 
-    console.log(`📁 PLAYWRIGHT_BROWSERS_PATH: ${process.env.PLAYWRIGHT_BROWSERS_PATH || 'not set'}`);
-    console.log(`📁 Cache directory: ${playwrightCache}`);
-
-    // List cache directory contents
-    if (fs.existsSync(playwrightCache)) {
-      const contents = fs.readdirSync(playwrightCache);
-      console.log(`📦 Cache contents (${contents.length} items):`, contents);
+      // Look for chromium directories
+      const chromiumDirs = contents.filter(d => d.includes('chromium'));
+      if (chromiumDirs.length > 0) {
+        console.log(`🔍 Found Chromium directories:`, chromiumDirs);
+        chromiumDirs.forEach(dir => {
+          const dirPath = path.join(BROWSER_PATH, dir);
+          if (fs.existsSync(dirPath) && fs.statSync(dirPath).isDirectory()) {
+            console.log(`   ${dir}:`, fs.readdirSync(dirPath));
+          }
+        });
+      }
     } else {
-      console.log('⚠️  Cache directory does not exist!');
+      console.log(`⚠️  Browser cache directory does not exist: ${BROWSER_PATH}`);
+      console.log('📁 Creating directory...');
+      fs.mkdirSync(BROWSER_PATH, { recursive: true });
     }
 
     // Try to launch a browser to verify it works
@@ -1013,14 +1027,15 @@ async function checkPlaywrightBrowsers() {
   } catch (error) {
     console.error('❌ Playwright browser check failed:', error.message);
     console.log('\n🔧 Attempting to install browsers at runtime...');
+    console.log(`🎯 Installing to: ${BROWSER_PATH}`);
 
     try {
-      // Install browsers at runtime (without --with-deps as system deps were installed during build)
+      // Install browsers at runtime
       console.log('Running: npx playwright install chromium');
       execSync('npx playwright install chromium', {
         stdio: 'inherit',
         timeout: 180000, // 3 minutes timeout
-        env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH || '/opt/render/project/src/.playwright-browsers' }
+        env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: BROWSER_PATH }
       });
 
       // Verify installation
