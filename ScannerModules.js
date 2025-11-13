@@ -483,8 +483,537 @@ export function analyzeFindings(collectors, snapshots = {}) {
     });
   }
 
+  // NEUE SECURITY FEATURES FINDINGS
+  if (snapshots.securityHeaders) {
+    findings.push({
+      type: "security_headers",
+      severity: snapshots.securityHeaders.missing.length > 0 ? "warning" : "info",
+      session: collectors.session,
+      evidence: {
+        score: snapshots.securityHeaders.score,
+        missing: snapshots.securityHeaders.missing,
+        headers: snapshots.securityHeaders.headers
+      },
+      source: "security_headers"
+    });
+  }
+
+  if (snapshots.mixedContent && snapshots.mixedContent.detected) {
+    findings.push({
+      type: "mixed_content",
+      severity: snapshots.mixedContent.severity,
+      session: collectors.session,
+      evidence: {
+        count: snapshots.mixedContent.count,
+        items: snapshots.mixedContent.items
+      },
+      source: "mixed_content"
+    });
+  }
+
+  if (snapshots.productionErrors && snapshots.productionErrors.count > 0) {
+    findings.push({
+      type: "production_errors",
+      severity: snapshots.productionErrors.hasCritical ? "critical" : "warning",
+      session: collectors.session,
+      evidence: {
+        count: snapshots.productionErrors.count,
+        errors: snapshots.productionErrors.errors
+      },
+      source: "production_errors"
+    });
+  }
+
+  if (snapshots.thirdPartyPerf && snapshots.thirdPartyPerf.warning) {
+    findings.push({
+      type: "third_party_performance",
+      severity: snapshots.thirdPartyPerf.slowScripts > 5 ? "warning" : "info",
+      session: collectors.session,
+      evidence: {
+        totalScripts: snapshots.thirdPartyPerf.totalScripts,
+        slowScripts: snapshots.thirdPartyPerf.slowScripts,
+        totalTime: snapshots.thirdPartyPerf.totalTime,
+        totalSize: snapshots.thirdPartyPerf.totalSize,
+        topScripts: snapshots.thirdPartyPerf.scripts.slice(0, 5)
+      },
+      source: "third_party_performance"
+    });
+  }
+
+  if (snapshots.vulnerableLibs && snapshots.vulnerableLibs.vulnerable > 0) {
+    findings.push({
+      type: "vulnerable_libraries",
+      severity: snapshots.vulnerableLibs.severity,
+      session: collectors.session,
+      evidence: {
+        vulnerable: snapshots.vulnerableLibs.vulnerable,
+        libraries: snapshots.vulnerableLibs.libraries
+      },
+      source: "vulnerable_libraries"
+    });
+  }
+
+  if (snapshots.cookieBanner) {
+    findings.push({
+      type: "cookie_banner_validation",
+      severity: snapshots.cookieBanner.severity,
+      session: collectors.session,
+      evidence: {
+        present: snapshots.cookieBanner.present,
+        compliance: snapshots.cookieBanner.compliance,
+        hasAcceptButton: snapshots.cookieBanner.hasAcceptButton,
+        hasRejectButton: snapshots.cookieBanner.hasRejectButton
+      },
+      source: "cookie_banner"
+    });
+  }
+
+  if (snapshots.renderBlocking && snapshots.renderBlocking.total > 0) {
+    findings.push({
+      type: "render_blocking",
+      severity: snapshots.renderBlocking.severity,
+      session: collectors.session,
+      evidence: {
+        total: snapshots.renderBlocking.total,
+        blockingScripts: snapshots.renderBlocking.blockingScripts,
+        blockingStylesheets: snapshots.renderBlocking.blockingStylesheets,
+        resources: snapshots.renderBlocking.resources.slice(0, 5)
+      },
+      source: "render_blocking"
+    });
+  }
+
+  if (snapshots.fingerprinting && snapshots.fingerprinting.detected) {
+    findings.push({
+      type: "fingerprinting_detection",
+      severity: snapshots.fingerprinting.severity,
+      session: collectors.session,
+      evidence: {
+        count: snapshots.fingerprinting.count,
+        methods: snapshots.fingerprinting.methods
+      },
+      source: "fingerprinting"
+    });
+  }
+
   return findings;
 }
+
+// ===================== NEUE SECURITY FEATURES =====================
+
+// 1. Security Headers Check
+export async function checkSecurityHeaders(topHeaders, { sessionLabel = "default" } = {}) {
+  if (!topHeaders?.headers) return null;
+
+  const headers = topHeaders.headers;
+  const requiredHeaders = {
+    'x-frame-options': {
+      present: !!headers['x-frame-options'],
+      value: headers['x-frame-options'],
+      severity: 'high',
+      description: 'Schützt vor Clickjacking-Angriffen'
+    },
+    'x-content-type-options': {
+      present: !!headers['x-content-type-options'],
+      value: headers['x-content-type-options'],
+      severity: 'medium',
+      description: 'Verhindert MIME-Type-Sniffing'
+    },
+    'strict-transport-security': {
+      present: !!headers['strict-transport-security'],
+      value: headers['strict-transport-security'],
+      severity: 'high',
+      description: 'Erzwingt HTTPS-Verbindungen'
+    },
+    'x-xss-protection': {
+      present: !!headers['x-xss-protection'],
+      value: headers['x-xss-protection'],
+      severity: 'medium',
+      description: 'XSS-Filter im Browser (legacy)'
+    },
+    'referrer-policy': {
+      present: !!headers['referrer-policy'],
+      value: headers['referrer-policy'],
+      severity: 'low',
+      description: 'Kontrolliert Referrer-Informationen'
+    },
+    'permissions-policy': {
+      present: !!headers['permissions-policy'],
+      value: headers['permissions-policy'],
+      severity: 'medium',
+      description: 'Kontrolliert Browser-Features'
+    }
+  };
+
+  const missing = Object.entries(requiredHeaders)
+    .filter(([key, info]) => !info.present)
+    .map(([key, info]) => ({ header: key, severity: info.severity, description: info.description }));
+
+  return {
+    session: sessionLabel,
+    kind: "security_headers",
+    headers: requiredHeaders,
+    missing,
+    score: ((Object.keys(requiredHeaders).length - missing.length) / Object.keys(requiredHeaders).length * 100).toFixed(0)
+  };
+}
+
+// 2. Mixed Content Detection
+export function detectMixedContent(networkResponses, topHeaders, { sessionLabel = "default" } = {}) {
+  const pageUrl = topHeaders?.url || '';
+  const isHttpsPage = pageUrl.startsWith('https://');
+
+  if (!isHttpsPage) {
+    return { session: sessionLabel, kind: "mixed_content", applicable: false, reason: "Page not HTTPS" };
+  }
+
+  const mixedContent = networkResponses
+    .filter(resp => resp.url && resp.url.startsWith('http://'))
+    .map(resp => ({
+      url: resp.url,
+      resourceType: resp.category || 'unknown',
+      blocked: resp.status === 0 || resp.status >= 400
+    }));
+
+  return {
+    session: sessionLabel,
+    kind: "mixed_content",
+    applicable: true,
+    detected: mixedContent.length > 0,
+    count: mixedContent.length,
+    items: mixedContent.slice(0, 20),
+    severity: mixedContent.length > 0 ? 'high' : 'none'
+  };
+}
+
+// 3. JavaScript Production Errors Detection
+export function detectProductionErrors(consoleEvents, { sessionLabel = "default" } = {}) {
+  const productionErrorPatterns = [
+    { pattern: /sourceMappingURL|\.map/i, type: 'sourcemap_missing', severity: 'low' },
+    { pattern: /minified|uglified|bundled/i, type: 'minification_error', severity: 'medium' },
+    { pattern: /webpack|parcel|rollup|vite/i, type: 'bundler_error', severity: 'medium' },
+    { pattern: /undefined is not|cannot read property.*undefined/i, type: 'null_reference', severity: 'high' },
+    { pattern: /script error/i, type: 'cors_script_error', severity: 'medium' },
+    { pattern: /out of memory/i, type: 'memory_error', severity: 'critical' },
+    { pattern: /maximum call stack/i, type: 'stack_overflow', severity: 'critical' }
+  ];
+
+  const detectedErrors = consoleEvents
+    .filter(ev => ev.level === 'error')
+    .map(ev => {
+      const text = ev.text || '';
+      const matches = productionErrorPatterns.filter(p => p.pattern.test(text));
+      return matches.length > 0 ? {
+        message: truncate(text, 300),
+        types: matches.map(m => m.type),
+        severity: matches.reduce((max, m) => {
+          const levels = { critical: 4, high: 3, medium: 2, low: 1 };
+          return levels[m.severity] > levels[max] ? m.severity : max;
+        }, 'low'),
+        timestamp: ev.timestamp
+      } : null;
+    })
+    .filter(Boolean);
+
+  return {
+    session: sessionLabel,
+    kind: "production_errors",
+    count: detectedErrors.length,
+    errors: detectedErrors.slice(0, 10),
+    hasCritical: detectedErrors.some(e => e.severity === 'critical')
+  };
+}
+
+// 4. Third-Party Script Performance Analysis
+export async function analyzeThirdPartyPerformance(page, { sessionLabel = "default" } = {}) {
+  const resourceTimings = await page.evaluate(() => {
+    const entries = performance.getEntriesByType('resource');
+    return entries
+      .filter(e => e.initiatorType === 'script' || e.name.endsWith('.js'))
+      .map(e => ({
+        url: e.name,
+        duration: e.duration,
+        size: e.transferSize || 0,
+        startTime: e.startTime,
+        dns: e.domainLookupEnd - e.domainLookupStart,
+        tcp: e.connectEnd - e.connectStart,
+        download: e.responseEnd - e.responseStart,
+        blocked: e.domainLookupStart - e.fetchStart
+      }));
+  });
+
+  const thirdParty = resourceTimings.filter(r => {
+    try {
+      const scriptHost = new URL(r.url).hostname;
+      const pageHost = new URL(window.location.href).hostname;
+      return scriptHost !== pageHost;
+    } catch {
+      return false;
+    }
+  }).map(r => {
+    const cls = classifyUrl(r.url);
+    return { ...r, toolName: cls?.toolName || null, category: cls?.category || 'unknown' };
+  });
+
+  const slowScripts = thirdParty.filter(s => s.duration > 500);
+  const totalThirdPartyTime = thirdParty.reduce((sum, s) => sum + s.duration, 0);
+  const totalThirdPartySize = thirdParty.reduce((sum, s) => sum + s.size, 0);
+
+  return {
+    session: sessionLabel,
+    kind: "third_party_performance",
+    totalScripts: thirdParty.length,
+    slowScripts: slowScripts.length,
+    totalTime: Math.round(totalThirdPartyTime),
+    totalSize: totalThirdPartySize,
+    scripts: thirdParty.sort((a, b) => b.duration - a.duration).slice(0, 15),
+    warning: slowScripts.length > 0
+  };
+}
+
+// 5. Vulnerable Libraries Detection
+export async function detectVulnerableLibraries(page, { sessionLabel = "default" } = {}) {
+  const knownVulnerablePatterns = [
+    { lib: 'jQuery', versions: ['1.', '2.', '3.0.', '3.1.', '3.2.', '3.3.', '3.4.0', '3.4.1'], pattern: /jquery[.-](\d+\.\d+\.\d+)/i },
+    { lib: 'Angular', versions: ['1.'], pattern: /angular[.-](\d+\.\d+)/i },
+    { lib: 'Moment.js', versions: ['2.29.3', '2.29.2', '2.29.1'], pattern: /moment[.-](\d+\.\d+\.\d+)/i },
+    { lib: 'Lodash', versions: ['4.17.20', '4.17.19', '4.17.15'], pattern: /lodash[.-](\d+\.\d+\.\d+)/i },
+    { lib: 'Bootstrap', versions: ['3.', '4.0.', '4.1.', '4.2.', '4.3.0'], pattern: /bootstrap[.-](\d+\.\d+\.\d+)/i }
+  ];
+
+  const detectedLibs = await page.evaluate((patterns) => {
+    const scripts = Array.from(document.scripts);
+    const detected = [];
+
+    scripts.forEach(script => {
+      const src = script.src || '';
+      const content = script.textContent || '';
+
+      patterns.forEach(({ lib, versions, pattern: patternStr }) => {
+        const pattern = new RegExp(patternStr.source, patternStr.flags);
+        const match = src.match(pattern) || content.substring(0, 1000).match(pattern);
+
+        if (match && match[1]) {
+          const version = match[1];
+          const isVulnerable = versions.some(v => version.startsWith(v));
+
+          if (isVulnerable) {
+            detected.push({
+              library: lib,
+              version,
+              source: src || 'inline',
+              vulnerable: true
+            });
+          }
+        }
+      });
+    });
+
+    // Check window globals
+    if (typeof window.jQuery !== 'undefined' && window.jQuery.fn) {
+      const jqVersion = window.jQuery.fn.jquery;
+      detected.push({ library: 'jQuery', version: jqVersion, source: 'window.jQuery', vulnerable: /^[123]\.|^3\.[0-4]\.[01]/.test(jqVersion) });
+    }
+
+    if (typeof window.angular !== 'undefined' && window.angular.version) {
+      const ngVersion = window.angular.version.full;
+      detected.push({ library: 'Angular', version: ngVersion, source: 'window.angular', vulnerable: /^1\./.test(ngVersion) });
+    }
+
+    return detected;
+  }, knownVulnerablePatterns);
+
+  const vulnerableLibs = detectedLibs.filter(lib => lib.vulnerable);
+
+  return {
+    session: sessionLabel,
+    kind: "vulnerable_libraries",
+    detected: detectedLibs.length,
+    vulnerable: vulnerableLibs.length,
+    libraries: vulnerableLibs,
+    severity: vulnerableLibs.length > 0 ? 'high' : 'none'
+  };
+}
+
+// 6. Advanced Cookie Banner Validation
+export async function validateCookieBanner(page, { sessionLabel = "default" } = {}) {
+  const bannerInfo = await page.evaluate(() => {
+    const selectors = [
+      '[class*="cookie"][class*="banner"]',
+      '[class*="consent"]',
+      '[id*="cookie"][id*="banner"]',
+      '[id*="consent"]',
+      '.cookie-notice',
+      '#cookie-notice',
+      '[role="dialog"][aria-label*="cookie" i]',
+      '[role="dialog"][aria-label*="consent" i]'
+    ];
+
+    let banner = null;
+    for (const sel of selectors) {
+      const el = document.querySelector(sel);
+      if (el && el.offsetParent !== null) {
+        banner = el;
+        break;
+      }
+    }
+
+    if (!banner) return { present: false };
+
+    const buttons = Array.from(banner.querySelectorAll('button, [role="button"], a[href], input[type="button"]'));
+    const acceptBtn = buttons.find(b => /accept|zustimmen|einverstanden|alle.*akzept/i.test(b.textContent || ''));
+    const rejectBtn = buttons.find(b => /reject|ablehnen|nur.*notwendig|necessary.*only/i.test(b.textContent || ''));
+    const settingsBtn = buttons.find(b => /settings|einstellungen|customize|anpassen/i.test(b.textContent || ''));
+
+    return {
+      present: true,
+      visible: banner.offsetParent !== null,
+      hasAcceptButton: !!acceptBtn,
+      hasRejectButton: !!rejectBtn,
+      hasSettingsButton: !!settingsBtn,
+      buttonCount: buttons.length,
+      hasPrivacyLink: !!banner.querySelector('a[href*="privacy"], a[href*="datenschutz"]'),
+      position: window.getComputedStyle(banner).position,
+      zIndex: window.getComputedStyle(banner).zIndex
+    };
+  });
+
+  const compliance = {
+    gdprCompliant: bannerInfo.present && bannerInfo.hasAcceptButton && bannerInfo.hasRejectButton,
+    issues: []
+  };
+
+  if (!bannerInfo.present) compliance.issues.push('Kein Cookie-Banner gefunden');
+  if (bannerInfo.present && !bannerInfo.hasRejectButton) compliance.issues.push('Keine Ablehnen-Option gefunden');
+  if (bannerInfo.present && !bannerInfo.hasAcceptButton) compliance.issues.push('Keine Akzeptieren-Option gefunden');
+  if (bannerInfo.present && !bannerInfo.hasPrivacyLink) compliance.issues.push('Kein Link zur Datenschutzerklärung');
+
+  return {
+    session: sessionLabel,
+    kind: "cookie_banner_validation",
+    ...bannerInfo,
+    compliance,
+    severity: compliance.gdprCompliant ? 'none' : 'high'
+  };
+}
+
+// 7. Render-Blocking Resources Detection
+export async function detectRenderBlockingResources(page, { sessionLabel = "default" } = {}) {
+  const blockingResources = await page.evaluate(() => {
+    const scripts = Array.from(document.scripts);
+    const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
+
+    const blocking = {
+      scripts: scripts
+        .filter(s => s.src && !s.async && !s.defer && s.compareDocumentPosition(document.body) & Node.DOCUMENT_POSITION_FOLLOWING)
+        .map(s => ({
+          url: s.src,
+          inHead: s.parentElement?.tagName === 'HEAD',
+          type: 'script'
+        })),
+      stylesheets: links
+        .filter(l => !l.media || l.media === 'all' || l.media === 'screen')
+        .map(l => ({
+          url: l.href,
+          media: l.media || 'all',
+          type: 'stylesheet'
+        }))
+    };
+
+    return blocking;
+  });
+
+  const totalBlocking = blockingResources.scripts.length + blockingResources.stylesheets.length;
+
+  return {
+    session: sessionLabel,
+    kind: "render_blocking",
+    blockingScripts: blockingResources.scripts.length,
+    blockingStylesheets: blockingResources.stylesheets.length,
+    total: totalBlocking,
+    resources: [
+      ...blockingResources.scripts,
+      ...blockingResources.stylesheets
+    ].slice(0, 20),
+    severity: totalBlocking > 5 ? 'medium' : totalBlocking > 0 ? 'low' : 'none'
+  };
+}
+
+// 8. Browser Fingerprinting Detection
+export async function detectFingerprinting(page, { sessionLabel = "default" } = {}) {
+  const fingerprintingSignals = await page.evaluate(() => {
+    const signals = {
+      canvasFingerprinting: false,
+      webglFingerprinting: false,
+      audioFingerprinting: false,
+      fontFingerprinting: false,
+      batteryAPI: false,
+      deviceMemory: false,
+      hardwareConcurrency: false,
+      screenResolution: false
+    };
+
+    // Canvas Fingerprinting Detection
+    const canvasProto = CanvasRenderingContext2D.prototype;
+    if (canvasProto.getImageData.toString().includes('[native code]')) {
+      // Check if canvas is being used in a fingerprinting way
+      const testCanvas = document.createElement('canvas');
+      if (testCanvas.getContext) signals.canvasFingerprinting = true;
+    }
+
+    // WebGL Fingerprinting
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (gl) {
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        if (debugInfo) signals.webglFingerprinting = true;
+      }
+    } catch (e) {}
+
+    // Audio Fingerprinting
+    if (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined') {
+      signals.audioFingerprinting = true;
+    }
+
+    // Font Fingerprinting (check if font detection is being used)
+    if (document.fonts && document.fonts.check) {
+      signals.fontFingerprinting = true;
+    }
+
+    // Battery API
+    if (navigator.getBattery) signals.batteryAPI = true;
+
+    // Device Memory
+    if (navigator.deviceMemory) signals.deviceMemory = true;
+
+    // Hardware Concurrency
+    if (navigator.hardwareConcurrency) signals.hardwareConcurrency = true;
+
+    // Screen Resolution
+    if (window.screen.width && window.screen.height && window.screen.colorDepth) {
+      signals.screenResolution = true;
+    }
+
+    return signals;
+  });
+
+  const fingerprintingMethods = Object.entries(fingerprintingSignals)
+    .filter(([key, value]) => value)
+    .map(([key]) => key);
+
+  return {
+    session: sessionLabel,
+    kind: "fingerprinting_detection",
+    detected: fingerprintingMethods.length > 0,
+    methods: fingerprintingMethods,
+    count: fingerprintingMethods.length,
+    signals: fingerprintingSignals,
+    severity: fingerprintingMethods.length > 3 ? 'medium' : fingerprintingMethods.length > 0 ? 'low' : 'none'
+  };
+}
+
+// ===================== UPDATED collectAllForCurrentState =====================
 
 export async function collectAllForCurrentState(page, context, options = {}) {
   const { sessionLabel = "default" } = options;
@@ -503,11 +1032,32 @@ export async function collectAllForCurrentState(page, context, options = {}) {
 
   const collectors = await stopAndCollect();
   const topHeaders = extractTopDocumentHeaders(collectors);
-  const findings = analyzeFindings(collectors, { cookies, storage, dom, consent, topHeaders, performance });
+
+  // NEUE SECURITY FEATURES
+  const [securityHeaders, mixedContent, productionErrors, thirdPartyPerf, vulnerableLibs, cookieBanner, renderBlocking, fingerprinting] = await Promise.all([
+    checkSecurityHeaders(topHeaders, { sessionLabel }),
+    Promise.resolve(detectMixedContent(collectors.networkResponses, topHeaders, { sessionLabel })),
+    Promise.resolve(detectProductionErrors(collectors.consoleEvents, { sessionLabel })),
+    analyzeThirdPartyPerformance(page, { sessionLabel }),
+    detectVulnerableLibraries(page, { sessionLabel }),
+    validateCookieBanner(page, { sessionLabel }),
+    detectRenderBlockingResources(page, { sessionLabel }),
+    detectFingerprinting(page, { sessionLabel })
+  ]);
+
+  const findings = analyzeFindings(collectors, {
+    cookies, storage, dom, consent, topHeaders, performance,
+    securityHeaders, mixedContent, productionErrors, thirdPartyPerf,
+    vulnerableLibs, cookieBanner, renderBlocking, fingerprinting
+  });
 
   return {
     session: sessionLabel,
-    artifacts: { collectors, cookies, storage, dom, consent, topHeaders, performance },
+    artifacts: {
+      collectors, cookies, storage, dom, consent, topHeaders, performance,
+      securityHeaders, mixedContent, productionErrors, thirdPartyPerf,
+      vulnerableLibs, cookieBanner, renderBlocking, fingerprinting
+    },
     findings
   };
 }
