@@ -747,15 +747,27 @@ async function startRealScan(url) {
       if (response.ok) {
         const data = await response.json();
         DATA = data;
+        console.log('✅ Scan data received from server');
       } else {
         throw new Error('Server error');
       }
     } catch (e) {
       // Fallback to demo data
+      console.log('⚠️ Using demo data, server error:', e.message);
       DATA = buildDemoData();
     }
-    
+
     // Show results
+    console.log('=== RENDERING SCAN RESULTS ===');
+    console.log('DATA object:', DATA);
+    console.log('Summary:', DATA?.summary);
+    console.log('Marketing Tags:', DATA?.summary?.marketingTags);
+    console.log('Details:', DATA?.details);
+    console.log('Errors count:', DATA?.details?.errors?.length);
+    console.log('Network Issues count:', DATA?.details?.networkIssues?.length);
+    console.log('CSP Violations count:', DATA?.details?.cspViolations?.length);
+    console.log('==============================');
+
     $('scanProgress').classList.remove('active');
     $('heroSection').style.display = 'none';
     $('exampleSection').style.display = 'none';
@@ -844,16 +856,23 @@ function buildDemoData() {
 
 // Render functions
 function renderSummary() {
-  if (!DATA) return;
+  console.log('🔵 renderSummary() called');
+  if (!DATA) {
+    console.log('❌ No DATA in renderSummary');
+    return;
+  }
+
   $('scannedUrl').textContent = DATA.scannedUrl || '–';
   $('timestamp').textContent = DATA.timestamp || '–';
   $('version').textContent = 'v' + (DATA.version || '–');
-  
+
   const total = (DATA.details?.errors?.length || 0) + (DATA.details?.networkIssues?.length || 0) + (DATA.details?.cspViolations?.length || 0);
   const crit = (DATA.details?.errors || []).filter(function(e) { return /critical|high/i.test(e.priority || ''); }).length;
   const mtags = DATA.summary?.marketingTags || [];
   const perfect = mtags.filter(function(m) { return m.compliance === 'perfect'; }).length;
   const risk = mtags.filter(function(m) { return ['bad','inconsistent','good','missing'].includes(m.compliance); }).length;
+
+  console.log('📊 Summary stats: total=' + total + ', crit=' + crit + ', mtags=' + mtags.length + ', perfect=' + perfect + ', risk=' + risk);
   
   // Calculate money impact
   let monthlyLoss = 0;
@@ -886,16 +905,23 @@ function renderSummary() {
 }
 
 function renderCompliance() {
+  console.log('🔵 renderCompliance() called');
   const container = $('complianceList');
-  if (!container) return;
+  if (!container) {
+    console.log('❌ complianceList container not found!');
+    return;
+  }
 
   const mtags = DATA.summary?.marketingTags || [];
+  console.log('📊 Marketing tags to render:', mtags.length, mtags);
+
   if (mtags.length === 0) {
+    console.log('⚠️ No marketing tags, showing empty message');
     container.innerHTML = '<div class="empty">Keine Marketing-Tags gefunden</div>';
     return;
   }
 
-  container.innerHTML = mtags.map(function(tag) {
+  const html = mtags.map(function(tag) {
     const compClass = tag.compliance || 'unknown';
     const compLabel = {
       'perfect': 'Perfekt',
@@ -932,24 +958,36 @@ function renderCompliance() {
       '</div>' +
     '</div>';
   }).join('');
+
+  container.innerHTML = html;
+  console.log('✅ Compliance HTML rendered, length:', html.length);
 }
 
 function renderIssues() {
+  console.log('🔵 renderIssues() called');
   const container = $('issueList');
-  if (!container) return;
+  if (!container) {
+    console.log('❌ issueList container not found!');
+    return;
+  }
 
   const allIssues = [
     ...(DATA.details?.errors || []),
     ...(DATA.details?.networkIssues || []),
     ...(DATA.details?.cspViolations || [])
   ];
+  console.log('🚨 Issues to render:', allIssues.length, 'issues');
+  console.log('  - Errors:', DATA.details?.errors?.length);
+  console.log('  - Network Issues:', DATA.details?.networkIssues?.length);
+  console.log('  - CSP Violations:', DATA.details?.cspViolations?.length);
 
   if (allIssues.length === 0) {
+    console.log('✅ No issues, showing success message');
     container.innerHTML = '<div class="empty">✅ Keine Probleme gefunden!</div>';
     return;
   }
 
-  container.innerHTML = allIssues.map(function(issue) {
+  const html = allIssues.map(function(issue) {
     const priority = issue.priority || 'low';
     const priorityLabel = {
       'critical': '🔴 Kritisch',
@@ -971,13 +1009,22 @@ function renderIssues() {
       '</div>' +
     '</div>';
   }).join('');
+
+  container.innerHTML = html;
+  console.log('✅ Issues HTML rendered, length:', html.length);
 }
 
 function renderAll() {
-  if (!DATA) return;
+  console.log('🎨 renderAll() called');
+  if (!DATA) {
+    console.log('❌ No DATA object available!');
+    return;
+  }
+  console.log('✅ DATA object exists, rendering all sections...');
   renderSummary();
   renderCompliance();
   renderIssues();
+  console.log('✅ All render functions completed');
 }
 
 // Event handlers
