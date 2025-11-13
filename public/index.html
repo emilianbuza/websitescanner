@@ -1024,6 +1024,19 @@ function renderAll() {
   renderSummary();
   renderCompliance();
   renderIssues();
+
+  // Make sure tabs are visible after rendering
+  const complianceTab = $('tab-compliance');
+  const issuesTab = $('tab-issues');
+  if (complianceTab) {
+    complianceTab.style.display = 'grid';
+    console.log('✅ Compliance tab made visible');
+  }
+  if (issuesTab) {
+    issuesTab.style.display = 'grid';
+    console.log('✅ Issues tab made visible');
+  }
+
   console.log('✅ All render functions completed');
 }
 
