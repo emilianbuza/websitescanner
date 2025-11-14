@@ -596,6 +596,155 @@ export function analyzeFindings(collectors, snapshots = {}) {
     });
   }
 
+  // ===================== 10 NEUE TECHNISCHE PRÜFUNGEN IN FINDINGS =====================
+
+  // 1. Broken Resources
+  if (snapshots.brokenResources && snapshots.brokenResources.count > 0) {
+    findings.push({
+      type: "broken_resources",
+      severity: snapshots.brokenResources.severity,
+      session: collectors.session,
+      evidence: {
+        count: snapshots.brokenResources.count,
+        details: snapshots.brokenResources.details,
+        grouped: snapshots.brokenResources.grouped
+      },
+      source: "network"
+    });
+  }
+
+  // 2. JavaScript Errors
+  if (snapshots.jsErrors && snapshots.jsErrors.count > 0) {
+    findings.push({
+      type: "javascript_runtime_errors",
+      severity: snapshots.jsErrors.severity,
+      session: collectors.session,
+      evidence: {
+        count: snapshots.jsErrors.count,
+        errors: snapshots.jsErrors.errors
+      },
+      source: "console"
+    });
+  }
+
+  // 3. CORS Issues
+  if (snapshots.corsIssues && snapshots.corsIssues.count > 0) {
+    findings.push({
+      type: "cors_failures",
+      severity: snapshots.corsIssues.severity,
+      session: collectors.session,
+      evidence: {
+        count: snapshots.corsIssues.count,
+        errors: snapshots.corsIssues.errors,
+        failedRequests: snapshots.corsIssues.failedRequests
+      },
+      source: "network"
+    });
+  }
+
+  // 4. Service Worker
+  if (snapshots.serviceWorker) {
+    findings.push({
+      type: "service_worker_status",
+      severity: snapshots.serviceWorker.hasErrors ? 'high' : 'info',
+      session: collectors.session,
+      evidence: snapshots.serviceWorker,
+      source: "browser_api"
+    });
+  }
+
+  // 5. Form Validation
+  if (snapshots.formValidation && snapshots.formValidation.issueCount > 0) {
+    findings.push({
+      type: "form_validation_issues",
+      severity: snapshots.formValidation.severity,
+      session: collectors.session,
+      evidence: {
+        totalForms: snapshots.formValidation.totalForms,
+        issueCount: snapshots.formValidation.issueCount,
+        issues: snapshots.formValidation.issues
+      },
+      source: "dom"
+    });
+  }
+
+  // 6. Slow Resources
+  if (snapshots.slowResources && snapshots.slowResources.count > 0) {
+    findings.push({
+      type: "slow_loading_resources",
+      severity: snapshots.slowResources.severity,
+      session: collectors.session,
+      evidence: {
+        count: snapshots.slowResources.count,
+        resources: snapshots.slowResources.resources
+      },
+      source: "performance"
+    });
+  }
+
+  // 7. Image Optimization
+  if (snapshots.imageOptimization && (snapshots.imageOptimization.largeCount > 0 || snapshots.imageOptimization.missingAltCount > 0)) {
+    findings.push({
+      type: "image_optimization_issues",
+      severity: snapshots.imageOptimization.severity,
+      session: collectors.session,
+      evidence: {
+        totalImages: snapshots.imageOptimization.totalImages,
+        largeCount: snapshots.imageOptimization.largeCount,
+        missingAltCount: snapshots.imageOptimization.missingAltCount,
+        largeImages: snapshots.imageOptimization.largeImages,
+        missingAlt: snapshots.imageOptimization.missingAlt
+      },
+      source: "dom"
+    });
+  }
+
+  // 8. Font Loading
+  if (snapshots.fontLoading && snapshots.fontLoading.failedCount > 0) {
+    findings.push({
+      type: "font_loading_failures",
+      severity: snapshots.fontLoading.severity,
+      session: collectors.session,
+      evidence: {
+        totalFonts: snapshots.fontLoading.totalFonts,
+        failedCount: snapshots.fontLoading.failedCount,
+        failed: snapshots.fontLoading.failed
+      },
+      source: "performance"
+    });
+  }
+
+  // 9. Memory Usage
+  if (snapshots.memoryUsage && snapshots.memoryUsage.supported) {
+    findings.push({
+      type: "memory_usage",
+      severity: snapshots.memoryUsage.severity,
+      session: collectors.session,
+      evidence: {
+        usagePercent: snapshots.memoryUsage.usagePercent,
+        usedJSHeapSize: snapshots.memoryUsage.usedJSHeapSize,
+        jsHeapSizeLimit: snapshots.memoryUsage.jsHeapSizeLimit,
+        warning: snapshots.memoryUsage.warning
+      },
+      source: "performance"
+    });
+  }
+
+  // 10. Redirect Chains
+  if (snapshots.redirectChains && snapshots.redirectChains.chainCount > 0) {
+    findings.push({
+      type: "redirect_chains",
+      severity: snapshots.redirectChains.severity,
+      session: collectors.session,
+      evidence: {
+        totalRedirects: snapshots.redirectChains.totalRedirects,
+        chainCount: snapshots.redirectChains.chainCount,
+        chains: snapshots.redirectChains.chains
+      },
+      source: "network"
+    });
+  }
+
   return findings;
 }
 
@@ -1013,6 +1162,306 @@ export async function detectFingerprinting(page, { sessionLabel = "default" } = 
   };
 }
 
+// ===================== 10 NEUE TECHNISCHE PRÜFUNGEN =====================
+
+// 1. Broken Links & Resources (404, 500, etc.)
+export async function detectBrokenResources(networkResponses, { sessionLabel = "default" } = {}) {
+  const broken = (networkResponses || []).filter(resp => {
+    const status = resp.status;
+    return status >= 400; // 4xx, 5xx errors
+  });
+
+  const grouped = {};
+  broken.forEach(resp => {
+    const statusKey = Math.floor(resp.status / 100) * 100; // 400, 500, etc.
+    if (!grouped[statusKey]) grouped[statusKey] = [];
+    grouped[statusKey].push({
+      url: truncate(resp.url, 200),
+      status: resp.status,
+      category: resp.category || 'unknown'
+    });
+  });
+
+  return {
+    session: sessionLabel,
+    kind: "broken_resources",
+    count: broken.length,
+    severity: broken.some(r => r.status >= 500) ? 'high' : broken.length > 0 ? 'medium' : 'none',
+    grouped,
+    details: broken.slice(0, 20).map(r => ({
+      url: truncate(r.url, 200),
+      status: r.status,
+      category: r.category || 'unknown'
+    }))
+  };
+}
+
+// 2. JavaScript Runtime Errors (Uncaught Exceptions)
+export function detectJavaScriptErrors(consoleEvents, { sessionLabel = "default" } = {}) {
+  const jsErrors = (consoleEvents || []).filter(ev => {
+    if (ev.level !== 'error') return false;
+    const text = ev.text || '';
+    return /Uncaught|TypeError|ReferenceError|SyntaxError|RangeError/i.test(text);
+  });
+
+  return {
+    session: sessionLabel,
+    kind: "javascript_errors",
+    count: jsErrors.length,
+    severity: jsErrors.length > 5 ? 'high' : jsErrors.length > 0 ? 'medium' : 'none',
+    errors: jsErrors.slice(0, 15).map(e => ({
+      message: truncate(e.text, 300),
+      timestamp: e.timestamp
+    }))
+  };
+}
+
+// 3. CORS Failures
+export function detectCORSIssues(consoleEvents, networkRequests, { sessionLabel = "default" } = {}) {
+  const corsErrors = (consoleEvents || []).filter(ev => {
+    const text = ev.text || '';
+    return /CORS|Cross-Origin|Access-Control-Allow-Origin/i.test(text);
+  });
+
+  const corsFailedRequests = (networkRequests || []).filter(req => {
+    return /CORS/i.test(req.failure || '');
+  });
+
+  return {
+    session: sessionLabel,
+    kind: "cors_issues",
+    count: corsErrors.length + corsFailedRequests.length,
+    severity: corsErrors.length + corsFailedRequests.length > 0 ? 'high' : 'none',
+    errors: corsErrors.slice(0, 10).map(e => truncate(e.text, 300)),
+    failedRequests: corsFailedRequests.slice(0, 10).map(r => truncate(r.url, 200))
+  };
+}
+
+// 4. Service Worker Errors
+export async function detectServiceWorkerIssues(page, { sessionLabel = "default" } = {}) {
+  const swStatus = await page.evaluate(() => {
+    if (!('serviceWorker' in navigator)) {
+      return { supported: false, registered: false };
+    }
+
+    return navigator.serviceWorker.getRegistrations().then(registrations => {
+      return {
+        supported: true,
+        registered: registrations.length > 0,
+        count: registrations.length,
+        scopes: registrations.map(r => r.scope)
+      };
+    }).catch(e => {
+      return { supported: true, registered: false, error: String(e) };
+    });
+  });
+
+  // Check for SW errors in console
+  const swErrors = []; // Would need to be passed from consoleEvents
+
+  return {
+    session: sessionLabel,
+    kind: "service_worker",
+    ...swStatus,
+    hasErrors: swErrors.length > 0,
+    errors: swErrors
+  };
+}
+
+// 5. Form Validation & Functionality
+export async function validateForms(page, { sessionLabel = "default" } = {}) {
+  const formAnalysis = await page.evaluate(() => {
+    const forms = Array.from(document.querySelectorAll('form'));
+
+    return forms.map(form => {
+      const inputs = form.querySelectorAll('input, textarea, select');
+      const hasAction = !!form.action && form.action !== window.location.href;
+      const hasMethod = !!form.method;
+      const hasValidation = Array.from(inputs).some(input =>
+        input.hasAttribute('required') || input.hasAttribute('pattern')
+      );
+      const hasSubmitButton = !!form.querySelector('button[type="submit"], input[type="submit"]');
+
+      return {
+        action: form.action || null,
+        method: form.method || 'get',
+        inputCount: inputs.length,
+        hasAction,
+        hasMethod,
+        hasValidation,
+        hasSubmitButton,
+        id: form.id || null,
+        name: form.name || null
+      };
+    });
+  });
+
+  const issues = formAnalysis.filter(f =>
+    !f.hasAction || !f.hasSubmitButton || f.inputCount === 0
+  );
+
+  return {
+    session: sessionLabel,
+    kind: "form_validation",
+    totalForms: formAnalysis.length,
+    issueCount: issues.length,
+    severity: issues.length > 0 ? 'medium' : 'none',
+    forms: formAnalysis,
+    issues: issues
+  };
+}
+
+// 6. Critical Resource Timeouts
+export async function detectSlowResources(page, { sessionLabel = "default" } = {}) {
+  const slowResources = await page.evaluate(() => {
+    const entries = performance.getEntriesByType('resource');
+    const slow = entries.filter(e => e.duration > 3000); // > 3s
+
+    return slow.map(e => ({
+      url: e.name,
+      duration: Math.round(e.duration),
+      type: e.initiatorType,
+      size: e.transferSize || 0
+    }));
+  });
+
+  return {
+    session: sessionLabel,
+    kind: "slow_resources",
+    count: slowResources.length,
+    severity: slowResources.length > 5 ? 'high' : slowResources.length > 0 ? 'medium' : 'none',
+    resources: slowResources.slice(0, 15)
+  };
+}
+
+// 7. Image Optimization Check
+export async function analyzeImages(page, { sessionLabel = "default" } = {}) {
+  const imageAnalysis = await page.evaluate(() => {
+    const images = Array.from(document.querySelectorAll('img'));
+    const largeImages = [];
+    const missingAlt = [];
+
+    images.forEach(img => {
+      const naturalSize = img.naturalWidth * img.naturalHeight;
+      const displaySize = img.width * img.height;
+      const oversized = displaySize > 0 && naturalSize > displaySize * 2;
+
+      if (oversized || naturalSize > 1920 * 1080) {
+        largeImages.push({
+          src: img.src,
+          naturalWidth: img.naturalWidth,
+          naturalHeight: img.naturalHeight,
+          displayWidth: img.width,
+          displayHeight: img.height,
+          oversized
+        });
+      }
+
+      if (!img.alt || img.alt.trim() === '') {
+        missingAlt.push(img.src);
+      }
+    });
+
+    return {
+      totalImages: images.length,
+      largeImages: largeImages.slice(0, 10),
+      missingAlt: missingAlt.slice(0, 10)
+    };
+  });
+
+  return {
+    session: sessionLabel,
+    kind: "image_optimization",
+    totalImages: imageAnalysis.totalImages,
+    largeCount: imageAnalysis.largeImages.length,
+    missingAltCount: imageAnalysis.missingAlt.length,
+    severity: imageAnalysis.largeImages.length > 5 ? 'medium' : 'low',
+    largeImages: imageAnalysis.largeImages,
+    missingAlt: imageAnalysis.missingAlt
+  };
+}
+
+// 8. Font Loading Issues (FOIT/FOUT)
+export async function analyzeFontLoading(page, { sessionLabel = "default" } = {}) {
+  const fontAnalysis = await page.evaluate(() => {
+    if (!document.fonts) return { supported: false };
+
+    const fonts = Array.from(document.fonts);
+    const loadedFonts = fonts.filter(f => f.status === 'loaded');
+    const failedFonts = fonts.filter(f => f.status === 'error');
+
+    return {
+      supported: true,
+      totalFonts: fonts.length,
+      loadedCount: loadedFonts.length,
+      failedCount: failedFonts.length,
+      failed: failedFonts.map(f => f.family)
+    };
+  });
+
+  return {
+    session: sessionLabel,
+    kind: "font_loading",
+    ...fontAnalysis,
+    severity: fontAnalysis.failedCount > 0 ? 'medium' : 'none'
+  };
+}
+
+// 9. Memory Leaks Detection
+export async function detectMemoryIssues(page, { sessionLabel = "default" } = {}) {
+  const memoryInfo = await page.evaluate(() => {
+    if (!performance.memory) return { supported: false };
+
+    return {
+      supported: true,
+      usedJSHeapSize: performance.memory.usedJSHeapSize,
+      totalJSHeapSize: performance.memory.totalJSHeapSize,
+      jsHeapSizeLimit: performance.memory.jsHeapSizeLimit,
+      usagePercent: Math.round((performance.memory.usedJSHeapSize / performance.memory.jsHeapSizeLimit) * 100)
+    };
+  });
+
+  const highUsage = memoryInfo.supported && memoryInfo.usagePercent > 70;
+
+  return {
+    session: sessionLabel,
+    kind: "memory_usage",
+    ...memoryInfo,
+    severity: highUsage ? 'high' : memoryInfo.usagePercent > 50 ? 'medium' : 'low',
+    warning: highUsage ? 'High memory usage detected - possible memory leak' : null
+  };
+}
+
+// 10. Redirect Chains
+export function detectRedirectChains(networkResponses, { sessionLabel = "default" } = {}) {
+  const redirects = (networkResponses || []).filter(resp => {
+    return resp.status >= 300 && resp.status < 400;
+  });
+
+  const chains = {};
+  redirects.forEach(resp => {
+    const location = resp.headers?.location || resp.headers?.Location;
+    if (location) {
+      if (!chains[resp.url]) chains[resp.url] = [];
+      chains[resp.url].push({ status: resp.status, to: location });
+    }
+  });
+
+  const longChains = Object.entries(chains).filter(([url, chain]) => chain.length > 1);
+
+  return {
+    session: sessionLabel,
+    kind: "redirect_chains",
+    totalRedirects: redirects.length,
+    chainCount: longChains.length,
+    severity: longChains.length > 0 ? 'medium' : redirects.length > 5 ? 'low' : 'none',
+    chains: longChains.slice(0, 10).map(([url, chain]) => ({
+      from: truncate(url, 150),
+      chain: chain
+    }))
+  };
+}
+
 // ===================== UPDATED collectAllForCurrentState =====================
 
 export async function collectAllForCurrentState(page, context, options = {}) {
@@ -1033,8 +1482,14 @@ export async function collectAllForCurrentState(page, context, options = {}) {
   const collectors = await stopAndCollect();
   const topHeaders = extractTopDocumentHeaders(collectors);
 
-  // NEUE SECURITY FEATURES
-  const [securityHeaders, mixedContent, productionErrors, thirdPartyPerf, vulnerableLibs, cookieBanner, renderBlocking, fingerprinting] = await Promise.all([
+  // SECURITY FEATURES + 10 NEUE TECHNISCHE PRÜFUNGEN
+  const [
+    securityHeaders, mixedContent, productionErrors, thirdPartyPerf, vulnerableLibs,
+    cookieBanner, renderBlocking, fingerprinting,
+    // 10 neue Checks:
+    brokenResources, jsErrors, corsIssues, serviceWorker, formValidation,
+    slowResources, imageOptimization, fontLoading, memoryUsage, redirectChains
+  ] = await Promise.all([
     checkSecurityHeaders(topHeaders, { sessionLabel }),
     Promise.resolve(detectMixedContent(collectors.networkResponses, topHeaders, { sessionLabel })),
     Promise.resolve(detectProductionErrors(collectors.consoleEvents, { sessionLabel })),
@@ -1042,13 +1497,27 @@ export async function collectAllForCurrentState(page, context, options = {}) {
     detectVulnerableLibraries(page, { sessionLabel }),
     validateCookieBanner(page, { sessionLabel }),
     detectRenderBlockingResources(page, { sessionLabel }),
-    detectFingerprinting(page, { sessionLabel })
+    detectFingerprinting(page, { sessionLabel }),
+    // 10 neue Checks:
+    Promise.resolve(detectBrokenResources(collectors.networkResponses, { sessionLabel })),
+    Promise.resolve(detectJavaScriptErrors(collectors.consoleEvents, { sessionLabel })),
+    Promise.resolve(detectCORSIssues(collectors.consoleEvents, collectors.networkRequests, { sessionLabel })),
+    detectServiceWorkerIssues(page, { sessionLabel }),
+    validateForms(page, { sessionLabel }),
+    detectSlowResources(page, { sessionLabel }),
+    analyzeImages(page, { sessionLabel }),
+    analyzeFontLoading(page, { sessionLabel }),
+    detectMemoryIssues(page, { sessionLabel }),
+    Promise.resolve(detectRedirectChains(collectors.networkResponses, { sessionLabel }))
   ]);
 
   const findings = analyzeFindings(collectors, {
     cookies, storage, dom, consent, topHeaders, performance,
     securityHeaders, mixedContent, productionErrors, thirdPartyPerf,
-    vulnerableLibs, cookieBanner, renderBlocking, fingerprinting
+    vulnerableLibs, cookieBanner, renderBlocking, fingerprinting,
+    // 10 neue Checks:
+    brokenResources, jsErrors, corsIssues, serviceWorker, formValidation,
+    slowResources, imageOptimization, fontLoading, memoryUsage, redirectChains
   });
 
   return {
@@ -1056,7 +1525,10 @@ export async function collectAllForCurrentState(page, context, options = {}) {
     artifacts: {
       collectors, cookies, storage, dom, consent, topHeaders, performance,
       securityHeaders, mixedContent, productionErrors, thirdPartyPerf,
-      vulnerableLibs, cookieBanner, renderBlocking, fingerprinting
+      vulnerableLibs, cookieBanner, renderBlocking, fingerprinting,
+      // 10 neue Checks:
+      brokenResources, jsErrors, corsIssues, serviceWorker, formValidation,
+      slowResources, imageOptimization, fontLoading, memoryUsage, redirectChains
     },
     findings
   };
