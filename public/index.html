@@ -793,13 +793,34 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Scan button
+  // Scan button - FIXED: Now shows immediate loading feedback
   const scanBtn = $('scanBtn');
   if (scanBtn) {
     scanBtn.addEventListener('click', function() {
       const url = $('url').value.trim();
       if (url) {
-        startRealScan(url);
+        // Immediate visual feedback
+        scanBtn.disabled = true;
+        const originalText = scanBtn.textContent;
+        scanBtn.textContent = '⏳ Scan wird gestartet...';
+
+        // Show progress overlay immediately
+        const progressOverlay = $('scanProgress');
+        const heroSection = $('heroSection');
+        const mainApp = $('mainApp');
+
+        if (progressOverlay) progressOverlay.classList.add('active');
+        if (heroSection) heroSection.style.display = 'none';
+        if (mainApp) mainApp.style.display = 'none';
+
+        console.log('✅ Starting scan with loading indicator');
+
+        // Start the actual scan
+        startRealScan(url).finally(function() {
+          // Re-enable button when scan completes or fails
+          scanBtn.disabled = false;
+          scanBtn.textContent = originalText;
+        });
       } else {
         showBanner('❌ Bitte URL eingeben');
       }
@@ -828,25 +849,156 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  // Mode toggle
+  // Mode toggle - FIXED: Now re-renders after mode change
   const modeManager = $('modeManager');
   const modeTech = $('modeTech');
-  
+
   if (modeManager) {
     modeManager.addEventListener('click', function() {
       MODE = 'manager';
       modeManager.classList.add('active');
       if (modeTech) modeTech.classList.remove('active');
+      renderAll(); // Re-render to update view
+      console.log('✅ Switched to Manager view');
     });
   }
-  
+
   if (modeTech) {
     modeTech.addEventListener('click', function() {
       MODE = 'tech';
       modeTech.classList.add('active');
       if (modeManager) modeManager.classList.remove('active');
+      renderAll(); // Re-render to update view
+      console.log('✅ Switched to Tech view');
     });
   }
+
+  // Expand/Collapse All Compliance - NEW
+  const expandAllBtn = $('expandAllCompliance');
+  const collapseAllBtn = $('collapseAllCompliance');
+
+  if (expandAllBtn) {
+    expandAllBtn.addEventListener('click', function() {
+      document.querySelectorAll('#complianceList .compliance-item').forEach(item => {
+        item.classList.add('expanded');
+        const body = item.querySelector('.compliance-body');
+        if (body) body.style.display = 'block';
+      });
+      console.log('✅ Expanded all compliance items');
+    });
+  }
+
+  if (collapseAllBtn) {
+    collapseAllBtn.addEventListener('click', function() {
+      document.querySelectorAll('#complianceList .compliance-item').forEach(item => {
+        item.classList.remove('expanded');
+        const body = item.querySelector('.compliance-body');
+        if (body) body.style.display = 'none';
+      });
+      console.log('✅ Collapsed all compliance items');
+    });
+  }
+
+  // Drawer functionality - NEW
+  const drawer = $('drawer');
+  const drawerClose = $('drawerClose');
+
+  // Close drawer button
+  if (drawerClose) {
+    drawerClose.addEventListener('click', function() {
+      if (drawer) drawer.classList.remove('open');
+      console.log('✅ Closed drawer');
+    });
+  }
+
+  // Filter Pills - Compliance - NEW
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('pill') && e.target.hasAttribute('data-cflt')) {
+      const filter = e.target.getAttribute('data-cflt');
+
+      // Update active pill
+      document.querySelectorAll('[data-cflt]').forEach(pill => pill.classList.remove('active'));
+      e.target.classList.add('active');
+
+      // Filter compliance items
+      const items = document.querySelectorAll('#complianceList .compliance-item');
+      items.forEach(item => {
+        if (filter === 'all') {
+          item.style.display = 'block';
+        } else {
+          const badge = item.querySelector('.compliance-badge');
+          const hasClass = badge && badge.classList.contains('badge-' + filter);
+          item.style.display = hasClass ? 'block' : 'none';
+        }
+      });
+
+      console.log('✅ Filtered compliance by:', filter);
+    }
+
+    // Filter Pills - Issues - NEW
+    if (e.target.classList.contains('pill') && e.target.hasAttribute('data-iflt')) {
+      const filter = e.target.getAttribute('data-iflt');
+
+      // Update active pill
+      document.querySelectorAll('[data-iflt]').forEach(pill => pill.classList.remove('active'));
+      e.target.classList.add('active');
+
+      // Filter issue items
+      const items = document.querySelectorAll('#issuesList .issue-item');
+      items.forEach(item => {
+        if (filter === 'all') {
+          item.style.display = 'block';
+        } else {
+          const hasClass = item.classList.contains('priority-' + filter);
+          item.style.display = hasClass ? 'block' : 'none';
+        }
+      });
+
+      console.log('✅ Filtered issues by:', filter);
+    }
+
+    // Click on compliance items to open drawer
+    const complianceItem = e.target.closest('.compliance-item');
+    if (complianceItem) {
+      const name = complianceItem.querySelector('.compliance-name')?.textContent || 'Details';
+      const status = complianceItem.querySelector('.compliance-badge')?.textContent || 'Unknown';
+      const body = complianceItem.querySelector('.compliance-body')?.innerHTML || '<p>Keine Details verfügbar</p>';
+
+      if (drawer) {
+        const drawerBody = $('drawerBody');
+        if (drawerBody) {
+          drawerBody.innerHTML = `
+            <h3>${name}</h3>
+            <div class="badge" style="margin-bottom: 16px;">${status}</div>
+            ${body}
+          `;
+        }
+        drawer.classList.add('open');
+        console.log('✅ Opened drawer for:', name);
+      }
+    }
+
+    // Click on issue items to open drawer
+    const issueItem = e.target.closest('.issue-item');
+    if (issueItem) {
+      const type = issueItem.querySelector('.issue-type')?.textContent || 'Issue Details';
+      const priority = issueItem.querySelector('.issue-priority')?.textContent || 'Unknown';
+      const description = issueItem.querySelector('.issue-description')?.textContent || 'Keine Beschreibung verfügbar';
+
+      if (drawer) {
+        const drawerBody = $('drawerBody');
+        if (drawerBody) {
+          drawerBody.innerHTML = `
+            <h3>${type}</h3>
+            <div class="badge" style="margin-bottom: 16px;">${priority}</div>
+            <p>${description}</p>
+          `;
+        }
+        drawer.classList.add('open');
+        console.log('✅ Opened drawer for issue:', type);
+      }
+    }
+  });
 
   // Focus URL input
   setTimeout(function() {
