@@ -540,10 +540,18 @@ body::before {
 
 /* Dashboard Results Metrics */
 .results-dashboard {
+  grid-column: span 12; /* Take full width in parent grid */
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 24px;
   margin: 24px 0;
+}
+
+@media (max-width: 768px) {
+  .results-dashboard {
+    grid-column: span 1;
+    grid-template-columns: 1fr;
+  }
 }
 
 .metric-card {

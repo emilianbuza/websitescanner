@@ -341,8 +341,11 @@ const scanSteps = [
 ];
 
 let MODE = 'manager';
-let DATA = null;
+var DATA = null; // Changed to var so dashboard.js can access it
 let currentTheme = localStorage.getItem('theme') || 'light';
+
+// Make DATA available globally for dashboard.js
+window.DATA = DATA;
 
 // Initialize theme
 document.documentElement.setAttribute('data-theme', currentTheme);
@@ -353,13 +356,16 @@ function escapeHtml(s) { return String(s||'').replace(/[&<>\"']/g,c=>({ '&':'&am
 function escapeAttr(s) { return escapeHtml(s).replace(/\"/g,'&quot;'); }
 function tryHost(u) { try{ return new URL(u).hostname }catch(e){ return u; } }
 
-function showBanner(msg) { 
+function showBanner(msg) {
   const banner = $('banner');
-  if(!banner) return; 
-  banner.textContent = msg; 
-  banner.style.display='block'; 
-  setTimeout(()=> banner.style.display='none', 2500); 
+  if(!banner) return;
+  banner.textContent = msg;
+  banner.style.display='block';
+  setTimeout(()=> banner.style.display='none', 2500);
 }
+
+// Make showBanner available globally for dashboard.js
+window.showBanner = showBanner;
 
 // Theme Toggle
 function toggleTheme() {
@@ -468,6 +474,7 @@ async function startRealScan(url) {
       if (response.ok) {
         const data = await response.json();
         DATA = data;
+        window.DATA = DATA;
         console.log('✅ Scan data received from server');
       } else {
         throw new Error('Server error');
@@ -476,6 +483,7 @@ async function startRealScan(url) {
       // Fallback to demo data
       console.log('⚠️ Using demo data, server error:', e.message);
       DATA = buildDemoData();
+      window.DATA = DATA;
     }
 
     // Show results
@@ -502,6 +510,7 @@ async function startRealScan(url) {
     // Fallback
     setTimeout(function() {
       DATA = buildDemoData();
+      window.DATA = DATA;
       $('scanProgress').classList.remove('active');
       $('heroSection').style.display = 'none';
       $('exampleSection').style.display = 'none';
@@ -778,6 +787,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (demoBtn) {
     demoBtn.addEventListener('click', function() {
       DATA = buildDemoData();
+      window.DATA = DATA;
       renderAll();
       showBanner('Demo-Daten geladen.');
     });
@@ -801,14 +811,19 @@ document.addEventListener('DOMContentLoaded', function() {
     if (e.target.classList.contains('tab')) {
       // Remove active from all tabs
       document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-      document.querySelectorAll('.grid section').forEach(section => section.style.display = 'none');
-      
+
+      // Hide all tab sections
+      document.querySelectorAll('#tab-summary, #tab-compliance, #tab-issues, #tab-history, #tab-evidence').forEach(section => {
+        section.style.display = 'none';
+      });
+
       // Activate clicked tab
       e.target.classList.add('active');
       const tabId = e.target.getAttribute('data-tab');
       const section = document.getElementById('tab-' + tabId);
       if (section) {
-        section.style.display = 'block';
+        section.style.display = 'grid';
+        console.log('✅ Switched to tab:', tabId);
       }
     }
   });
