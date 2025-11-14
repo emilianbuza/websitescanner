@@ -596,23 +596,43 @@ function renderSummary() {
   $('timestamp').textContent = DATA.timestamp || '–';
   $('version').textContent = 'v' + (DATA.version || '–');
 
-  const total = (DATA.details?.errors?.length || 0) + (DATA.details?.networkIssues?.length || 0) + (DATA.details?.cspViolations?.length || 0);
-  const crit = (DATA.details?.errors || []).filter(function(e) { return /critical|high/i.test(e.priority || ''); }).length;
+  // FIXED: Better metric calculation that includes ALL issues
+  const allErrors = DATA.details?.errors || [];
+  const allNetworkIssues = DATA.details?.networkIssues || [];
+  const allCspViolations = DATA.details?.cspViolations || [];
   const mtags = DATA.summary?.marketingTags || [];
+
+  // Count critical issues across ALL categories
+  const criticalErrors = allErrors.filter(function(e) { return /critical/i.test(e.priority || ''); }).length;
+  const highErrors = allErrors.filter(function(e) { return /high/i.test(e.priority || ''); }).length;
+  const criticalNetwork = allNetworkIssues.filter(function(e) { return /critical/i.test(e.priority || ''); }).length;
+  const crit = criticalErrors + highErrors + criticalNetwork;
+
+  // Total issues count
+  const total = allErrors.length + allNetworkIssues.length + allCspViolations.length;
+
+  // Compliance metrics
   const perfect = mtags.filter(function(m) { return m.compliance === 'perfect'; }).length;
-  const risk = mtags.filter(function(m) { return ['bad','inconsistent','good','missing'].includes(m.compliance); }).length;
+  const badCompliance = mtags.filter(function(m) { return ['bad', 'inconsistent', 'missing'].includes(m.compliance); }).length;
+  const risk = badCompliance;
 
   console.log('📊 Summary stats: total=' + total + ', crit=' + crit + ', mtags=' + mtags.length + ', perfect=' + perfect + ', risk=' + risk);
-  
-  // Calculate money impact
+
+  // FIXED: More realistic money impact calculation
   let monthlyLoss = 0;
-  if (crit > 0) monthlyLoss += 650; // Facebook issues
-  if (total > 3) monthlyLoss += 400; // GA issues
-  if (risk > 2) monthlyLoss += 300; // Additional compliance issues
-  
+
+  // Critical issues: €800 each (high impact)
+  monthlyLoss += crit * 800;
+
+  // Bad compliance tags: €500 each (GDPR fines + lost conversions)
+  monthlyLoss += badCompliance * 500;
+
+  // General issues: €150 each (minor impact)
+  monthlyLoss += Math.max(0, total - crit) * 150;
+
   $('monthlyLoss').textContent = '€' + monthlyLoss.toLocaleString();
-  $('kpiCritical').textContent = crit; 
-  $('kpiPerfect').textContent = perfect; 
+  $('kpiCritical').textContent = crit;
+  $('kpiPerfect').textContent = perfect;
   $('kpiRisk').textContent = risk;
   
   const riskBox = $('riskBox');
@@ -706,10 +726,7 @@ function renderIssues() {
     ...(DATA.details?.networkIssues || []),
     ...(DATA.details?.cspViolations || [])
   ];
-  console.log('🚨 Issues to render:', allIssues.length, 'issues');
-  console.log('  - Errors:', DATA.details?.errors?.length);
-  console.log('  - Network Issues:', DATA.details?.networkIssues?.length);
-  console.log('  - CSP Violations:', DATA.details?.cspViolations?.length);
+  console.log('🚨 Issues to render:', allIssues.length, 'raw issues');
 
   if (allIssues.length === 0) {
     console.log('✅ No issues, showing success message');
@@ -717,31 +734,101 @@ function renderIssues() {
     return;
   }
 
-  const html = allIssues.map(function(issue) {
-    const priority = issue.priority || 'low';
+  // FIXED: Group and deduplicate issues for better readability
+  const groupedIssues = {};
+
+  allIssues.forEach(function(issue) {
+    // Extract URL from message if present
+    const urlMatch = issue.message ? issue.message.match(/https?:\/\/[^\s]+/) : null;
+    const url = urlMatch ? urlMatch[0].replace(/['"]+$/, '') : null;
+
+    // Extract DOMAIN only (not full path) for better grouping
+    // Example: https://eu-data.kameleoon.eu/geolocation → eu-data.kameleoon.eu
+    let domain = 'no-url';
+    if (url) {
+      domain = url.replace(/https?:\/\//, '').split('/')[0].split('?')[0];
+    }
+
+    // Create a unique key based on translation + DOMAIN (not full URL)
+    // This groups all errors for the same domain together
+    const key = (issue.translation || issue.message || 'Unknown') + '||' + domain;
+
+    if (!groupedIssues[key]) {
+      groupedIssues[key] = {
+        translation: issue.translation || issue.message,
+        techFix: issue.techFix || issue.managerFix,
+        managerFix: issue.managerFix,
+        priority: issue.priority || 'low',
+        type: issue.type || 'Issue',
+        domain: domain, // Store domain instead of full URL
+        modes: new Set(),
+        count: 0,
+        technicalDetails: []
+      };
+    }
+
+    groupedIssues[key].count++;
+    if (issue.consentMode) groupedIssues[key].modes.add(issue.consentMode);
+    groupedIssues[key].technicalDetails.push(issue.message);
+
+    // Keep highest priority
+    const priorities = ['critical', 'high', 'medium', 'low'];
+    if (priorities.indexOf(issue.priority) < priorities.indexOf(groupedIssues[key].priority)) {
+      groupedIssues[key].priority = issue.priority;
+    }
+  });
+
+  const uniqueIssues = Object.values(groupedIssues);
+  console.log('📊 Grouped to', uniqueIssues.length, 'unique issues');
+
+  // Sort by priority
+  uniqueIssues.sort(function(a, b) {
+    const priorities = ['critical', 'high', 'medium', 'low'];
+    return priorities.indexOf(a.priority) - priorities.indexOf(b.priority);
+  });
+
+  const html = uniqueIssues.map(function(issue) {
     const priorityLabel = {
       'critical': '🔴 Kritisch',
       'high': '🟠 Hoch',
       'medium': '🟡 Mittel',
       'low': '🔵 Niedrig'
-    }[priority] || '–';
+    }[issue.priority] || '–';
 
-    return '<div class="issue-item priority-' + priority + '">' +
+    const countBadge = issue.count > 1 ? '<span class="issue-count">' + issue.count + '×</span>' : '';
+    const modesText = Array.from(issue.modes).join(', ') || '–';
+
+    // Manager-friendly description
+    const managerDesc = MODE === 'manager' && issue.managerFix
+      ? '<div class="issue-manager-fix"><strong>Handlungsempfehlung:</strong> ' + escapeHtml(issue.managerFix) + '</div>'
+      : '';
+
+    // Display domain (already extracted during grouping)
+    let urlDisplay = '';
+    if (issue.domain && issue.domain !== 'no-url') {
+      urlDisplay = '<div class="issue-url"><strong>🔗 Betroffen:</strong> <code>' + escapeHtml(issue.domain) + '</code></div>';
+    }
+
+    return '<div class="issue-item priority-' + issue.priority + '">' +
       '<div class="issue-header">' +
-        '<div class="issue-type">' + escapeHtml(issue.type || 'Issue') + '</div>' +
+        '<div class="issue-type">' + escapeHtml(issue.type) + ' ' + countBadge + '</div>' +
         '<div class="issue-priority">' + priorityLabel + '</div>' +
       '</div>' +
       '<div class="issue-body">' +
-        '<div class="issue-message">' + escapeHtml(issue.message || 'Keine Details') + '</div>' +
-        '<div class="issue-translation">' + escapeHtml(issue.translation || '') + '</div>' +
-        '<div class="issue-fix"><strong>Fix:</strong> ' + escapeHtml(issue.techFix || 'Keine Empfehlung') + '</div>' +
-        '<div class="issue-mode">Modus: ' + escapeHtml(issue.consentMode || '–') + '</div>' +
+        '<div class="issue-translation"><strong>' + escapeHtml(issue.translation) + '</strong></div>' +
+        urlDisplay +
+        managerDesc +
+        (MODE === 'tech' ? '<div class="issue-fix"><strong>Technischer Fix:</strong> ' + escapeHtml(issue.techFix || 'Keine Empfehlung') + '</div>' : '') +
+        '<div class="issue-meta">' +
+          '<span><strong>Modi:</strong> ' + escapeHtml(modesText) + '</span>' +
+          (issue.count > 1 ? '<span><strong>Vorkommen:</strong> ' + issue.count + '</span>' : '') +
+        '</div>' +
       '</div>' +
     '</div>';
   }).join('');
 
   container.innerHTML = html;
-  console.log('✅ Issues HTML rendered, length:', html.length);
+  console.log('✅ Issues HTML rendered:', uniqueIssues.length, 'unique issues');
 }
 
 function renderAll() {
@@ -793,13 +880,34 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Scan button
+  // Scan button - FIXED: Now shows immediate loading feedback
   const scanBtn = $('scanBtn');
   if (scanBtn) {
     scanBtn.addEventListener('click', function() {
       const url = $('url').value.trim();
       if (url) {
-        startRealScan(url);
+        // Immediate visual feedback
+        scanBtn.disabled = true;
+        const originalText = scanBtn.textContent;
+        scanBtn.textContent = '⏳ Scan wird gestartet...';
+
+        // Show progress overlay immediately
+        const progressOverlay = $('scanProgress');
+        const heroSection = $('heroSection');
+        const mainApp = $('mainApp');
+
+        if (progressOverlay) progressOverlay.classList.add('active');
+        if (heroSection) heroSection.style.display = 'none';
+        if (mainApp) mainApp.style.display = 'none';
+
+        console.log('✅ Starting scan with loading indicator');
+
+        // Start the actual scan
+        startRealScan(url).finally(function() {
+          // Re-enable button when scan completes or fails
+          scanBtn.disabled = false;
+          scanBtn.textContent = originalText;
+        });
       } else {
         showBanner('❌ Bitte URL eingeben');
       }
@@ -828,24 +936,207 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  // Mode toggle
+  // Mode toggle - FIXED: Now re-renders after mode change
   const modeManager = $('modeManager');
   const modeTech = $('modeTech');
-  
+
   if (modeManager) {
     modeManager.addEventListener('click', function() {
       MODE = 'manager';
       modeManager.classList.add('active');
       if (modeTech) modeTech.classList.remove('active');
+      renderAll(); // Re-render to update view
+      console.log('✅ Switched to Manager view');
     });
   }
-  
+
   if (modeTech) {
     modeTech.addEventListener('click', function() {
       MODE = 'tech';
       modeTech.classList.add('active');
       if (modeManager) modeManager.classList.remove('active');
+      renderAll(); // Re-render to update view
+      console.log('✅ Switched to Tech view');
     });
+  }
+
+  // Expand/Collapse All Compliance - NEW
+  const expandAllBtn = $('expandAllCompliance');
+  const collapseAllBtn = $('collapseAllCompliance');
+
+  if (expandAllBtn) {
+    expandAllBtn.addEventListener('click', function() {
+      document.querySelectorAll('#complianceList .compliance-item').forEach(item => {
+        item.classList.add('expanded');
+        const body = item.querySelector('.compliance-body');
+        if (body) body.style.display = 'block';
+      });
+      console.log('✅ Expanded all compliance items');
+    });
+  }
+
+  if (collapseAllBtn) {
+    collapseAllBtn.addEventListener('click', function() {
+      document.querySelectorAll('#complianceList .compliance-item').forEach(item => {
+        item.classList.remove('expanded');
+        const body = item.querySelector('.compliance-body');
+        if (body) body.style.display = 'none';
+      });
+      console.log('✅ Collapsed all compliance items');
+    });
+  }
+
+  // Drawer functionality - NEW
+  const drawer = $('drawer');
+  const drawerClose = $('drawerClose');
+
+  // Close drawer button
+  if (drawerClose) {
+    drawerClose.addEventListener('click', function() {
+      if (drawer) drawer.classList.remove('open');
+      console.log('✅ Closed drawer');
+    });
+  }
+
+  // Filter Pills - Compliance - NEW
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('pill') && e.target.hasAttribute('data-cflt')) {
+      const filter = e.target.getAttribute('data-cflt');
+
+      // Update active pill
+      document.querySelectorAll('[data-cflt]').forEach(pill => pill.classList.remove('active'));
+      e.target.classList.add('active');
+
+      // Filter compliance items
+      const items = document.querySelectorAll('#complianceList .compliance-item');
+      items.forEach(item => {
+        if (filter === 'all') {
+          item.style.display = 'block';
+        } else {
+          const badge = item.querySelector('.compliance-badge');
+          const hasClass = badge && badge.classList.contains('badge-' + filter);
+          item.style.display = hasClass ? 'block' : 'none';
+        }
+      });
+
+      console.log('✅ Filtered compliance by:', filter);
+    }
+
+    // Filter Pills - Issues - NEW
+    if (e.target.classList.contains('pill') && e.target.hasAttribute('data-iflt')) {
+      const filter = e.target.getAttribute('data-iflt');
+
+      // Update active pill
+      document.querySelectorAll('[data-iflt]').forEach(pill => pill.classList.remove('active'));
+      e.target.classList.add('active');
+
+      // Filter issue items
+      const items = document.querySelectorAll('#issuesList .issue-item');
+      items.forEach(item => {
+        if (filter === 'all') {
+          item.style.display = 'block';
+        } else {
+          const hasClass = item.classList.contains('priority-' + filter);
+          item.style.display = hasClass ? 'block' : 'none';
+        }
+      });
+
+      console.log('✅ Filtered issues by:', filter);
+    }
+
+    // Click on compliance items to open drawer
+    const complianceItem = e.target.closest('.compliance-item');
+    if (complianceItem) {
+      const name = complianceItem.querySelector('.compliance-name')?.textContent || 'Details';
+      const status = complianceItem.querySelector('.compliance-badge')?.textContent || 'Unknown';
+      const body = complianceItem.querySelector('.compliance-body')?.innerHTML || '<p>Keine Details verfügbar</p>';
+
+      if (drawer) {
+        const drawerBody = $('drawerBody');
+        if (drawerBody) {
+          drawerBody.innerHTML = `
+            <h3>${name}</h3>
+            <div class="badge" style="margin-bottom: 16px;">${status}</div>
+            ${body}
+          `;
+        }
+        drawer.classList.add('open');
+        console.log('✅ Opened drawer for:', name);
+      }
+    }
+
+    // Click on issue items to open drawer
+    const issueItem = e.target.closest('.issue-item');
+    if (issueItem) {
+      const type = issueItem.querySelector('.issue-type')?.textContent || 'Issue Details';
+      const priority = issueItem.querySelector('.issue-priority')?.textContent || 'Unknown';
+      const description = issueItem.querySelector('.issue-description')?.textContent || 'Keine Beschreibung verfügbar';
+
+      if (drawer) {
+        const drawerBody = $('drawerBody');
+        if (drawerBody) {
+          drawerBody.innerHTML = `
+            <h3>${type}</h3>
+            <div class="badge" style="margin-bottom: 16px;">${priority}</div>
+            <p>${description}</p>
+          `;
+        }
+        drawer.classList.add('open');
+        console.log('✅ Opened drawer for issue:', type);
+      }
+    }
+  });
+
+  // PDF Export - FIXED: Add event listener here to ensure button exists
+  const exportPDFBtn = $('exportPDFBtn');
+  if (exportPDFBtn) {
+    exportPDFBtn.addEventListener('click', function() {
+      console.log('🔍 PDF Export button clicked');
+
+      if (!DATA) {
+        showBanner('❌ Keine Scan-Daten zum Exportieren');
+        console.log('❌ No DATA available for PDF export');
+        return;
+      }
+
+      // Call the exportCurrentScanPDF function from dashboard.js
+      if (typeof window.exportCurrentScanPDF === 'function') {
+        console.log('✅ Calling exportCurrentScanPDF()');
+        window.exportCurrentScanPDF();
+      } else {
+        console.log('⚠️ exportCurrentScanPDF not available, using fallback');
+        showBanner('PDF wird erstellt...');
+
+        fetch('/api/export/pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scanData: DATA })
+        })
+        .then(function(response) {
+          if (!response.ok) throw new Error('PDF generation failed');
+          return response.blob();
+        })
+        .then(function(blob) {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'scan-report-' + Date.now() + '.pdf';
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+          showBanner('✅ PDF heruntergeladen!');
+          console.log('✅ PDF downloaded successfully');
+        })
+        .catch(function(error) {
+          console.error('❌ PDF export failed:', error);
+          showBanner('❌ PDF-Export fehlgeschlagen');
+        });
+      }
+    });
+    console.log('✅ PDF Export button event listener attached');
+  } else {
+    console.log('⚠️ PDF Export button not found');
   }
 
   // Focus URL input

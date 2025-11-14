@@ -181,6 +181,9 @@ async function exportCurrentScanPDF() {
   }
 }
 
+// Make exportCurrentScanPDF globally available
+window.exportCurrentScanPDF = exportCurrentScanPDF;
+
 // Export Scan by ID
 async function exportScanPDF(scanId) {
   const showBanner = window.showBanner; // Get showBanner from window
