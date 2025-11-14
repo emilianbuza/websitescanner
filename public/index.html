@@ -596,23 +596,43 @@ function renderSummary() {
   $('timestamp').textContent = DATA.timestamp || '–';
   $('version').textContent = 'v' + (DATA.version || '–');
 
-  const total = (DATA.details?.errors?.length || 0) + (DATA.details?.networkIssues?.length || 0) + (DATA.details?.cspViolations?.length || 0);
-  const crit = (DATA.details?.errors || []).filter(function(e) { return /critical|high/i.test(e.priority || ''); }).length;
+  // FIXED: Better metric calculation that includes ALL issues
+  const allErrors = DATA.details?.errors || [];
+  const allNetworkIssues = DATA.details?.networkIssues || [];
+  const allCspViolations = DATA.details?.cspViolations || [];
   const mtags = DATA.summary?.marketingTags || [];
+
+  // Count critical issues across ALL categories
+  const criticalErrors = allErrors.filter(function(e) { return /critical/i.test(e.priority || ''); }).length;
+  const highErrors = allErrors.filter(function(e) { return /high/i.test(e.priority || ''); }).length;
+  const criticalNetwork = allNetworkIssues.filter(function(e) { return /critical/i.test(e.priority || ''); }).length;
+  const crit = criticalErrors + highErrors + criticalNetwork;
+
+  // Total issues count
+  const total = allErrors.length + allNetworkIssues.length + allCspViolations.length;
+
+  // Compliance metrics
   const perfect = mtags.filter(function(m) { return m.compliance === 'perfect'; }).length;
-  const risk = mtags.filter(function(m) { return ['bad','inconsistent','good','missing'].includes(m.compliance); }).length;
+  const badCompliance = mtags.filter(function(m) { return ['bad', 'inconsistent', 'missing'].includes(m.compliance); }).length;
+  const risk = badCompliance;
 
   console.log('📊 Summary stats: total=' + total + ', crit=' + crit + ', mtags=' + mtags.length + ', perfect=' + perfect + ', risk=' + risk);
-  
-  // Calculate money impact
+
+  // FIXED: More realistic money impact calculation
   let monthlyLoss = 0;
-  if (crit > 0) monthlyLoss += 650; // Facebook issues
-  if (total > 3) monthlyLoss += 400; // GA issues
-  if (risk > 2) monthlyLoss += 300; // Additional compliance issues
-  
+
+  // Critical issues: €800 each (high impact)
+  monthlyLoss += crit * 800;
+
+  // Bad compliance tags: €500 each (GDPR fines + lost conversions)
+  monthlyLoss += badCompliance * 500;
+
+  // General issues: €150 each (minor impact)
+  monthlyLoss += Math.max(0, total - crit) * 150;
+
   $('monthlyLoss').textContent = '€' + monthlyLoss.toLocaleString();
-  $('kpiCritical').textContent = crit; 
-  $('kpiPerfect').textContent = perfect; 
+  $('kpiCritical').textContent = crit;
+  $('kpiPerfect').textContent = perfect;
   $('kpiRisk').textContent = risk;
   
   const riskBox = $('riskBox');
@@ -999,6 +1019,58 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   });
+
+  // PDF Export - FIXED: Add event listener here to ensure button exists
+  const exportPDFBtn = $('exportPDFBtn');
+  if (exportPDFBtn) {
+    exportPDFBtn.addEventListener('click', function() {
+      console.log('🔍 PDF Export button clicked');
+
+      if (!DATA) {
+        showBanner('❌ Keine Scan-Daten zum Exportieren');
+        console.log('❌ No DATA available for PDF export');
+        return;
+      }
+
+      // Call the exportCurrentScanPDF function from dashboard.js
+      if (typeof window.exportCurrentScanPDF === 'function') {
+        console.log('✅ Calling exportCurrentScanPDF()');
+        window.exportCurrentScanPDF();
+      } else {
+        console.log('⚠️ exportCurrentScanPDF not available, using fallback');
+        showBanner('PDF wird erstellt...');
+
+        fetch('/api/export/pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scanData: DATA })
+        })
+        .then(function(response) {
+          if (!response.ok) throw new Error('PDF generation failed');
+          return response.blob();
+        })
+        .then(function(blob) {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'scan-report-' + Date.now() + '.pdf';
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+          showBanner('✅ PDF heruntergeladen!');
+          console.log('✅ PDF downloaded successfully');
+        })
+        .catch(function(error) {
+          console.error('❌ PDF export failed:', error);
+          showBanner('❌ PDF-Export fehlgeschlagen');
+        });
+      }
+    });
+    console.log('✅ PDF Export button event listener attached');
+  } else {
+    console.log('⚠️ PDF Export button not found');
+  }
 
   // Focus URL input
   setTimeout(function() {
