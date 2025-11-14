@@ -3,10 +3,15 @@ services:
     name: websitescanner
     env: node
     plan: starter
-    buildCommand: yarn install && npx playwright install --with-deps chromium
+    buildCommand: |
+      echo "📦 Installing dependencies..."
+      yarn install
+      echo "🎭 Installing Playwright browsers..."
+      echo "📁 Browser path: /opt/render/project/src/.playwright-browsers"
+      export PLAYWRIGHT_BROWSERS_PATH=/opt/render/project/src/.playwright-browsers
+      mkdir -p /opt/render/project/src/.playwright-browsers
+      npx playwright install --with-deps chromium
+      echo "✅ Build complete"
+      echo "📂 Checking installed browsers:"
+      ls -la /opt/render/project/src/.playwright-browsers || echo "Directory not found"
     startCommand: yarn start
-    envVars:
-      - key: NODE_VERSION
-        value: 20.11.0
-      - key: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD
-        value: "0"

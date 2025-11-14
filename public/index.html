@@ -256,7 +256,29 @@
   .stat-value{font-size:2rem;font-weight:bold;color:#1f2937}
   .stat-label{color:#6b7280;font-size:0.9rem;margin-top:4px}
   #statsOverview{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
-  
+
+  .compliance-item,.issue-item{background:white;border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px}
+  .compliance-header,.issue-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .compliance-name,.issue-type{font-weight:600;color:#1f2937}
+  .compliance-badge{padding:4px 12px;border-radius:8px;font-size:0.85rem;font-weight:500}
+  .badge-perfect{background:#dcfce7;color:#166534}
+  .badge-good{background:#fef9c3;color:#854d0e}
+  .badge-inconsistent{background:#fef3c7;color:#92400e}
+  .badge-bad{background:#fee2e2;color:#991b1b}
+  .badge-missing{background:#f3f4f6;color:#4b5563}
+  .compliance-body,.issue-body{font-size:0.9rem;color:#4b5563}
+  .compliance-impact,.issue-message{margin-bottom:8px;color:#1f2937}
+  .compliance-meta,.compliance-states{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;font-size:0.85rem}
+  .issue-translation{font-style:italic;color:#6b7280;margin:8px 0}
+  .issue-fix{background:#f9fafb;padding:8px;border-radius:6px;margin-top:8px;font-size:0.85rem}
+  .issue-mode{margin-top:8px;font-size:0.8rem;color:#9ca3af}
+  .issue-priority{padding:4px 12px;border-radius:8px;font-size:0.85rem;font-weight:500}
+  .priority-critical .issue-priority{background:#fee2e2;color:#991b1b}
+  .priority-high .issue-priority{background:#fed7aa;color:#9a3412}
+  .priority-medium .issue-priority{background:#fef3c7;color:#92400e}
+  .priority-low .issue-priority{background:#dbeafe;color:#1e40af}
+  .empty{text-align:center;padding:40px;color:#9ca3af;font-style:italic}
+
   @media (max-width: 768px) {
     .hero-section h1 { font-size: 2.5rem; }
     .hero-section .subtitle { font-size: 1.2rem; }
@@ -725,15 +747,27 @@ async function startRealScan(url) {
       if (response.ok) {
         const data = await response.json();
         DATA = data;
+        console.log('✅ Scan data received from server');
       } else {
         throw new Error('Server error');
       }
     } catch (e) {
       // Fallback to demo data
+      console.log('⚠️ Using demo data, server error:', e.message);
       DATA = buildDemoData();
     }
-    
+
     // Show results
+    console.log('=== RENDERING SCAN RESULTS ===');
+    console.log('DATA object:', DATA);
+    console.log('Summary:', DATA?.summary);
+    console.log('Marketing Tags:', DATA?.summary?.marketingTags);
+    console.log('Details:', DATA?.details);
+    console.log('Errors count:', DATA?.details?.errors?.length);
+    console.log('Network Issues count:', DATA?.details?.networkIssues?.length);
+    console.log('CSP Violations count:', DATA?.details?.cspViolations?.length);
+    console.log('==============================');
+
     $('scanProgress').classList.remove('active');
     $('heroSection').style.display = 'none';
     $('exampleSection').style.display = 'none';
@@ -822,16 +856,23 @@ function buildDemoData() {
 
 // Render functions
 function renderSummary() {
-  if (!DATA) return;
+  console.log('🔵 renderSummary() called');
+  if (!DATA) {
+    console.log('❌ No DATA in renderSummary');
+    return;
+  }
+
   $('scannedUrl').textContent = DATA.scannedUrl || '–';
   $('timestamp').textContent = DATA.timestamp || '–';
   $('version').textContent = 'v' + (DATA.version || '–');
-  
+
   const total = (DATA.details?.errors?.length || 0) + (DATA.details?.networkIssues?.length || 0) + (DATA.details?.cspViolations?.length || 0);
   const crit = (DATA.details?.errors || []).filter(function(e) { return /critical|high/i.test(e.priority || ''); }).length;
   const mtags = DATA.summary?.marketingTags || [];
   const perfect = mtags.filter(function(m) { return m.compliance === 'perfect'; }).length;
   const risk = mtags.filter(function(m) { return ['bad','inconsistent','good','missing'].includes(m.compliance); }).length;
+
+  console.log('📊 Summary stats: total=' + total + ', crit=' + crit + ', mtags=' + mtags.length + ', perfect=' + perfect + ', risk=' + risk);
   
   // Calculate money impact
   let monthlyLoss = 0;
@@ -857,16 +898,146 @@ function renderSummary() {
     text = 'Mittleres Risiko – einige Probleme erfordern Aufmerksamkeit.'; 
   }
   
-  riskBox.className = 'risk ' + level; 
-  riskText.textContent = text; 
-  riskBox.classList.remove('ghost'); 
+  riskBox.className = 'risk ' + level;
+  riskText.textContent = text;
+  riskBox.classList.remove('ghost');
   riskText.classList.remove('ghost');
 }
 
-function renderAll() { 
-  if (!DATA) return; 
-  renderSummary(); 
-  // Add other render functions here as needed
+function renderCompliance() {
+  console.log('🔵 renderCompliance() called');
+  const container = $('complianceList');
+  if (!container) {
+    console.log('❌ complianceList container not found!');
+    return;
+  }
+
+  const mtags = DATA.summary?.marketingTags || [];
+  console.log('📊 Marketing tags to render:', mtags.length, mtags);
+
+  if (mtags.length === 0) {
+    console.log('⚠️ No marketing tags, showing empty message');
+    container.innerHTML = '<div class="empty">Keine Marketing-Tags gefunden</div>';
+    return;
+  }
+
+  const html = mtags.map(function(tag) {
+    const compClass = tag.compliance || 'unknown';
+    const compLabel = {
+      'perfect': 'Perfekt',
+      'good': 'Eingeschränkt',
+      'inconsistent': 'Uneinheitlich',
+      'bad': 'Missachtet',
+      'missing': 'Fehlt'
+    }[compClass] || 'Unbekannt';
+
+    const riskClass = tag.gdprRisk || 'none';
+    const riskLabel = {
+      'high': '⚠️ Hoch',
+      'medium': '🟡 Mittel',
+      'low': '🔵 Niedrig',
+      'none': '✅ Kein'
+    }[riskClass] || '–';
+
+    return '<div class="compliance-item">' +
+      '<div class="compliance-header">' +
+        '<div class="compliance-name">' + escapeHtml(tag.name) + '</div>' +
+        '<div class="compliance-badge badge-' + compClass + '">' + compLabel + '</div>' +
+      '</div>' +
+      '<div class="compliance-body">' +
+        '<div class="compliance-impact">' + escapeHtml(tag.impact || 'Keine Details') + '</div>' +
+        '<div class="compliance-meta">' +
+          '<span>DSGVO-Risiko: ' + riskLabel + '</span>' +
+          '<span>Business Impact: ' + escapeHtml(tag.businessImpact || '–') + '</span>' +
+        '</div>' +
+        '<div class="compliance-states">' +
+          '<span>Ohne Consent: ' + (tag.withoutConsent ? '🔴 Aktiv' : '✅ Inaktiv') + '</span>' +
+          '<span>Mit Accept: ' + (tag.withAccept ? '✅ Aktiv' : '🔴 Inaktiv') + '</span>' +
+          '<span>Mit Reject: ' + (tag.withReject ? '🔴 Aktiv' : '✅ Inaktiv') + '</span>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  container.innerHTML = html;
+  console.log('✅ Compliance HTML rendered, length:', html.length);
+}
+
+function renderIssues() {
+  console.log('🔵 renderIssues() called');
+  const container = $('issueList');
+  if (!container) {
+    console.log('❌ issueList container not found!');
+    return;
+  }
+
+  const allIssues = [
+    ...(DATA.details?.errors || []),
+    ...(DATA.details?.networkIssues || []),
+    ...(DATA.details?.cspViolations || [])
+  ];
+  console.log('🚨 Issues to render:', allIssues.length, 'issues');
+  console.log('  - Errors:', DATA.details?.errors?.length);
+  console.log('  - Network Issues:', DATA.details?.networkIssues?.length);
+  console.log('  - CSP Violations:', DATA.details?.cspViolations?.length);
+
+  if (allIssues.length === 0) {
+    console.log('✅ No issues, showing success message');
+    container.innerHTML = '<div class="empty">✅ Keine Probleme gefunden!</div>';
+    return;
+  }
+
+  const html = allIssues.map(function(issue) {
+    const priority = issue.priority || 'low';
+    const priorityLabel = {
+      'critical': '🔴 Kritisch',
+      'high': '🟠 Hoch',
+      'medium': '🟡 Mittel',
+      'low': '🔵 Niedrig'
+    }[priority] || '–';
+
+    return '<div class="issue-item priority-' + priority + '">' +
+      '<div class="issue-header">' +
+        '<div class="issue-type">' + escapeHtml(issue.type || 'Issue') + '</div>' +
+        '<div class="issue-priority">' + priorityLabel + '</div>' +
+      '</div>' +
+      '<div class="issue-body">' +
+        '<div class="issue-message">' + escapeHtml(issue.message || 'Keine Details') + '</div>' +
+        '<div class="issue-translation">' + escapeHtml(issue.translation || '') + '</div>' +
+        '<div class="issue-fix"><strong>Fix:</strong> ' + escapeHtml(issue.techFix || 'Keine Empfehlung') + '</div>' +
+        '<div class="issue-mode">Modus: ' + escapeHtml(issue.consentMode || '–') + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  container.innerHTML = html;
+  console.log('✅ Issues HTML rendered, length:', html.length);
+}
+
+function renderAll() {
+  console.log('🎨 renderAll() called');
+  if (!DATA) {
+    console.log('❌ No DATA object available!');
+    return;
+  }
+  console.log('✅ DATA object exists, rendering all sections...');
+  renderSummary();
+  renderCompliance();
+  renderIssues();
+
+  // Make sure tabs are visible after rendering
+  const complianceTab = $('tab-compliance');
+  const issuesTab = $('tab-issues');
+  if (complianceTab) {
+    complianceTab.style.display = 'grid';
+    console.log('✅ Compliance tab made visible');
+  }
+  if (issuesTab) {
+    issuesTab.style.display = 'grid';
+    console.log('✅ Issues tab made visible');
+  }
+
+  console.log('✅ All render functions completed');
 }
 
 // Event handlers

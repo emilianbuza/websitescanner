@@ -8,8 +8,51 @@ import { saveScan, getScanHistory, getScansByUrl, getScanById, compareScans, get
 import { generatePDF } from './pdfExport.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
+import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
+
+// Set browser path BEFORE any Playwright operations
+const BROWSER_PATH = process.env.PLAYWRIGHT_BROWSERS_PATH || path.join(__dirname, '.playwright-browsers');
+process.env.PLAYWRIGHT_BROWSERS_PATH = BROWSER_PATH;
+console.log(`🎯 Setting PLAYWRIGHT_BROWSERS_PATH to: ${BROWSER_PATH}`);
+
+// Function to find Chromium executable
+function findChromiumExecutable() {
+  const possiblePaths = [
+    // Render project directory
+    path.join(__dirname, '.playwright-browsers'),
+    // Default Playwright cache
+    path.join(process.env.HOME || '/opt/render', '.cache', 'ms-playwright'),
+  ];
+
+  for (const basePath of possiblePaths) {
+    if (!fs.existsSync(basePath)) continue;
+
+    const dirs = fs.readdirSync(basePath);
+    const chromiumDirs = dirs.filter(d => d.startsWith('chromium'));
+
+    for (const dir of chromiumDirs) {
+      const chromePaths = [
+        path.join(basePath, dir, 'chrome-linux', 'chrome'),
+        path.join(basePath, dir, 'chrome-linux', 'headless_shell'),
+      ];
+
+      for (const chromePath of chromePaths) {
+        if (fs.existsSync(chromePath)) {
+          console.log(`✅ Found Chromium executable: ${chromePath}`);
+          return chromePath;
+        }
+      }
+    }
+  }
+
+  console.log('⚠️  No Chromium executable found');
+  return null;
+}
+
+let CHROMIUM_EXECUTABLE = null;
 
 const app = express();
 app.set('trust proxy', 1);
@@ -131,10 +174,29 @@ class UltimateWebsiteScanner {
     this.validateUrl(url);
     console.log(`🔍 Starting comprehensive scan of ${url}`);
 
-    const browser = await chromium.launch({
-      headless: true,
-      args: ['--no-sandbox','--disable-setuid-sandbox','--disable-dev-shm-usage','--disable-web-security','--disable-features=VizDisplayCompositor']
-    });
+    let browser;
+    try {
+      console.log('🌐 Launching Chromium browser...');
+
+      // Prepare launch options
+      const launchOptions = {
+        headless: true,
+        args: ['--no-sandbox','--disable-setuid-sandbox','--disable-dev-shm-usage','--disable-web-security','--disable-features=VizDisplayCompositor']
+      };
+
+      // Use explicit executable path if available
+      if (CHROMIUM_EXECUTABLE) {
+        console.log(`🎯 Using explicit Chromium path: ${CHROMIUM_EXECUTABLE}`);
+        launchOptions.executablePath = CHROMIUM_EXECUTABLE;
+      }
+
+      browser = await chromium.launch(launchOptions);
+      console.log('✅ Browser launched successfully');
+    } catch (launchError) {
+      console.error('❌ Failed to launch browser:', launchError.message);
+      console.error('Attempted executable path:', CHROMIUM_EXECUTABLE || chromium.executablePath());
+      throw new Error(`Browser launch failed: ${launchError.message}`);
+    }
 
     try {
       console.log('🚫 Run A: Scanning without consent (default denied)...');
@@ -412,6 +474,7 @@ class UltimateWebsiteScanner {
   }
 
   async checkMarketingTagsDeep(page, requestLog) {
+    console.log(`🔍 Checking ${requestLog.length} requests for marketing tags...`);
     const hasGA4_HIT = requestLog.some(r => /(www|region\d+)\.google-analytics\.com\/g\/collect/i.test(r.url));
     const hasGA4_LIB = requestLog.some(r => /gtag\/js\?id=G-/i.test(r.url));
     const hasUA_HIT  = requestLog.some(r => /google-analytics\.com\/collect(\?|$)/i.test(r.url));
@@ -475,6 +538,7 @@ class UltimateWebsiteScanner {
       ['CrazyEgg', 'hasCrazyEgg']
     ];
     this.marketingTags = defs.map(([n,p]) => this.analyzeTagCompliance(n,p)).filter(t => t.relevant);
+    console.log(`📊 Found ${this.marketingTags.length} relevant marketing tags:`, this.marketingTags.map(t => t.name));
   }
 
   analyzeTagCompliance(tagName, tagProperty) {
@@ -767,6 +831,11 @@ class UltimateWebsiteScanner {
     const totalIssues = allErrors.length + allNetworkIssues.length + allCSPViolations.length;
     const highPriorityIssues = [...allErrors, ...allNetworkIssues, ...allCSPViolations].filter(i => i.priority === 'high' || i.priority === 'critical').length;
 
+    console.log(`📈 Scan Results Summary:
+  - Marketing Tags: ${this.marketingTags.length}
+  - Total Issues: ${totalIssues} (${highPriorityIssues} high priority)
+  - Errors: ${allErrors.length}, Network Issues: ${allNetworkIssues.length}, CSP Violations: ${allCSPViolations.length}`);
+
     return {
       version: VERSION,
       scannedUrl: url,
@@ -824,7 +893,11 @@ app.post('/scan-v2', async (req, res) => {
   const { url } = req.body || {};
   if (!url) return res.status(400).json({ error: 'Missing URL' });
 
-  const browser = await chromium.launch({ headless: true });
+  const launchOptions = { headless: true };
+  if (CHROMIUM_EXECUTABLE) {
+    launchOptions.executablePath = CHROMIUM_EXECUTABLE;
+  }
+  const browser = await chromium.launch(launchOptions);
   const context = await browser.newContext({ viewport: { width: 1366, height: 900 }, ignoreHTTPSErrors: true });
   const page = await context.newPage();
 
@@ -970,11 +1043,91 @@ app.post('/api/export/pdf', async (req, res) => {
   }
 });
 
+/* ------------------------- Playwright Browser Check ------------------------ */
+async function checkPlaywrightBrowsers() {
+  console.log('\n🔍 Checking Playwright browser installation...');
+  console.log(`📁 PLAYWRIGHT_BROWSERS_PATH: ${process.env.PLAYWRIGHT_BROWSERS_PATH}`);
+  console.log(`📁 Current directory: ${__dirname}`);
+
+  // Find Chromium executable
+  CHROMIUM_EXECUTABLE = findChromiumExecutable();
+
+  try {
+    // List browser cache directory
+    if (fs.existsSync(BROWSER_PATH)) {
+      const contents = fs.readdirSync(BROWSER_PATH);
+      console.log(`📦 Browser cache contents (${contents.length} items):`, contents);
+
+      // Look for chromium directories
+      const chromiumDirs = contents.filter(d => d.includes('chromium'));
+      if (chromiumDirs.length > 0) {
+        console.log(`🔍 Found Chromium directories:`, chromiumDirs);
+        chromiumDirs.forEach(dir => {
+          const dirPath = path.join(BROWSER_PATH, dir);
+          if (fs.existsSync(dirPath) && fs.statSync(dirPath).isDirectory()) {
+            console.log(`   ${dir}:`, fs.readdirSync(dirPath));
+          }
+        });
+      }
+    } else {
+      console.log(`⚠️  Browser cache directory does not exist: ${BROWSER_PATH}`);
+      console.log('📁 Creating directory...');
+      fs.mkdirSync(BROWSER_PATH, { recursive: true });
+    }
+
+    // Try to launch a browser to verify it works
+    console.log('🧪 Testing browser launch...');
+    const launchOptions = { headless: true, timeout: 10000 };
+    if (CHROMIUM_EXECUTABLE) {
+      launchOptions.executablePath = CHROMIUM_EXECUTABLE;
+    }
+    const testBrowser = await chromium.launch(launchOptions);
+    await testBrowser.close();
+    console.log('✅ Playwright browsers are installed and working!\n');
+    return true;
+  } catch (error) {
+    console.error('❌ Playwright browser check failed:', error.message);
+    console.log('\n🔧 Attempting to install browsers at runtime...');
+    console.log(`🎯 Installing to: ${BROWSER_PATH}`);
+
+    try {
+      // Install browsers at runtime
+      console.log('Running: npx playwright install chromium');
+      execSync('npx playwright install chromium', {
+        stdio: 'inherit',
+        timeout: 180000, // 3 minutes timeout
+        env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: BROWSER_PATH }
+      });
+
+      // Find the executable after installation
+      CHROMIUM_EXECUTABLE = findChromiumExecutable();
+
+      // Verify installation
+      console.log('\n🧪 Re-testing browser launch...');
+      const launchOptions = { headless: true, timeout: 10000 };
+      if (CHROMIUM_EXECUTABLE) {
+        launchOptions.executablePath = CHROMIUM_EXECUTABLE;
+      }
+      const testBrowser = await chromium.launch(launchOptions);
+      await testBrowser.close();
+      console.log('✅ Browser installation successful!\n');
+      return true;
+    } catch (installError) {
+      console.error('❌ Failed to install browsers at runtime:', installError.message);
+      console.error('⚠️  Scanner will not work until browsers are properly installed!');
+      return false;
+    }
+  }
+}
+
 /* ----------------------------- Start & Shutdown ---------------------------- */
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, async () => {
   console.log(`🚀 Website Scanner running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔍 Scanner UI:   http://localhost:${PORT}/`);
+
+  // Check Playwright browsers after server starts
+  await checkPlaywrightBrowsers();
 });
 const graceful = (sig) => async () => {
   console.log(`\nReceived ${sig}, shutting down gracefully...`);
