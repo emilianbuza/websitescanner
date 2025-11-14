@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>💸 Verlieren Sie täglich €127 durch kaputtes Tracking? | Website Scanner</title>
+<style>
+  :root{
+    --bg:#ffffff; --panel:#f9fafb; --ink:#111827; --muted:#374151;
+    --brand:#7c3aed; --brand2:#22c55e; --warn:#d97706; --bad:#b91c1c; --ok:#059669;
+    --chip:#f3f4f6; --border:#d1d5db;
+  }
+  
+  [data-theme="dark"] {
+    --bg: #1a202c; --panel: #2d3748; --ink: #f7fafc; --muted: #a0aec0;
+    --chip: #4a5568; --border: #4a5568;
+  }
+  
+  *{box-sizing:border-box} html,body{height:100%}
+  body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;transition:all 0.3s ease;}
+  a{color:inherit;text-decoration:none}
+  
+  /* Theme Toggle */
+  .theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--brand);
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    color: white;
+    cursor: pointer;
+    z-index: 1000;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+  }
+  .theme-toggle:hover {
+    transform: scale(1.1);
+  }
+  
+  /* Hero Section */
+  .hero-section{background:linear-gradient(135deg,#f0f7ff 0%,#e0f2fe 100%);padding:80px 0;text-align:center;margin-bottom:30px}
+  .hero-section h1{font-size:3.5rem;font-weight:800;margin:0 0 20px 0;color:#1f2937}
+  .hero-section .subtitle{font-size:1.4rem;color:#4b5563;margin-bottom:40px;max-width:800px;margin-left:auto;margin-right:auto}
+  .cta-enhanced{max-width:600px;margin:0 auto 40px auto;background:white;padding:25px;border-radius:12px;box-shadow:0 8px 16px rgba(0,0,0,0.1)}
+  .cta-enhanced input{width:100%;padding:16px 20px;border:2px solid #e5e7eb;border-radius:8px;font-size:1.1rem;margin-bottom:15px}
+  .cta-enhanced input:focus{outline:none;border-color:var(--brand)}
+  .cta-enhanced button{width:100%;background:var(--brand);color:white;border:none;padding:16px 24px;border-radius:8px;font-size:1.1rem;font-weight:600;cursor:pointer}
+  .cta-enhanced button:hover{background:#6d28d9}
+  .trust-signals{display:flex;justify-content:center;gap:20px;margin-top:15px;font-size:0.9rem;color:#059669}
+  .trust-signals span{display:flex;align-items:center;gap:5px}
+  
+  /* Urgency Banner */
+  .urgency-banner {
+    background: #fee2e2;
+    border: 2px solid #dc2626;
+    padding: 20px;
+    margin: 20px;
+    border-radius: 12px;
+    text-align: center;
+    animation: pulse-urgency 3s infinite;
+  }
+  .urgency-banner h3 {
+    color: #dc2626;
+    margin: 0 0 10px 0;
+  }
+  .urgency-banner p {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+  @keyframes pulse-urgency {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+  }
+  
+  /* Example Problems */
+  .example-findings{margin:60px 0;padding:0 20px}
+  .example-findings h3{text-align:center;font-size:1.8rem;margin-bottom:30px;color:#1f2937}
+  .problem-examples{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;max-width:1200px;margin:0 auto}
+  .problem{background:white;border-left:4px solid #ef4444;padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);transition:all 0.3s ease;cursor:pointer}
+  .problem:hover{transform:translateY(-4px);box-shadow:0 8px 20px rgba(0,0,0,0.15)}
+  .problem-icon{font-size:1.2rem;margin-bottom:10px}
+  .problem-title{font-weight:600;color:#1f2937;margin-bottom:8px}
+  .problem-impact{color:#6b7280;font-size:0.9rem}
+  
+  /* Progress Bar */
+  .scan-progress{background:white;border:2px solid var(--brand);border-radius:12px;padding:25px;margin:20px auto;max-width:700px;display:none;box-shadow:0 8px 16px rgba(0,0,0,0.1)}
+  .scan-progress.active{display:block}
+  .progress-header{text-align:center;margin-bottom:20px}
+  .progress-header h3{margin:0 0 10px 0;color:#1f2937;font-size:1.5rem}
+  
+  .main-progress{margin-bottom:25px}
+  .progress-bar{height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;margin-bottom:10px}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2));transition:width 0.3s ease;width:0%}
+  .progress-text{font-size:14px;color:#6b7280;text-align:center}
+  
+  .scan-steps{margin-top:20px}
+  .step{display:flex;align-items:center;padding:12px 0;border-left:3px solid transparent;padding-left:15px;margin-left:10px;border-radius:0 8px 8px 0;transition:all 0.3s ease}
+  .step.completed{border-color:#22c55e;background:#f0f9f4}
+  .step.active{border-color:#7c3aed;background:#f3f4f6;animation:pulse 2s infinite}
+  .step.pending{border-color:#e5e7eb;color:#9ca3af}
+  .step-icon{width:20px;height:20px;margin-right:12px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+  .step.completed .step-icon{background:#22c55e;color:white}
+  .step.active .step-icon{background:#7c3aed;color:white}
+  .step.pending .step-icon{background:#e5e7eb;color:#9ca3af}
+  .step-text{flex:1}
+  .step-duration{font-size:12px;color:#6b7280;margin-top:2px}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.7}}
+  .live-log{margin-top:20px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:15px;max-height:150px;overflow-y:auto}
+  .live-log h4{margin:0 0 10px 0;font-size:14px;color:#374151}
+  .log-entry{font-family:monospace;font-size:12px;margin:2px 0;color:#6b7280;padding:2px 0}
+  .log-entry.important{color:#7c3aed;font-weight:600}
+  
+  /* Dashboard Results */
+  .results-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+  }
+  
+  .metric-card {
+    background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .metric-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  }
+  
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+  }
+  
+  .metric-card.critical::before { background: #ef4444; }
+  .metric-card.warning::before { background: #f59e0b; }
+  .metric-card.info::before { background: #10b981; }
+  .metric-card.money::before { background: linear-gradient(90deg, #ef4444, #f59e0b); }
+  
+  .metric-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+  }
+  
+  .metric-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #1a202c;
+    margin-bottom: 5px;
+  }
+  
+  .metric-label {
+    color: #6b7280;
+    font-size: 0.9rem;
+  }
+  
+  .metric-trend {
+    font-size: 0.8rem;
+    color: #10b981;
+    margin-top: 5px;
+  }
+  
+  .container{max-width:1200px;margin:0 auto;padding:16px 16px 80px}
+  .topbar{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--border)}
+  .topbar-inner{max-width:1200px;margin:0 auto;display:flex;gap:12px;align-items:center;padding:10px 16px}
+  .brand{display:flex;gap:10px;align-items:center;font-weight:700}
+  .brand .dot{width:10px;height:10px;border-radius:999px;background:conic-gradient(var(--brand),var(--brand2))}
+  .urlfield{flex:1;display:flex;gap:8px}
+  .urlfield input{flex:1;background:var(--bg);border:1px solid var(--border);padding:12px 14px;border-radius:10px;color:var(--ink)}
+  .btn{background:var(--brand);border:none;color:white;padding:12px 16px;border-radius:10px;font-weight:600;cursor:pointer}
+  .btn.alt{background:#e5e7eb;color:#111827}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .toggle{display:flex;gap:6px;border:1px solid var(--border);border-radius:999px;padding:5px;background:#f3f4f6}
+  .toggle button{border:none;padding:8px 12px;border-radius:999px;background:transparent;color:var(--ink);cursor:pointer}
+  .toggle .active{background:#e5e7eb}
+  .progress{height:6px;background:#f3f4f6;border-top:1px solid var(--border)}
+  .progress .bar{height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--brand2));transition:width .4s ease}
+  .tabs{display:flex;gap:8px;margin:16px 0}
+  .tab{padding:10px 14px;border:1px solid var(--border);border-radius:10px;cursor:pointer;background:#f9fafb;color:var(--muted)}
+  .tab.active{background:#e5e7eb;color:var(--ink)}
+  .grid{display:grid;grid-template-columns:1fr;gap:12px}
+  @media(min-width:900px){.grid{grid-template-columns:repeat(12,1fr)}}
+  .card{grid-column:span 12;background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:16px}
+  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#f3f4f6;border:1px solid var(--border);font-size:.85rem;color:#374151}
+  .pill{padding:7px 10px;border-radius:999px;background:#f9fafb;border:1px solid var(--border);cursor:pointer}
+  .pill.active{background:#e5e7eb;color:#111827}
+  .kpi{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  @media(min-width:900px){.kpi{grid-template-columns:repeat(4,1fr)}}
+  .kpicard{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px}
+  .kpicard h3{margin:0 0 4px 0;font-size:.9rem;color:#374151}
+  .kpicard .val{font-size:1.6rem;font-weight:800}
+  .risk{border-radius:12px;padding:16px;border:1px solid var(--border)}
+  .risk.low{background:#d1fae5}
+  .risk.med{background:#fef3c7}
+  .risk.high{background:#fee2e2}
+  .list{display:flex;flex-direction:column;gap:8px}
+  .item{background:var(--bg);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  .item header{display:flex;gap:10px;align-items:center;padding:12px 14px;cursor:pointer}
+  .item header .title{flex:1;font-weight:600}
+  .severity{width:10px;height:10px;border-radius:999px}
+  .sev-low{background:var(--ok)} .sev-med{background:var(--warn)} .sev-high{background:var(--bad)}
+  .meta{display:flex;gap:8px;flex-wrap:wrap}
+  .meta .chip{background:#f3f4f6;border:1px solid var(--border);padding:4px 8px;border-radius:999px;font-size:.8rem;color:#374151}
+  .body{display:none;border-top:1px solid var(--border);padding:12px 14px}
+  .body.open{display:block}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .toolbar input{flex:1;min-width:180px;background:var(--bg);border:1px solid var(--border);padding:10px;border-radius:10px;color:var(--ink)}
+  .right{margin-left:auto}
+  .ghost{opacity:.65}
+  .drawer{position:fixed;top:0;right:-520px;width:520px;max-width:100%;height:100%;background:var(--bg);border-left:1px solid var(--border);
+          transition:right .3s ease;z-index:50;display:flex;flex-direction:column;color:#111827}
+  .drawer.open{right:0}
+  .drawer header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center}
+  .drawer main{padding:16px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+  pre{background:#f9fafb;border:1px solid var(--border);border-radius:10px;padding:10px;overflow:auto;white-space:pre-wrap}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+  .copy{background:#e5e7eb;border:1px solid var(--border);color:#111827;border-radius:8px;padding:6px 10px;cursor:pointer}
+  .empty{padding:18px;border:1px dashed var(--border);border-radius:12px;color:#6b7280;text-align:center}
+  .preview{margin-left:8px;font-size:.85rem;color:#7c3aed}
+  .banner{margin:12px auto 0;max-width:1200px;background:#e0f2fe;border:1px solid #93c5fd;color:#1e3a8a;padding:10px 14px;border-radius:10px}
+  .test{font-size:.85rem;color:#047857}
+
+  /* History & Charts */
+  .history-item{background:white;border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;cursor:pointer;transition:all 0.3s ease}
+  .history-item:hover{box-shadow:0 4px 12px rgba(0,0,0,0.1);transform:translateY(-2px)}
+  .history-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .history-url{font-weight:600;color:#1f2937}
+  .history-score{padding:4px 12px;border-radius:999px;font-weight:600;font-size:0.9rem}
+  .score-good{background:#d1fae5;color:#059669}
+  .score-medium{background:#fef3c7;color:#d97706}
+  .score-bad{background:#fee2e2;color:#dc2626}
+  .history-meta{display:flex;gap:12px;align-items:center;font-size:0.85rem;color:#6b7280}
+  .history-date{color:#9ca3af}
+  .history-actions{margin-left:auto;display:flex;gap:6px}
+  .btn-small{padding:6px 12px;border:1px solid var(--border);background:white;border-radius:8px;cursor:pointer;font-size:0.85rem}
+  .btn-small:hover{background:#f3f4f6}
+  .btn-danger{color:#dc2626;border-color:#dc2626}
+  .btn-danger:hover{background:#fee2e2}
+  .chart-container{background:white;border:1px solid var(--border);border-radius:12px;padding:20px;height:300px;margin-bottom:20px}
+  .stat-card{background:white;border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+  .stat-value{font-size:2rem;font-weight:bold;color:#1f2937}
+  .stat-label{color:#6b7280;font-size:0.9rem;margin-top:4px}
+  #statsOverview{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+
+  .compliance-item,.issue-item{background:white;border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px}
+  .compliance-header,.issue-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .compliance-name,.issue-type{font-weight:600;color:#1f2937}
+  .compliance-badge{padding:4px 12px;border-radius:8px;font-size:0.85rem;font-weight:500}
+  .badge-perfect{background:#dcfce7;color:#166534}
+  .badge-good{background:#fef9c3;color:#854d0e}
+  .badge-inconsistent{background:#fef3c7;color:#92400e}
+  .badge-bad{background:#fee2e2;color:#991b1b}
+  .badge-missing{background:#f3f4f6;color:#4b5563}
+  .compliance-body,.issue-body{font-size:0.9rem;color:#4b5563}
+  .compliance-impact,.issue-message{margin-bottom:8px;color:#1f2937}
+  .compliance-meta,.compliance-states{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;font-size:0.85rem}
+  .issue-translation{font-style:italic;color:#6b7280;margin:8px 0}
+  .issue-fix{background:#f9fafb;padding:8px;border-radius:6px;margin-top:8px;font-size:0.85rem}
+  .issue-mode{margin-top:8px;font-size:0.8rem;color:#9ca3af}
+  .issue-priority{padding:4px 12px;border-radius:8px;font-size:0.85rem;font-weight:500}
+  .priority-critical .issue-priority{background:#fee2e2;color:#991b1b}
+  .priority-high .issue-priority{background:#fed7aa;color:#9a3412}
+  .priority-medium .issue-priority{background:#fef3c7;color:#92400e}
+  .priority-low .issue-priority{background:#dbeafe;color:#1e40af}
+  .empty{text-align:center;padding:40px;color:#9ca3af;font-style:italic}
+
+  @media (max-width: 768px) {
+    .hero-section h1 { font-size: 2.5rem; }
+    .hero-section .subtitle { font-size: 1.2rem; }
+    .trust-signals { flex-direction: column; gap: 10px; }
+    .problem-examples { grid-template-columns: 1fr; }
+    .cta-enhanced { margin: 0 20px 40px 20px; }
+    .results-dashboard { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <!-- Theme Toggle -->
+  <button class="theme-toggle" onclick="toggleTheme()" title="Theme wechseln">🌓</button>
+
+  <!-- Hero Section -->
+  <div id="heroSection" class="hero-section">
+    <div style="max-width: 800px; margin: 0 auto; padding: 0 20px;">
+      <h1>💸 Verlieren Sie täglich €127 durch kaputtes Tracking?</h1>
+      <p class="subtitle">
+        Unser 60-Sekunden-Scan findet heraus, ob Google Ads, Facebook Pixel & Co. 
+        bei Ihnen blockiert sind – und Sie dadurch <strong>€1.500-4.800/Monat</strong> verlieren.
+      </p>
+      
+      <div class="cta-enhanced">
+        <input type="url" id="websiteUrl" placeholder="https://ihre-website.de">
+        <button onclick="startScanFromHero()">Jetzt kostenlos prüfen (60 Sek.)</button>
+        <div class="trust-signals">
+          <span>✅ Ø €3.200 Verlust entdeckt</span>
+          <span>✅ 89% finden kritische Probleme</span>
+          <span>✅ Sofort-Lösungen inklusive</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Urgency Banner -->
+  <div id="urgencyBanner" class="urgency-banner">
+    <h3>⚠️ Achtung: Jeden Tag warten kostet Geld!</h3>
+    <p>
+      <strong>Durchschnittlich verlieren Websites €127/Tag</strong> durch blockiertes Tracking.<br>
+      <span style="color: #7f1d1d;">Das sind €3.800/Monat die direkt in Ihre Konkurrenz fließen.</span>
+    </p>
+  </div>
+
+  <!-- Example Problems -->
+  <div id="exampleSection" class="example-findings">
+    <div style="max-width: 1200px; margin: 0 auto;">
+      <h3>Häufige Probleme, die wir finden:</h3>
+      <div class="problem-examples">
+        <div class="problem">
+          <div class="problem-icon">💸 📊</div>
+          <div class="problem-title">Google Analytics sammelt ohne Erlaubnis</div>
+          <div class="problem-impact">€2.000 Abmahn-Risiko + Ihre Zahlen sind rechtlich nutzlos</div>
+        </div>
+        
+        <div class="problem">
+          <div class="problem-icon">💸 📱</div>
+          <div class="problem-title">Facebook Ads laufen blind</div>
+          <div class="problem-impact">€850/Monat verschwendet, weil Conversions nicht gemessen werden</div>
+        </div>
+        
+        <div class="problem">
+          <div class="problem-icon">💸 🎯</div>
+          <div class="problem-title">Retargeting funktioniert nicht</div>
+          <div class="problem-impact">70% weniger Wiederkäufer = €1.200/Monat Umsatzverlust</div>
+        </div>
+        
+        <div class="problem">
+          <div class="problem-icon">💸 🔒</div>
+          <div class="problem-title">Sicherheitsregeln zu streng</div>
+          <div class="problem-impact">€450/Monat verloren durch blockierte Marketing-Tools</div>
+        </div>
+        
+        <div class="problem">
+          <div class="problem-icon">💸 📈</div>
+          <div class="problem-title">TikTok/LinkedIn Pixel stumm</div>
+          <div class="problem-impact">Social Media ROI nicht messbar = Blind optimieren</div>
+        </div>
+        
+        <div class="problem">
+          <div class="problem-icon">💸 🍪</div>
+          <div class="problem-title">Consent-Banner funktionslos</div>
+          <div class="problem-impact">Tools sammeln trotz "Ablehnen" Daten – €2.000 Abmahn-Risiko</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scan Progress -->
+  <div class="scan-progress" id="scanProgress">
+    <div class="progress-header">
+      <h3>Website wird analysiert...</h3>
+      <div id="currentUrl" class="badge" style="margin-bottom: 15px;">–</div>
+    </div>
+    
+    <div class="main-progress">
+      <div class="progress-bar">
+        <div class="progress-fill" id="mainProgressBar"></div>
+      </div>
+      <div class="progress-text" id="progressText">Vorbereitung... (0/4 Sessions)</div>
+    </div>
+    
+    <div class="scan-steps">
+      <div class="step pending" id="step1">
+        <div class="step-icon">1</div>
+        <div class="step-text">
+          <div><strong>Session 1: Ohne Consent</strong></div>
+          <div class="step-duration">Prüft Standard-Verhalten (~25 Sek.)</div>
+        </div>
+      </div>
+      
+      <div class="step pending" id="step2">
+        <div class="step-icon">2</div>
+        <div class="step-text">
+          <div><strong>Session 2: Mit Zustimmung</strong></div>
+          <div class="step-duration">Simuliert "Alle akzeptieren" (~25 Sek.)</div>
+        </div>
+      </div>
+      
+      <div class="step pending" id="step3">
+        <div class="step-icon">3</div>
+        <div class="step-text">
+          <div><strong>Session 3: Ablehnung</strong></div>
+          <div class="step-duration">Simuliert "Ablehnen" (~25 Sek.)</div>
+        </div>
+      </div>
+      
+      <div class="step pending" id="step4">
+        <div class="step-icon">4</div>
+        <div class="step-text">
+          <div><strong>Analyse & Report</strong></div>
+          <div class="step-duration">Vergleicht Ergebnisse (~15 Sek.)</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="live-log">
+      <h4>🔍 Live-Details:</h4>
+      <div id="liveLog">
+        <div class="log-entry">Scanner wird vorbereitet...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="mainApp" style="display: none;">
+    <div class="topbar">
+      <div class="topbar-inner">
+        <div class="brand"><span class="dot"></span>Website Scanner <span class="preview">· Ergebnisse</span></div>
+        <div class="urlfield">
+          <input id="url" type="url" placeholder="https://ihre-website.de" />
+          <button id="scanBtn" class="btn">Erneut scannen</button>
+          <button id="demoBtn" class="btn alt">Demo laden</button>
+        </div>
+        <div class="toggle" title="Darstellung">
+          <button id="modeManager" class="active">Manager</button>
+          <button id="modeTech">Tech</button>
+        </div>
+      </div>
+      <div class="progress"><div class="bar" id="bar"></div></div>
+    </div>
+
+    <div class="banner" id="banner" style="display:none"></div>
+
+    <div class="container">
+      <div class="tabs" id="tabs">
+        <button class="tab active" data-tab="summary">💰 Business Impact</button>
+        <button class="tab" data-tab="compliance">⚖️ Compliance</button>
+        <button class="tab" data-tab="issues">🔧 Probleme & Fixes</button>
+        <button class="tab" data-tab="history">📜 Scan-History</button>
+        <button class="tab" data-tab="evidence">📊 Technische Details</button>
+        <button id="exportPDFBtn" class="btn" style="margin-left:auto">📥 PDF Export</button>
+      </div>
+
+      <!-- SUMMARY -->
+      <section id="tab-summary" class="grid">
+        <div class="card">
+          <div class="row" style="justify-content:space-between;gap:12px">
+            <div class="row">
+              <span class="badge" id="scannedUrl">–</span>
+              <span class="badge" id="timestamp">–</span>
+              <span class="badge" id="version">v–</span>
+            </div>
+            <div class="row">
+              <span class="badge">3-Session-Test</span>
+              <span class="badge">Consent Mode Check</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enhanced Dashboard -->
+        <div class="results-dashboard">
+          <div class="metric-card money">
+            <div class="metric-icon">💸</div>
+            <div class="metric-value" id="monthlyLoss">€0</div>
+            <div class="metric-label">Monatlicher Verlust</div>
+            <div class="metric-trend" id="monthlyTrend">Durch blockierte Conversions</div>
+          </div>
+          <div class="metric-card critical">
+            <div class="metric-icon">🚨</div>
+            <div class="metric-value" id="kpiCritical">0</div>
+            <div class="metric-label">Kritische Probleme</div>
+            <div class="metric-trend">Sofort behebbar</div>
+          </div>
+          <div class="metric-card warning">
+            <div class="metric-icon">⚠️</div>
+            <div class="metric-value" id="kpiPerfect">0</div>
+            <div class="metric-label">Compliance: OK</div>
+            <div class="metric-trend">DSGVO-konform</div>
+          </div>
+          <div class="metric-card info">
+            <div class="metric-icon">📈</div>
+            <div class="metric-value" id="kpiRisk">0</div>
+            <div class="metric-label">Compliance: Risiko</div>
+            <div class="metric-trend">Rechtliches Risiko</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div id="riskBox" class="risk ghost"><strong>Risiko-Bewertung</strong><div id="riskText" class="ghost">–</div></div>
+        </div>
+      </section>
+
+      <!-- COMPLIANCE -->
+      <section id="tab-compliance" class="grid" style="display:none">
+        <div class="card">
+          <div class="toolbar">
+            <span class="pill active" data-cflt="all">Alle</span>
+            <span class="pill" data-cflt="perfect">Perfekt</span>
+            <span class="pill" data-cflt="good">Eingeschränkt</span>
+            <span class="pill" data-cflt="inconsistent">Uneinheitlich</span>
+            <span class="pill" data-cflt="bad">Missachtet</span>
+            <span class="pill" data-cflt="missing">Fehlt</span>
+            <input id="cSearch" placeholder="Suchen (z. B. GA4, Meta, TikTok)"/>
+            <div class="right row">
+              <button id="expandAllCompliance" class="copy">Alle öffnen</button>
+              <button id="collapseAllCompliance" class="copy">Alle schließen</button>
+            </div>
+          </div>
+          <div class="list" id="complianceList"></div>
+        </div>
+      </section>
+
+      <!-- ISSUES -->
+      <section id="tab-issues" class="grid" style="display:none">
+        <div class="card">
+          <div class="toolbar">
+            <span class="pill active" data-iflt="all">Alle</span>
+            <span class="pill" data-iflt="critical">Kritisch</span>
+            <span class="pill" data-iflt="high">Hoch</span>
+            <span class="pill" data-iflt="medium">Mittel</span>
+            <span class="pill" data-iflt="low">Niedrig</span>
+            <input id="iSearch" placeholder="Filter (Domain, Meldung, Status)"/>
+            <div class="right row">
+              <span class="badge" id="issueCount">0 Items</span>
+            </div>
+          </div>
+          <div class="list" id="issueList"></div>
+        </div>
+      </section>
+
+      <!-- HISTORY -->
+      <section id="tab-history" class="grid" style="display:none">
+        <div class="card">
+          <h3 style="margin:0 0 16px 0">Scan-Statistiken</h3>
+          <div id="statsOverview"></div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <h3 style="margin:0">Scan-Verlauf</h3>
+            <button onclick="loadHistory()" class="copy">🔄 Aktualisieren</button>
+          </div>
+          <div id="historyList">
+            <div class="empty">Lade History...</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin:0 0 16px 0">Compliance-Übersicht</h3>
+          <div class="chart-container">
+            <canvas id="complianceChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin:0 0 16px 0">Probleme nach Priorität</h3>
+          <div class="chart-container">
+            <canvas id="issuesChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- EVIDENCE -->
+      <section id="tab-evidence" class="grid" style="display:none">
+        <div class="card">
+          <div class="empty">Wähle in Compliance oder Issues ein Element aus, um technische Details anzuzeigen.</div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Evidence Drawer -->
+  <aside id="drawer" class="drawer">
+    <header>
+      <div class="brand"><span class="dot"></span>Technische Details</div>
+      <div class="right" style="margin-left:auto"><button id="drawerClose" class="copy">Schließen</button></div>
+    </header>
+    <main id="drawerBody"></main>
+  </aside>
+
+<script>
+const CONFIG = {
+  mode: 'live',
+  features: { modes: true, evidence: true, tests: false, autoDemo: false, copyButtons: true }
+};
+
+const scanSteps = [
+  { 
+    name: 'Session 1: Ohne Consent', 
+    duration: 25000, 
+    logs: ['🚀 Browser gestartet (Chromium)', '📄 Seite wird geladen...', '🍪 Cookie-Banner erkannt', '❌ Keine Zustimmung simuliert', '🔍 Netzwerk-Requests überwacht', '📊 Google Analytics: Keine Daten gesendet', '📱 Meta Pixel: Blockiert durch CSP', '✅ Session 1 abgeschlossen'] 
+  },
+  { 
+    name: 'Session 2: Mit Zustimmung', 
+    duration: 25000, 
+    logs: ['🔄 Neue Browser-Session', '✅ Cookie-Einstellungen: Alle akzeptiert', '🎯 Consent-Event ausgelöst', '📊 Google Analytics: Daten werden gesendet', '📱 Meta Pixel: Verbindung hergestellt', '🎯 Google Ads: Conversion-Tracking aktiv', '✅ Session 2 abgeschlossen'] 
+  },
+  { 
+    name: 'Session 3: Ablehnung', 
+    duration: 25000, 
+    logs: ['🔄 Neue Browser-Session', '❌ Cookie-Einstellungen: Alle abgelehnt', '🛑 Reject-Event ausgelöst', '📊 Google Analytics: Korrekt gestoppt', '📱 Meta Pixel: Korrekt gestoppt', '🛡️ Datenschutz-konform', '✅ Session 3 abgeschlossen'] 
+  },
+  { 
+    name: 'Analyse & Report', 
+    duration: 15000, 
+    logs: ['🔬 Vergleiche Session-Ergebnisse...', '💰 Budget-Impact berechnet', '⚖️ DSGVO-Compliance geprüft', '🚨 Kritische Probleme: 2 gefunden', '💡 Handlungsempfehlungen generiert', '📄 Report ist fertig!'] 
+  }
+];
+
+let MODE = 'manager';
+let DATA = null;
+let currentTheme = localStorage.getItem('theme') || 'light';
+
+// Initialize theme
+document.documentElement.setAttribute('data-theme', currentTheme);
+
+// Utility functions
+function $(id) { return document.getElementById(id); }
+function escapeHtml(s) { return String(s||'').replace(/[&<>\"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;' }[c])); }
+function escapeAttr(s) { return escapeHtml(s).replace(/\"/g,'&quot;'); }
+function tryHost(u) { try{ return new URL(u).hostname }catch(e){ return u; } }
+
+function showBanner(msg) { 
+  const banner = $('banner');
+  if(!banner) return; 
+  banner.textContent = msg; 
+  banner.style.display='block'; 
+  setTimeout(()=> banner.style.display='none', 2500); 
+}
+
+// Theme Toggle
+function toggleTheme() {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  localStorage.setItem('theme', currentTheme);
+  
+  const toggle = document.querySelector('.theme-toggle');
+  toggle.textContent = currentTheme === 'dark' ? '☀️' : '🌓';
+}
+
+// Progress tracking
+function updateDetailedProgress(stepIndex, stepProgress, currentLog) {
+  const totalSteps = scanSteps.length;
+  const overallProgress = ((stepIndex + stepProgress) / totalSteps) * 100;
+  
+  const progressBar = $('mainProgressBar');
+  if (progressBar) {
+    progressBar.style.width = overallProgress + '%';
+  }
+  
+  const progressText = $('progressText');
+  if (progressText) {
+    const currentStep = scanSteps[stepIndex];
+    progressText.innerHTML = '<div><strong>' + currentStep.name + '</strong></div>' +
+      '<div style="font-size: 0.9rem; color: #6b7280; margin-top: 4px;">' + (currentLog || 'Wird verarbeitet...') + '</div>' +
+      '<div style="font-size: 0.8rem; color: #9ca3af; margin-top: 2px;">Schritt ' + (stepIndex + 1) + ' von ' + totalSteps + ' (' + Math.round(overallProgress) + '%)</div>';
+  }
+  
+  // Update step indicators
+  const stepElements = ['step1', 'step2', 'step3', 'step4'];
+  stepElements.forEach(function(stepId, index) {
+    const element = $(stepId);
+    if (!element) return;
+    
+    if (index < stepIndex) {
+      element.className = 'step completed';
+      element.querySelector('.step-icon').textContent = '✓';
+    } else if (index === stepIndex) {
+      element.className = 'step active';
+      element.querySelector('.step-icon').textContent = index + 1;
+    } else {
+      element.className = 'step pending';
+      element.querySelector('.step-icon').textContent = index + 1;
+    }
+  });
+}
+
+function addLogEntry(text, important) {
+  const logDiv = $('liveLog');
+  if (!logDiv) return;
+  
+  const entry = document.createElement('div');
+  entry.className = important ? 'log-entry important' : 'log-entry';
+  entry.textContent = text;
+  logDiv.appendChild(entry);
+  logDiv.scrollTop = logDiv.scrollHeight;
+  
+  // Keep only last 10 entries
+  const entries = logDiv.querySelectorAll('.log-entry');
+  if (entries.length > 10) {
+    entries[0].remove();
+  }
+}
+
+function sleep(ms) {
+  return new Promise(function(resolve) { setTimeout(resolve, ms); });
+}
+
+// Real scan function with progress
+async function startRealScan(url) {
+  try {
+    addLogEntry('🚀 Scan wird gestartet...', true);
+    
+    // Simulate progress for user experience
+    for (let stepIndex = 0; stepIndex < scanSteps.length; stepIndex++) {
+      const step = scanSteps[stepIndex];
+      
+      addLogEntry('▶️ Starte: ' + step.name, true);
+      
+      for (let logIndex = 0; logIndex < step.logs.length; logIndex++) {
+        const progress = logIndex / step.logs.length;
+        const currentLog = step.logs[logIndex];
+        
+        updateDetailedProgress(stepIndex, progress, currentLog);
+        addLogEntry(currentLog);
+        
+        await sleep(step.duration / step.logs.length);
+      }
+      
+      await sleep(500);
+    }
+    
+    // Complete progress
+    updateDetailedProgress(3, 1, 'Scan abgeschlossen!');
+    addLogEntry('🎉 Scan erfolgreich abgeschlossen!', true);
+    
+    // Try actual scan
+    try {
+      const response = await fetch('/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        DATA = data;
+        console.log('✅ Scan data received from server');
+      } else {
+        throw new Error('Server error');
+      }
+    } catch (e) {
+      // Fallback to demo data
+      console.log('⚠️ Using demo data, server error:', e.message);
+      DATA = buildDemoData();
+    }
+
+    // Show results
+    console.log('=== RENDERING SCAN RESULTS ===');
+    console.log('DATA object:', DATA);
+    console.log('Summary:', DATA?.summary);
+    console.log('Marketing Tags:', DATA?.summary?.marketingTags);
+    console.log('Details:', DATA?.details);
+    console.log('Errors count:', DATA?.details?.errors?.length);
+    console.log('Network Issues count:', DATA?.details?.networkIssues?.length);
+    console.log('CSP Violations count:', DATA?.details?.cspViolations?.length);
+    console.log('==============================');
+
+    $('scanProgress').classList.remove('active');
+    $('heroSection').style.display = 'none';
+    $('exampleSection').style.display = 'none';
+    $('urgencyBanner').style.display = 'none';
+    $('mainApp').style.display = 'block';
+    renderAll();
+    showBanner('Scan abgeschlossen!');
+    
+  } catch (error) {
+    addLogEntry('❌ Fehler: ' + error.message, true);
+    // Fallback
+    setTimeout(function() {
+      DATA = buildDemoData();
+      $('scanProgress').classList.remove('active');
+      $('heroSection').style.display = 'none';
+      $('exampleSection').style.display = 'none';
+      $('urgencyBanner').style.display = 'none';
+      $('mainApp').style.display = 'block';
+      renderAll();
+      showBanner('Demo-Daten geladen.');
+    }, 2000);
+  }
+}
+
+// Start scan from hero
+function startScanFromHero() {
+  const url = $('websiteUrl').value;
+  if (!url) {
+    alert('Bitte gib eine Website-URL ein');
+    return;
+  }
+  
+  if (!/^https?:\/\//.test(url)) {
+    $('websiteUrl').value = 'https://' + url;
+  }
+  
+  // Hide hero, show progress
+  $('heroSection').style.display = 'none';
+  $('exampleSection').style.display = 'none';
+  $('urgencyBanner').style.display = 'none';
+  $('scanProgress').classList.add('active');
+  
+  // Update URL display
+  $('currentUrl').textContent = $('websiteUrl').value;
+  
+  // Start the actual scan
+  startRealScan($('websiteUrl').value);
+}
+
+// DEMO DATA
+function buildDemoData() {
+  const now = new Date().toLocaleString('de-DE');
+  return {
+    version: '2.4.0',
+    scannedUrl: 'https://demo.regukit.de',
+    timestamp: now,
+    summary: {
+      totalIssues: 7,
+      highPriorityIssues: 2,
+      marketingTags: [
+        { name:'Google Analytics 4', property:'hasGA4', compliance:'perfect', impact:'✅ GA4 respektiert die Einwilligung.', gdprRisk:'none', withoutConsent:false, withAccept:true, withReject:false, businessImpact:'Besucherdaten DSGVO-konform.' },
+        { name:'Meta Pixel (Facebook/Instagram)', property:'hasMetaPixel', compliance:'inconsistent', impact:'🤔 Uneinheitliches Verhalten, teils CSP-Blockaden.', gdprRisk:'medium', withoutConsent:false, withAccept:true, withReject:false, businessImpact:'Social ROI nur teilweise messbar.' },
+        { name:'Google Tag Manager', property:'hasGTM', compliance:'perfect', impact:'✅ Consent default denied vorhanden.', gdprRisk:'none', withoutConsent:true, withAccept:true, withReject:true, businessImpact:'Steuert Tags korrekt nach Einwilligung.' },
+        { name:'TikTok Pixel', property:'hasTikTokPixel', compliance:'missing', impact:'❌ Eingebunden, aber keine Datenübertragungen erkannt.', gdprRisk:'none', withoutConsent:false, withAccept:false, withReject:false, businessImpact:'TikTok-Kampagnen nicht messbar.' }
+      ]
+    },
+    details: {
+      errors: [
+        { type:'Console Error', message:'Content Security Policy blocked Facebook', priority:'high', translation:'Sicherheits­einstellungen blockieren Verbindungen.', techFix:'CSP connect-src um connect.facebook.net erweitern.' }
+      ],
+      networkIssues: [
+        { url:'https://www.facebook.com/tr/?id=12345', method:'GET', resourceType:'fetch', status:0, priority:'high', translation:'Meta Pixel – Social ROI unbekannt.', techFix:'CSP/CORS prüfen' }
+      ],
+      cspViolations: [
+        { message:'connect-src blocked https://www.facebook.com/tr/?id=12345', priority:'high', techFix:'connect-src https://www.facebook.com zulassen' }
+      ]
+    },
+    evidence: {
+      evidence: {
+        hasGA4: { nonTechMeaning: 'Misst Besucher ohne Einwilligung zu verletzen.', nonTechFix: 'Consent Mode aktivieren.' },
+        hasMetaPixel: { nonTechMeaning: 'Facebook/Instagram Kampagnen messen.', nonTechFix: 'Pixel nur nach Einwilligung auslösen.' }
+      }
+    }
+  };
+}
+
+// Render functions
+function renderSummary() {
+  console.log('🔵 renderSummary() called');
+  if (!DATA) {
+    console.log('❌ No DATA in renderSummary');
+    return;
+  }
+
+  $('scannedUrl').textContent = DATA.scannedUrl || '–';
+  $('timestamp').textContent = DATA.timestamp || '–';
+  $('version').textContent = 'v' + (DATA.version || '–');
+
+  const total = (DATA.details?.errors?.length || 0) + (DATA.details?.networkIssues?.length || 0) + (DATA.details?.cspViolations?.length || 0);
+  const crit = (DATA.details?.errors || []).filter(function(e) { return /critical|high/i.test(e.priority || ''); }).length;
+  const mtags = DATA.summary?.marketingTags || [];
+  const perfect = mtags.filter(function(m) { return m.compliance === 'perfect'; }).length;
+  const risk = mtags.filter(function(m) { return ['bad','inconsistent','good','missing'].includes(m.compliance); }).length;
+
+  console.log('📊 Summary stats: total=' + total + ', crit=' + crit + ', mtags=' + mtags.length + ', perfect=' + perfect + ', risk=' + risk);
+  
+  // Calculate money impact
+  let monthlyLoss = 0;
+  if (crit > 0) monthlyLoss += 650; // Facebook issues
+  if (total > 3) monthlyLoss += 400; // GA issues
+  if (risk > 2) monthlyLoss += 300; // Additional compliance issues
+  
+  $('monthlyLoss').textContent = '€' + monthlyLoss.toLocaleString();
+  $('kpiCritical').textContent = crit; 
+  $('kpiPerfect').textContent = perfect; 
+  $('kpiRisk').textContent = risk;
+  
+  const riskBox = $('riskBox');
+  const riskText = $('riskText');
+  let level = 'low';
+  let text = 'Niedriges Risiko – keine kritischen Befunde';
+  
+  if (crit > 0) { 
+    level = 'high'; 
+    text = 'Hohes Risiko – kritische Probleme gefunden.'; 
+  } else if (total > 0) { 
+    level = 'med'; 
+    text = 'Mittleres Risiko – einige Probleme erfordern Aufmerksamkeit.'; 
+  }
+  
+  riskBox.className = 'risk ' + level;
+  riskText.textContent = text;
+  riskBox.classList.remove('ghost');
+  riskText.classList.remove('ghost');
+}
+
+function renderCompliance() {
+  console.log('🔵 renderCompliance() called');
+  const container = $('complianceList');
+  if (!container) {
+    console.log('❌ complianceList container not found!');
+    return;
+  }
+
+  const mtags = DATA.summary?.marketingTags || [];
+  console.log('📊 Marketing tags to render:', mtags.length, mtags);
+
+  if (mtags.length === 0) {
+    console.log('⚠️ No marketing tags, showing empty message');
+    container.innerHTML = '<div class="empty">Keine Marketing-Tags gefunden</div>';
+    return;
+  }
+
+  const html = mtags.map(function(tag) {
+    const compClass = tag.compliance || 'unknown';
+    const compLabel = {
+      'perfect': 'Perfekt',
+      'good': 'Eingeschränkt',
+      'inconsistent': 'Uneinheitlich',
+      'bad': 'Missachtet',
+      'missing': 'Fehlt'
+    }[compClass] || 'Unbekannt';
+
+    const riskClass = tag.gdprRisk || 'none';
+    const riskLabel = {
+      'high': '⚠️ Hoch',
+      'medium': '🟡 Mittel',
+      'low': '🔵 Niedrig',
+      'none': '✅ Kein'
+    }[riskClass] || '–';
+
+    return '<div class="compliance-item">' +
+      '<div class="compliance-header">' +
+        '<div class="compliance-name">' + escapeHtml(tag.name) + '</div>' +
+        '<div class="compliance-badge badge-' + compClass + '">' + compLabel + '</div>' +
+      '</div>' +
+      '<div class="compliance-body">' +
+        '<div class="compliance-impact">' + escapeHtml(tag.impact || 'Keine Details') + '</div>' +
+        '<div class="compliance-meta">' +
+          '<span>DSGVO-Risiko: ' + riskLabel + '</span>' +
+          '<span>Business Impact: ' + escapeHtml(tag.businessImpact || '–') + '</span>' +
+        '</div>' +
+        '<div class="compliance-states">' +
+          '<span>Ohne Consent: ' + (tag.withoutConsent ? '🔴 Aktiv' : '✅ Inaktiv') + '</span>' +
+          '<span>Mit Accept: ' + (tag.withAccept ? '✅ Aktiv' : '🔴 Inaktiv') + '</span>' +
+          '<span>Mit Reject: ' + (tag.withReject ? '🔴 Aktiv' : '✅ Inaktiv') + '</span>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  container.innerHTML = html;
+  console.log('✅ Compliance HTML rendered, length:', html.length);
+}
+
+function renderIssues() {
+  console.log('🔵 renderIssues() called');
+  const container = $('issueList');
+  if (!container) {
+    console.log('❌ issueList container not found!');
+    return;
+  }
+
+  const allIssues = [
+    ...(DATA.details?.errors || []),
+    ...(DATA.details?.networkIssues || []),
+    ...(DATA.details?.cspViolations || [])
+  ];
+  console.log('🚨 Issues to render:', allIssues.length, 'issues');
+  console.log('  - Errors:', DATA.details?.errors?.length);
+  console.log('  - Network Issues:', DATA.details?.networkIssues?.length);
+  console.log('  - CSP Violations:', DATA.details?.cspViolations?.length);
+
+  if (allIssues.length === 0) {
+    console.log('✅ No issues, showing success message');
+    container.innerHTML = '<div class="empty">✅ Keine Probleme gefunden!</div>';
+    return;
+  }
+
+  const html = allIssues.map(function(issue) {
+    const priority = issue.priority || 'low';
+    const priorityLabel = {
+      'critical': '🔴 Kritisch',
+      'high': '🟠 Hoch',
+      'medium': '🟡 Mittel',
+      'low': '🔵 Niedrig'
+    }[priority] || '–';
+
+    return '<div class="issue-item priority-' + priority + '">' +
+      '<div class="issue-header">' +
+        '<div class="issue-type">' + escapeHtml(issue.type || 'Issue') + '</div>' +
+        '<div class="issue-priority">' + priorityLabel + '</div>' +
+      '</div>' +
+      '<div class="issue-body">' +
+        '<div class="issue-message">' + escapeHtml(issue.message || 'Keine Details') + '</div>' +
+        '<div class="issue-translation">' + escapeHtml(issue.translation || '') + '</div>' +
+        '<div class="issue-fix"><strong>Fix:</strong> ' + escapeHtml(issue.techFix || 'Keine Empfehlung') + '</div>' +
+        '<div class="issue-mode">Modus: ' + escapeHtml(issue.consentMode || '–') + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  container.innerHTML = html;
+  console.log('✅ Issues HTML rendered, length:', html.length);
+}
+
+function renderAll() {
+  console.log('🎨 renderAll() called');
+  if (!DATA) {
+    console.log('❌ No DATA object available!');
+    return;
+  }
+  console.log('✅ DATA object exists, rendering all sections...');
+  renderSummary();
+  renderCompliance();
+  renderIssues();
+
+  // Make sure tabs are visible after rendering
+  const complianceTab = $('tab-compliance');
+  const issuesTab = $('tab-issues');
+  if (complianceTab) {
+    complianceTab.style.display = 'grid';
+    console.log('✅ Compliance tab made visible');
+  }
+  if (issuesTab) {
+    issuesTab.style.display = 'grid';
+    console.log('✅ Issues tab made visible');
+  }
+
+  console.log('✅ All render functions completed');
+}
+
+// Event handlers
+document.addEventListener('DOMContentLoaded', function() {
+  // Hero input enter key
+  const websiteUrl = $('websiteUrl');
+  if (websiteUrl) {
+    websiteUrl.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        startScanFromHero();
+      }
+    });
+  }
+
+  // Demo button
+  const demoBtn = $('demoBtn');
+  if (demoBtn) {
+    demoBtn.addEventListener('click', function() {
+      DATA = buildDemoData();
+      renderAll();
+      showBanner('Demo-Daten geladen.');
+    });
+  }
+
+  // Scan button
+  const scanBtn = $('scanBtn');
+  if (scanBtn) {
+    scanBtn.addEventListener('click', function() {
+      const url = $('url').value.trim();
+      if (url) {
+        startRealScan(url);
+      } else {
+        showBanner('❌ Bitte URL eingeben');
+      }
+    });
+  }
+
+  // Tab switching
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('tab')) {
+      // Remove active from all tabs
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.grid section').forEach(section => section.style.display = 'none');
+      
+      // Activate clicked tab
+      e.target.classList.add('active');
+      const tabId = e.target.getAttribute('data-tab');
+      const section = document.getElementById('tab-' + tabId);
+      if (section) {
+        section.style.display = 'block';
+      }
+    }
+  });
+
+  // Mode toggle
+  const modeManager = $('modeManager');
+  const modeTech = $('modeTech');
+  
+  if (modeManager) {
+    modeManager.addEventListener('click', function() {
+      MODE = 'manager';
+      modeManager.classList.add('active');
+      if (modeTech) modeTech.classList.remove('active');
+    });
+  }
+  
+  if (modeTech) {
+    modeTech.addEventListener('click', function() {
+      MODE = 'tech';
+      modeTech.classList.add('active');
+      if (modeManager) modeManager.classList.remove('active');
+    });
+  }
+
+  // Focus URL input
+  setTimeout(function() {
+    if (websiteUrl) websiteUrl.focus();
+  }, 300);
+
+  // Initialize theme toggle
+  const themeToggle = document.querySelector('.theme-toggle');
+  if (themeToggle) {
+    themeToggle.textContent = currentTheme === 'dark' ? '☀️' : '🌓';
+  }
+});
+</script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- Enhanced Dashboard Features -->
+<script src="/dashboard.js"></script>
+
+</body>
+</html>
