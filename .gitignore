@@ -4,4 +4,7 @@ node_modules/
 .DS_Store
 scans.db
 scans.db-journal
+scans.db-shm
+scans.db-wal
 .playwright-browsers/
+data/

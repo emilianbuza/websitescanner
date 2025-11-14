@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>🚀 Website Scanner Ultimate | Premium GDPR & Security Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ==================== MODERN CSS VARIABLES ==================== */
+:root {
+  /* Light Mode Colors */
+  --bg-primary: #0f0f23;
+  --bg-secondary: #1a1a2e;
+  --bg-tertiary: #16213e;
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.18);
+
+  --text-primary: #ffffff;
+  --text-secondary: #b8b8d4;
+  --text-muted: #7a7a9e;
+
+  /* Brand Colors - Premium Gradient */
+  --brand-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --brand-gradient-hover: linear-gradient(135deg, #764ba2 0%, #f093fb 100%);
+  --accent-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  --warning-gradient: linear-gradient(135deg, #f2994a 0%, #f2c94c 100%);
+  --danger-gradient: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+
+  /* Status Colors */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
+
+  /* Effects */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.25);
+  --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.35);
+
+  --glow-purple: 0 0 40px rgba(102, 126, 234, 0.4);
+  --glow-pink: 0 0 40px rgba(240, 147, 251, 0.4);
+  --glow-green: 0 0 40px rgba(16, 185, 129, 0.4);
+
+  --blur-glass: blur(10px);
+  --blur-strong: blur(20px);
+
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+}
+
+[data-theme="light"] {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 0, 0, 0.1);
+
+  --text-primary: #0f0f23;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+/* ==================== RESET & BASE ==================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* ==================== ANIMATED BACKGROUND ==================== */
+.animated-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.gradient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.3;
+  animation: float 20s infinite ease-in-out;
+}
+
+.orb-1 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, #667eea 0%, transparent 70%);
+  top: -250px;
+  left: -250px;
+  animation-delay: 0s;
+}
+
+.orb-2 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, #f093fb 0%, transparent 70%);
+  top: 50%;
+  right: -200px;
+  animation-delay: 7s;
+}
+
+.orb-3 {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, #764ba2 0%, transparent 70%);
+  bottom: -300px;
+  left: 30%;
+  animation-delay: 14s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(50px, -50px) scale(1.1); }
+  66% { transform: translate(-50px, 50px) scale(0.9); }
+}
+
+/* ==================== GLASSMORPHISM UTILITIES ==================== */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: var(--blur-strong);
+  -webkit-backdrop-filter: var(--blur-strong);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ==================== THEME TOGGLE ==================== */
+.theme-toggle {
+  position: fixed;
+  top: 30px;
+  right: 30px;
+  z-index: 1000;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur-glass);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 24px;
+  transition: all var(--transition-normal);
+  box-shadow: var(--shadow-md);
+}
+
+.theme-toggle:hover {
+  transform: scale(1.1) rotate(15deg);
+  box-shadow: var(--shadow-lg), var(--glow-purple);
+}
+
+.theme-toggle:active {
+  transform: scale(0.95) rotate(15deg);
+}
+
+/* ==================== HERO SECTION ==================== */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 20px 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-content {
+  max-width: 1000px;
+  text-align: center;
+  z-index: 10;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-badge {
+  display: inline-block;
+  padding: 12px 24px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur-glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 50px;
+  margin-bottom: 30px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  animation: pulse-glow 3s infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(102, 126, 234, 0.6), 0 0 60px rgba(240, 147, 251, 0.4); }
+}
+
+.hero h1 {
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  font-weight: 900;
+  line-height: 1.1;
+  margin-bottom: 30px;
+  background: linear-gradient(135deg, #ffffff 0%, #b8b8d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+.hero-subtitle {
+  font-size: clamp(1.1rem, 3vw, 1.5rem);
+  color: var(--text-secondary);
+  margin-bottom: 50px;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  animation: fadeInUp 0.8s ease-out 0.4s both;
+}
+
+/* ==================== SCAN INPUT (GLASSMORPHISM) ==================== */
+.scan-input-wrapper {
+  max-width: 700px;
+  margin: 0 auto 50px;
+  animation: fadeInUp 0.8s ease-out 0.6s both;
+}
+
+.scan-input-container {
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur-glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: var(--shadow-xl);
+  transition: all var(--transition-normal);
+}
+
+.scan-input-container:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-xl), var(--glow-purple);
+}
+
+.scan-input-group {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.scan-input {
+  flex: 1;
+  padding: 18px 24px;
+  font-size: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  color: var(--text-primary);
+  transition: all var(--transition-normal);
+  font-family: 'Inter', sans-serif;
+}
+
+.scan-input:focus {
+  outline: none;
+  border-color: #667eea;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.scan-input::placeholder {
+  color: var(--text-muted);
+}
+
+.btn {
+  padding: 18px 36px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+}
+
+.btn-primary {
+  background: var(--brand-gradient);
+  color: white;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-primary:hover {
+  background: var(--brand-gradient-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg), var(--glow-purple);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Button ripple effect */
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+.trust-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.trust-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trust-indicator-icon {
+  font-size: 18px;
+}
+
+/* ==================== FEATURES GRID ==================== */
+.features-section {
+  padding: 100px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.section-title {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 800;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #ffffff 0%, #b8b8d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.section-subtitle {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+}
+
+.feature-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur-glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 40px 30px;
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--brand-gradient);
+  transform: scaleX(0);
+  transition: transform var(--transition-normal);
+}
+
+.feature-card:hover::before {
+  transform: scaleX(1);
+}
+
+.feature-card:hover {
+  transform: translateY(-10px);
+  box-shadow: var(--shadow-xl), var(--glow-purple);
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+.feature-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: var(--brand-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-md);
+}
+
+.feature-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.feature-description {
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* ==================== PROGRESS SECTION ==================== */
+.progress-section {
+  max-width: 900px;
+  margin: 60px auto;
+  padding: 0 20px;
+  display: none;
+}
+
+.progress-section.active {
+  display: block;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.progress-container {
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur-strong);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: var(--shadow-xl);
+}
+
+.progress-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.progress-header h2 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.progress-header p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.progress-bar-wrapper {
+  margin-bottom: 40px;
+}
+
+.progress-bar {
+  height: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 15px;
+  position: relative;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--brand-gradient);
+  border-radius: 10px;
+  transition: width 0.5s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.progress-text {
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.progress-steps {
+  display: grid;
+  gap: 15px;
+}
+
+.progress-step {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid transparent;
+  border-radius: 16px;
+  transition: all var(--transition-normal);
+}
+
+.progress-step.completed {
+  border-color: var(--success);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.progress-step.active {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+  animation: pulse-border 2s infinite;
+}
+
+@keyframes pulse-border {
+  0%, 100% { border-color: #667eea; }
+  50% { border-color: #764ba2; }
+}
+
+.step-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.progress-step.completed .step-icon {
+  background: var(--success-gradient);
+  box-shadow: var(--glow-green);
+}
+
+.progress-step.active .step-icon {
+  background: var(--brand-gradient);
+  box-shadow: var(--glow-purple);
+  animation: pulse-icon 2s infinite;
+}
+
+@keyframes pulse-icon {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.progress-step.pending .step-icon {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.step-description {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* ==================== RESULTS DASHBOARD ==================== */
+.results-section {
+  max-width: 1400px;
+  margin: 80px auto;
+  padding: 0 20px;
+  display: none;
+}
+
+.results-section.active {
+  display: block;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.results-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.results-score {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: var(--brand-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 30px;
+  box-shadow: var(--shadow-xl), var(--glow-purple);
+  position: relative;
+}
+
+.results-score::before {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  background: var(--brand-gradient);
+  filter: blur(20px);
+  opacity: 0.5;
+  z-index: -1;
+  animation: rotate-glow 3s linear infinite;
+}
+
+@keyframes rotate-glow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.score-value {
+  font-size: 4rem;
+  font-weight: 900;
+  color: white;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 25px;
+  margin-bottom: 60px;
+}
+
+.metric-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur-glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 30px;
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--brand-gradient);
+}
+
+.metric-card.critical::before {
+  background: var(--danger-gradient);
+}
+
+.metric-card.warning::before {
+  background: var(--warning-gradient);
+}
+
+.metric-card.success::before {
+  background: var(--success-gradient);
+}
+
+.metric-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: var(--shadow-xl);
+}
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.metric-icon-wrapper {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  background: var(--brand-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.metric-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.metric-label {
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .hero h1 {
+    font-size: 2.5rem;
+  }
+
+  .scan-input-group {
+    flex-direction: column;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .theme-toggle {
+    top: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+  }
+}
+
+/* ==================== UTILITY ANIMATIONS ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== LOADING SPINNER ==================== */
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==================== SCROLL INDICATOR ==================== */
+.scroll-indicator {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 50px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+  animation: fadeInUp 1s ease-out 1s both;
+}
+
+.scroll-indicator::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: white;
+  border-radius: 50%;
+  animation: scroll-down 2s infinite;
+}
+
+@keyframes scroll-down {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}
+</style>
+</head>
+<body>
+  <!-- Animated Background -->
+  <div class="animated-background">
+    <div class="gradient-orb orb-1"></div>
+    <div class="gradient-orb orb-2"></div>
+    <div class="gradient-orb orb-3"></div>
+  </div>
+
+  <!-- Theme Toggle -->
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+    <span id="themeIcon">🌙</span>
+  </button>
+
+  <!-- Hero Section -->
+  <section class="hero" id="heroSection">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span>✨ Premium GDPR & Security Scanner</span>
+      </div>
+
+      <h1>
+        Discover Hidden<br>
+        Tracking Issues<br>
+        In Seconds
+      </h1>
+
+      <p class="hero-subtitle">
+        Analyze your website for GDPR compliance, security vulnerabilities,
+        and marketing tag issues with our AI-powered scanner. Get actionable insights instantly.
+      </p>
+
+      <div class="scan-input-wrapper">
+        <div class="scan-input-container">
+          <div class="scan-input-group">
+            <input
+              type="url"
+              class="scan-input"
+              id="urlInput"
+              placeholder="https://your-website.com"
+              aria-label="Website URL">
+            <button class="btn btn-primary" id="scanButton">
+              🚀 Start Scan
+            </button>
+          </div>
+
+          <div class="trust-indicators">
+            <div class="trust-indicator">
+              <span class="trust-indicator-icon">⚡</span>
+              <span>60-second analysis</span>
+            </div>
+            <div class="trust-indicator">
+              <span class="trust-indicator-icon">🔒</span>
+              <span>100% secure</span>
+            </div>
+            <div class="trust-indicator">
+              <span class="trust-indicator-icon">✅</span>
+              <span>GDPR compliant</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scroll-indicator"></div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features-section">
+    <div class="section-header">
+      <h2 class="section-title">Why Choose Our Scanner?</h2>
+      <p class="section-subtitle">
+        Industry-leading technology meets beautiful design
+      </p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <h3 class="feature-title">GDPR Compliance</h3>
+        <p class="feature-description">
+          Automatic detection of cookie banners, consent management,
+          and TCF API implementation. Stay compliant with EU regulations.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🛡️</div>
+        <h3 class="feature-title">Security Analysis</h3>
+        <p class="feature-description">
+          Deep security header checks, CSP validation, mixed content detection,
+          and vulnerability scanning for peace of mind.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3 class="feature-title">Marketing Tags</h3>
+        <p class="feature-description">
+          Detect Google Analytics, Meta Pixel, TikTok, and 50+ tracking tools.
+          Ensure proper consent integration.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3 class="feature-title">Performance Insights</h3>
+        <p class="feature-description">
+          Identify slow third-party scripts, render-blocking resources,
+          and optimization opportunities.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <h3 class="feature-title">Fingerprinting Detection</h3>
+        <p class="feature-description">
+          Detect Canvas, WebGL, and Audio fingerprinting techniques
+          that track users without consent.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📈</div>
+        <h3 class="feature-title">Detailed Reports</h3>
+        <p class="feature-description">
+          Get actionable insights with evidence, business impact analysis,
+          and step-by-step fixing instructions.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Progress Section -->
+  <section class="progress-section" id="progressSection">
+    <div class="progress-container">
+      <div class="progress-header">
+        <h2>🔄 Scanning in Progress</h2>
+        <p id="progressStatus">Initializing scanner...</p>
+      </div>
+
+      <div class="progress-bar-wrapper">
+        <div class="progress-bar">
+          <div class="progress-bar-fill" id="progressBarFill" style="width: 0%"></div>
+        </div>
+        <div class="progress-text" id="progressText">0%</div>
+      </div>
+
+      <div class="progress-steps" id="progressSteps">
+        <div class="progress-step pending">
+          <div class="step-icon">🌐</div>
+          <div class="step-content">
+            <div class="step-title">Loading Website</div>
+            <div class="step-description">Navigating to your website...</div>
+          </div>
+        </div>
+
+        <div class="progress-step pending">
+          <div class="step-icon">🍪</div>
+          <div class="step-content">
+            <div class="step-title">Analyzing Consent</div>
+            <div class="step-description">Checking cookie banners and GDPR compliance...</div>
+          </div>
+        </div>
+
+        <div class="progress-step pending">
+          <div class="step-icon">📡</div>
+          <div class="step-content">
+            <div class="step-title">Detecting Tracking</div>
+            <div class="step-description">Scanning for marketing pixels and analytics...</div>
+          </div>
+        </div>
+
+        <div class="progress-step pending">
+          <div class="step-icon">🔒</div>
+          <div class="step-content">
+            <div class="step-title">Security Check</div>
+            <div class="step-description">Analyzing security headers and vulnerabilities...</div>
+          </div>
+        </div>
+
+        <div class="progress-step pending">
+          <div class="step-icon">✨</div>
+          <div class="step-content">
+            <div class="step-title">Generating Report</div>
+            <div class="step-description">Compiling results and insights...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Results Section -->
+  <section class="results-section" id="resultsSection">
+    <div class="results-header">
+      <div class="results-score">
+        <span class="score-value" id="scoreValue">--</span>
+      </div>
+      <h2 class="section-title">Scan Results</h2>
+      <p class="section-subtitle" id="scannedUrl">example.com</p>
+    </div>
+
+    <div class="metrics-grid" id="metricsGrid">
+      <!-- Metrics will be dynamically inserted here -->
+    </div>
+
+    <!-- More detailed results sections will go here -->
+  </section>
+
+  <script>
+    // Theme Toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const html = document.documentElement;
+
+    themeToggle.addEventListener('click', () => {
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      html.setAttribute('data-theme', newTheme);
+      themeIcon.textContent = newTheme === 'light' ? '☀️' : '🌙';
+      localStorage.setItem('theme', newTheme);
+    });
+
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    html.setAttribute('data-theme', savedTheme);
+    themeIcon.textContent = savedTheme === 'light' ? '☀️' : '🌙';
+
+    // Scan functionality
+    const scanButton = document.getElementById('scanButton');
+    const urlInput = document.getElementById('urlInput');
+    const heroSection = document.getElementById('heroSection');
+    const progressSection = document.getElementById('progressSection');
+    const resultsSection = document.getElementById('resultsSection');
+
+    scanButton.addEventListener('click', async () => {
+      const url = urlInput.value.trim();
+
+      if (!url) {
+        alert('Please enter a valid URL');
+        return;
+      }
+
+      // Hide hero, show progress
+      heroSection.style.display = 'none';
+      progressSection.classList.add('active');
+
+      // Start scan simulation (replace with actual API call)
+      await simulateScan(url);
+    });
+
+    // Simulate scan progress
+    async function simulateScan(url) {
+      const steps = document.querySelectorAll('.progress-step');
+      const progressBar = document.getElementById('progressBarFill');
+      const progressText = document.getElementById('progressText');
+      const progressStatus = document.getElementById('progressStatus');
+
+      const stepMessages = [
+        'Loading website...',
+        'Analyzing cookie consent...',
+        'Detecting tracking pixels...',
+        'Running security checks...',
+        'Generating report...'
+      ];
+
+      for (let i = 0; i < steps.length; i++) {
+        // Update status
+        progressStatus.textContent = stepMessages[i];
+
+        // Mark step as active
+        steps[i].classList.remove('pending');
+        steps[i].classList.add('active');
+
+        // Update progress bar
+        const progress = ((i + 1) / steps.length) * 100;
+        progressBar.style.width = `${progress}%`;
+        progressText.textContent = `${Math.round(progress)}%`;
+
+        // Wait
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // Mark as completed
+        steps[i].classList.remove('active');
+        steps[i].classList.add('completed');
+      }
+
+      // Show results
+      setTimeout(() => {
+        progressSection.classList.remove('active');
+        progressSection.style.display = 'none';
+        showResults(url);
+      }, 500);
+    }
+
+    function showResults(url) {
+      resultsSection.classList.add('active');
+      document.getElementById('scannedUrl').textContent = url;
+      document.getElementById('scoreValue').textContent = '78';
+
+      // Example metrics
+      const metrics = [
+        { icon: '🎯', value: '78/100', label: 'Compliance Score', type: 'success' },
+        { icon: '⚠️', value: '3', label: 'Critical Issues', type: 'critical' },
+        { icon: '📊', value: '12', label: 'Findings', type: 'warning' },
+        { icon: '🍪', value: '24', label: 'Cookies Detected', type: 'info' },
+        { icon: '📡', value: '8', label: 'Tracking Tools', type: 'info' },
+        { icon: '⚡', value: '2.3s', label: 'Load Time', type: 'success' }
+      ];
+
+      const metricsGrid = document.getElementById('metricsGrid');
+      metricsGrid.innerHTML = metrics.map(metric => `
+        <div class="metric-card ${metric.type}">
+          <div class="metric-header">
+            <div class="metric-icon-wrapper">${metric.icon}</div>
+          </div>
+          <div class="metric-value">${metric.value}</div>
+          <div class="metric-label">${metric.label}</div>
+        </div>
+      `).join('');
+    }
+
+    // Smooth scroll for scroll indicator
+    document.querySelector('.scroll-indicator')?.addEventListener('click', () => {
+      document.querySelector('.features-section').scrollIntoView({ behavior: 'smooth' });
+    });
+  </script>
+</body>
+</html>

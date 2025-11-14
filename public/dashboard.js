@@ -145,13 +145,16 @@ function setupPDFExport() {
 
 // Export Current Scan as PDF
 async function exportCurrentScanPDF() {
+  const DATA = window.DATA; // Get DATA from window object
+  const showBanner = window.showBanner; // Get showBanner from window
+
   if (!DATA) {
-    showBanner('❌ Keine Scan-Daten zum Exportieren');
+    if (showBanner) showBanner('❌ Keine Scan-Daten zum Exportieren');
     return;
   }
 
   try {
-    showBanner('PDF wird erstellt...');
+    if (showBanner) showBanner('PDF wird erstellt...');
 
     const response = await fetch('/api/export/pdf', {
       method: 'POST',
@@ -171,17 +174,19 @@ async function exportCurrentScanPDF() {
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
 
-    showBanner('✅ PDF heruntergeladen!');
+    if (showBanner) showBanner('✅ PDF heruntergeladen!');
   } catch (error) {
     console.error('PDF export failed:', error);
-    showBanner('❌ PDF-Export fehlgeschlagen');
+    if (showBanner) showBanner('❌ PDF-Export fehlgeschlagen');
   }
 }
 
 // Export Scan by ID
 async function exportScanPDF(scanId) {
+  const showBanner = window.showBanner; // Get showBanner from window
+
   try {
-    showBanner('PDF wird erstellt...');
+    if (showBanner) showBanner('PDF wird erstellt...');
 
     const response = await fetch('/api/export/pdf', {
       method: 'POST',
@@ -201,10 +206,10 @@ async function exportScanPDF(scanId) {
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
 
-    showBanner('✅ PDF heruntergeladen!');
+    if (showBanner) showBanner('✅ PDF heruntergeladen!');
   } catch (error) {
     console.error('PDF export failed:', error);
-    showBanner('❌ PDF-Export fehlgeschlagen');
+    if (showBanner) showBanner('❌ PDF-Export fehlgeschlagen');
   }
 }
 
