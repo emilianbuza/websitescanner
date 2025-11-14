@@ -67,7 +67,6 @@ async function loadScan(scanId) {
       // Switch to results view
       document.getElementById('heroSection').style.display = 'none';
       document.getElementById('exampleSection').style.display = 'none';
-      document.getElementById('urgencyBanner').style.display = 'none';
       document.getElementById('mainApp').style.display = 'block';
 
       showBanner('Scan geladen!');
