@@ -742,8 +742,16 @@ function renderIssues() {
     const urlMatch = issue.message ? issue.message.match(/https?:\/\/[^\s]+/) : null;
     const url = urlMatch ? urlMatch[0].replace(/['"]+$/, '') : null;
 
-    // Create a unique key based on translation + URL
-    const key = (issue.translation || issue.message || 'Unknown') + '||' + (url || 'no-url');
+    // Extract DOMAIN only (not full path) for better grouping
+    // Example: https://eu-data.kameleoon.eu/geolocation → eu-data.kameleoon.eu
+    let domain = 'no-url';
+    if (url) {
+      domain = url.replace(/https?:\/\//, '').split('/')[0].split('?')[0];
+    }
+
+    // Create a unique key based on translation + DOMAIN (not full URL)
+    // This groups all errors for the same domain together
+    const key = (issue.translation || issue.message || 'Unknown') + '||' + domain;
 
     if (!groupedIssues[key]) {
       groupedIssues[key] = {
@@ -752,7 +760,7 @@ function renderIssues() {
         managerFix: issue.managerFix,
         priority: issue.priority || 'low',
         type: issue.type || 'Issue',
-        url: url,
+        domain: domain, // Store domain instead of full URL
         modes: new Set(),
         count: 0,
         technicalDetails: []
@@ -795,11 +803,10 @@ function renderIssues() {
       ? '<div class="issue-manager-fix"><strong>Handlungsempfehlung:</strong> ' + escapeHtml(issue.managerFix) + '</div>'
       : '';
 
-    // Extract clean URL for display
+    // Display domain (already extracted during grouping)
     let urlDisplay = '';
-    if (issue.url) {
-      const cleanUrl = issue.url.replace(/https?:\/\//, '').split('/')[0].split('?')[0];
-      urlDisplay = '<div class="issue-url"><strong>🔗 Betroffen:</strong> <code>' + escapeHtml(cleanUrl) + '</code></div>';
+    if (issue.domain && issue.domain !== 'no-url') {
+      urlDisplay = '<div class="issue-url"><strong>🔗 Betroffen:</strong> <code>' + escapeHtml(issue.domain) + '</code></div>';
     }
 
     return '<div class="issue-item priority-' + issue.priority + '">' +
