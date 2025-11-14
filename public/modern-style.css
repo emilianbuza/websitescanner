@@ -1,51 +1,52 @@
-/* ==================== MODERN PREMIUM DESIGN FOR WEBSITE SCANNER ==================== */
-/* This CSS replaces the old inline styles with glassmorphism and modern animations */
-/* ALL HTML structure and functionality remains unchanged */
+/* ==================== TAGSHOT-INSPIRED DESIGN ==================== */
+/* Dark theme with vibrant orange accents - matches tagshot.app style */
 
 :root {
-  /* Light Mode (Default) */
-  --bg: #f8fafc;
-  --panel: #ffffff;
-  --ink: #0f172a;
-  --muted: #475569;
+  /* Light Mode - keeping for compatibility but defaulting to dark */
+  --bg: #0a0e17;
+  --panel: #151922;
+  --ink: #f8fafc;
+  --muted: #94a3b8;
 
-  --brand: #7c3aed;
-  --brand2: #22c55e;
-  --warn: #f59e0b;
-  --bad: #ef4444;
-  --ok: #10b981;
+  /* TAGSHOT BRAND COLORS - Orange/Coral primary */
+  --brand: #FF6B35;  /* Vibrant Orange - main brand */
+  --brand2: #00D9A3; /* Teal/Green - success accent */
+  --warn: #FFA726;   /* Amber warning */
+  --bad: #FF5252;    /* Red error */
+  --ok: #00D9A3;     /* Teal success */
 
-  --chip: #f1f5f9;
-  --border: #e2e8f0;
+  --chip: #1e2530;
+  --border: #2a3340;
 
-  /* Glass effects */
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.3);
-  --blur: blur(12px);
+  /* Glass effects for dark theme */
+  --glass-bg: rgba(21, 25, 34, 0.85);
+  --glass-border: rgba(255, 107, 53, 0.15);
+  --blur: blur(16px);
 
-  /* Shadows & Glows */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.12);
-  --glow-purple: 0 0 30px rgba(124, 58, 237, 0.3);
-  --glow-green: 0 0 30px rgba(34, 197, 94, 0.3);
+  /* Shadows & Glows - Orange themed */
+  --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.6);
+  --glow-orange: 0 0 40px rgba(255, 107, 53, 0.4);
+  --glow-teal: 0 0 40px rgba(0, 217, 163, 0.3);
 }
 
 [data-theme="dark"] {
-  --bg: #0f172a;
-  --panel: #1e293b;
-  --ink: #f1f5f9;
+  /* Already dark by default - keep same */
+  --bg: #0a0e17;
+  --panel: #151922;
+  --ink: #f8fafc;
   --muted: #94a3b8;
 
-  --chip: #334155;
-  --border: #334155;
+  --chip: #1e2530;
+  --border: #2a3340;
 
-  --glass-bg: rgba(30, 41, 59, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-bg: rgba(21, 25, 34, 0.85);
+  --glass-border: rgba(255, 107, 53, 0.15);
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.6);
 }
 
 * { box-sizing: border-box; }
