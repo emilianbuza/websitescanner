@@ -3,49 +3,53 @@
 /* ALL HTML structure and functionality remains unchanged */
 
 :root {
-  /* Light Mode (Default) */
-  --bg: #f8fafc;
+  /* Tagshot.app Design - Light Mode (Always) */
+  --bg: #ffffff;
   --panel: #ffffff;
-  --ink: #0f172a;
-  --muted: #475569;
+  --ink: #000000;
+  --muted: #666666;
 
-  --brand: #7c3aed;
-  --brand2: #22c55e;
+  /* Tagshot.app Colors */
+  --brand: #0ea8ea;        /* Turquoise/Cyan */
+  --brand-light: #a2d9e7;  /* Light Turquoise */
+  --brand2: #7EBEC5;       /* Teal accent */
+  --cta: #E02B20;          /* Red for CTAs */
+  --cream: #f9f3d5;        /* Light cream for sections */
+
   --warn: #f59e0b;
-  --bad: #ef4444;
+  --bad: #E02B20;
   --ok: #10b981;
 
-  --chip: #f1f5f9;
-  --border: #e2e8f0;
+  --chip: #f3f4f6;
+  --border: #d1d5db;
 
-  /* Glass effects */
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.3);
-  --blur: blur(12px);
-
-  /* Shadows & Glows */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.12);
-  --glow-purple: 0 0 30px rgba(124, 58, 237, 0.3);
-  --glow-green: 0 0 30px rgba(34, 197, 94, 0.3);
+  /* Tagshot.app Drop Shadows (hard shadows, not blur) */
+  --shadow-sm: 2px 2px 0px 0px rgba(0, 0, 0, 0.1);
+  --shadow-md: 6px 6px 0px 0px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 10px 10px 0px 0px rgba(0, 0, 0, 0.15);
+  --glow-cyan: 0 0 20px rgba(14, 168, 234, 0.3);
+  --glow-red: 0 0 20px rgba(224, 43, 32, 0.3);
 }
 
+/* Keep light theme always - no dark mode */
 [data-theme="dark"] {
-  --bg: #0f172a;
-  --panel: #1e293b;
-  --ink: #f1f5f9;
-  --muted: #94a3b8;
+  --bg: #ffffff;
+  --panel: #ffffff;
+  --ink: #000000;
+  --muted: #666666;
 
-  --chip: #334155;
-  --border: #334155;
+  --brand: #0ea8ea;
+  --brand-light: #a2d9e7;
+  --brand2: #7EBEC5;
+  --cta: #E02B20;
+  --cream: #f9f3d5;
 
-  --glass-bg: rgba(30, 41, 59, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --chip: #f3f4f6;
+  --border: #d1d5db;
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 2px 2px 0px 0px rgba(0, 0, 0, 0.1);
+  --shadow-md: 6px 6px 0px 0px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 10px 10px 0px 0px rgba(0, 0, 0, 0.15);
 }
 
 * { box-sizing: border-box; }
@@ -61,7 +65,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Animated Background */
+/* Tagshot.app Style Background - Subtle Turquoise/Cyan hints */
 body::before {
   content: '';
   position: fixed;
@@ -70,9 +74,9 @@ body::before {
   width: 100%;
   height: 100%;
   background:
-    radial-gradient(circle at 20% 30%, rgba(124, 58, 237, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 70%, rgba(34, 197, 94, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.05) 0%, transparent 50%);
+    radial-gradient(circle at 20% 30%, rgba(162, 217, 231, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(126, 190, 197, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(14, 168, 234, 0.04) 0%, transparent 50%);
   z-index: -1;
   animation: backgroundShift 20s ease-in-out infinite;
 }
@@ -82,16 +86,14 @@ body::before {
   50% { opacity: 0.8; transform: scale(1.05); }
 }
 
-/* Theme Toggle */
+/* Theme Toggle - Tagshot.app style */
 .theme-toggle {
   position: fixed;
   top: 20px;
   right: 20px;
-  background: var(--glass-bg);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
-  border: 1px solid var(--glass-border);
-  border-radius: 50%;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 8px;
   width: 56px;
   height: 56px;
   color: var(--ink);
@@ -106,13 +108,13 @@ body::before {
 }
 
 .theme-toggle:hover {
-  transform: scale(1.1) rotate(15deg);
-  box-shadow: var(--shadow-lg), var(--glow-purple);
+  transform: translate(-2px, -2px);
+  box-shadow: 12px 12px 0px 0px rgba(0, 0, 0, 0.2);
 }
 
-/* Hero Section */
+/* Hero Section - Tagshot.app Turquoise */
 .hero-section {
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(34, 197, 94, 0.08) 100%);
+  background: linear-gradient(135deg, #a2d9e7 0%, #7EBEC5 100%);
   padding: 100px 20px 80px;
   text-align: center;
   margin-bottom: 40px;
@@ -153,24 +155,22 @@ body::before {
   }
 }
 
-/* CTA Box */
+/* CTA Box - Tagshot.app style with drop shadow */
 .cta-enhanced {
   max-width: 600px;
   margin: 0 auto 40px auto;
-  background: var(--glass-bg);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
+  background: var(--panel);
   padding: 32px;
-  border-radius: 20px;
+  border-radius: 8px;
   box-shadow: var(--shadow-lg);
-  border: 1px solid var(--glass-border);
+  border: 2px solid var(--border);
   animation: fadeInUp 0.8s ease-out 0.4s both;
   transition: all 0.3s ease;
 }
 
 .cta-enhanced:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-lg), var(--glow-purple);
+  transform: translate(-3px, -3px);
+  box-shadow: 13px 13px 0px 0px rgba(0, 0, 0, 0.2);
 }
 
 .cta-enhanced input {
@@ -189,17 +189,17 @@ body::before {
 .cta-enhanced input:focus {
   outline: none;
   border-color: var(--brand);
-  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+  box-shadow: 0 0 0 3px rgba(14, 168, 234, 0.2);
   transform: translateY(-2px);
 }
 
 .cta-enhanced button {
   width: 100%;
-  background: linear-gradient(135deg, var(--brand) 0%, #6d28d9 100%);
+  background: var(--cta);
   color: white;
   border: none;
   padding: 18px 28px;
-  border-radius: 12px;
+  border-radius: 6px;
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
@@ -228,9 +228,9 @@ body::before {
 }
 
 .cta-enhanced button:hover {
-  background: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg), var(--glow-purple);
+  background: #c42418;
+  transform: translate(-2px, -2px);
+  box-shadow: 12px 12px 0px 0px rgba(0, 0, 0, 0.2), var(--glow-red);
 }
 
 .trust-signals {
@@ -249,19 +249,19 @@ body::before {
   gap: 6px;
 }
 
-/* Urgency Banner */
+/* Urgency Banner - Tagshot.app style */
 .urgency-banner {
-  background: var(--glass-bg);
-  backdrop-filter: var(--blur);
+  background: var(--panel);
   border: 2px solid var(--bad);
   padding: 24px;
   margin: 0 20px 40px;
-  border-radius: 16px;
+  border-radius: 8px;
   text-align: center;
   animation: pulseGlow 3s infinite;
   max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
+  box-shadow: var(--shadow-md);
 }
 
 @keyframes pulseGlow {
@@ -270,7 +270,7 @@ body::before {
     transform: scale(1);
   }
   50% {
-    box-shadow: var(--shadow-lg), 0 0 40px rgba(239, 68, 68, 0.3);
+    box-shadow: 12px 12px 0px 0px rgba(224, 43, 32, 0.3);
     transform: scale(1.01);
   }
 }
@@ -310,20 +310,20 @@ body::before {
 }
 
 .problem {
-  background: var(--glass-bg);
-  backdrop-filter: var(--blur);
+  background: var(--panel);
   border-left: 4px solid var(--bad);
   padding: 24px;
-  border-radius: 16px;
+  border-radius: 8px;
   box-shadow: var(--shadow-md);
   transition: all 0.3s ease;
   cursor: pointer;
-  border: 1px solid var(--glass-border);
+  border: 2px solid var(--border);
+  border-left: 4px solid var(--bad);
 }
 
 .problem:hover {
-  transform: translateY(-6px);
-  box-shadow: var(--shadow-lg);
+  transform: translate(-3px, -3px);
+  box-shadow: 13px 13px 0px 0px rgba(0, 0, 0, 0.15);
   border-left-width: 6px;
 }
 
@@ -344,12 +344,11 @@ body::before {
   font-size: 0.95rem;
 }
 
-/* Progress Container */
+/* Progress Container - Tagshot.app style */
 .scan-progress {
-  background: var(--glass-bg);
-  backdrop-filter: var(--blur);
+  background: var(--panel);
   border: 2px solid var(--brand);
-  border-radius: 20px;
+  border-radius: 8px;
   padding: 32px;
   margin: 40px auto;
   max-width: 800px;
@@ -555,16 +554,15 @@ body::before {
 }
 
 .metric-card {
-  background: var(--glass-bg);
-  backdrop-filter: var(--blur);
-  border-radius: 20px;
+  background: var(--panel);
+  border-radius: 8px;
   padding: 28px;
   text-align: center;
   box-shadow: var(--shadow-md);
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-  border: 1px solid var(--glass-border);
+  border: 2px solid var(--border);
 }
 
 .metric-card::before {
@@ -582,8 +580,8 @@ body::before {
 .metric-card.money::before { background: linear-gradient(90deg, var(--bad), var(--warn)); }
 
 .metric-card:hover {
-  transform: translateY(-6px) scale(1.02);
-  box-shadow: var(--shadow-lg);
+  transform: translate(-3px, -3px);
+  box-shadow: 13px 13px 0px 0px rgba(0, 0, 0, 0.15);
 }
 
 .metric-icon {
@@ -621,9 +619,8 @@ body::before {
   position: sticky;
   top: 0;
   z-index: 30;
-  background: var(--glass-bg);
-  backdrop-filter: var(--blur);
-  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  border-bottom: 2px solid var(--border);
   box-shadow: var(--shadow-sm);
 }
 
@@ -648,7 +645,7 @@ body::before {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: conic-gradient(var(--brand), var(--brand2));
+  background: conic-gradient(var(--brand), var(--brand2), var(--brand));
   animation: rotate 4s linear infinite;
 }
 
@@ -677,15 +674,15 @@ body::before {
 .urlfield input:focus {
   outline: none;
   border-color: var(--brand);
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+  box-shadow: 0 0 0 3px rgba(14, 168, 234, 0.2);
 }
 
 .btn {
-  background: linear-gradient(135deg, var(--brand) 0%, #6d28d9 100%);
+  background: var(--cta);
   border: none;
   color: white;
   padding: 12px 20px;
-  border-radius: 12px;
+  border-radius: 6px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -693,9 +690,9 @@ body::before {
 }
 
 .btn:hover {
-  background: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md), var(--glow-purple);
+  background: #c42418;
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 0.15);
 }
 
 .btn.alt {
@@ -719,8 +716,8 @@ body::before {
 
 .tab {
   padding: 12px 18px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
   cursor: pointer;
   background: var(--panel);
   color: var(--muted);
@@ -729,24 +726,24 @@ body::before {
 }
 
 .tab.active {
-  background: linear-gradient(135deg, var(--brand) 0%, #6d28d9 100%);
+  background: var(--brand);
   color: white;
   border-color: var(--brand);
-  box-shadow: var(--shadow-sm), var(--glow-purple);
+  box-shadow: var(--shadow-sm);
 }
 
 .tab:hover:not(.active) {
   background: var(--chip);
-  transform: translateY(-2px);
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 0.1);
 }
 
-/* Cards */
+/* Cards - Tagshot.app style */
 .card {
   grid-column: span 12;
-  background: var(--glass-bg);
-  backdrop-filter: var(--blur);
-  border: 1px solid var(--border);
-  border-radius: 20px;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 8px;
   padding: 24px;
   box-shadow: var(--shadow-md);
   transition: all 0.3s ease;
@@ -754,23 +751,25 @@ body::before {
 
 .card:hover {
   box-shadow: var(--shadow-lg);
+  transform: translate(-1px, -1px);
 }
 
-/* Compliance & Issues Lists */
+/* Compliance & Issues Lists - Tagshot.app style */
 .compliance-item,
 .issue-item {
   background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
   padding: 20px;
   margin-bottom: 16px;
   transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
 }
 
 .compliance-item:hover,
 .issue-item:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateX(4px);
+  box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 0.1);
+  transform: translate(-2px, -2px);
 }
 
 .compliance-header,
@@ -815,20 +814,21 @@ body::before {
 .priority-medium .issue-priority { background: #fef3c7; color: #92400e; }
 .priority-low .issue-priority { background: #dbeafe; color: #1e40af; }
 
-/* History */
+/* History - Tagshot.app style */
 .history-item {
   background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
   padding: 20px;
   margin-bottom: 16px;
   cursor: pointer;
   transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
 }
 
 .history-item:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-3px);
+  box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 0.1);
+  transform: translate(-2px, -2px);
 }
 
 /* Responsive */
