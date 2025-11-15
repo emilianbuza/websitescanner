@@ -169,6 +169,7 @@
         <button class="tab active" data-tab="summary">💰 Business Impact</button>
         <button class="tab" data-tab="compliance">⚖️ Compliance</button>
         <button class="tab" data-tab="issues">🔧 Probleme & Fixes</button>
+        <button class="tab" data-tab="functional">🔧 Funktionale Tests</button>
         <button class="tab" data-tab="history">📜 Scan-History</button>
         <button class="tab" data-tab="evidence">📊 Technische Details</button>
         <button id="exportPDFBtn" class="btn" style="margin-left:auto">📥 PDF Export</button>
@@ -258,6 +259,18 @@
             </div>
           </div>
           <div class="list" id="issueList"></div>
+        </div>
+      </section>
+
+      <!-- FUNCTIONAL TESTS -->
+      <section id="tab-functional" class="grid" style="display:none">
+        <div class="card">
+          <h3 style="margin:0 0 16px 0">🔧 Funktionale Website-Checks</h3>
+          <p style="color:var(--muted);margin-bottom:24px">
+            Diese Tests prüfen ob kritische Website-Funktionen tatsächlich arbeiten.
+            <strong>Keine SEO-Checks</strong> - echte Business-kritische Probleme!
+          </p>
+          <div id="functionalTestsList"></div>
         </div>
       </section>
 

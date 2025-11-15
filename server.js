@@ -6,6 +6,7 @@ import { collectAllForCurrentState } from './ScannerModules.js';
 import { formatReport } from './ReportFormatter.js';
 import { saveScan, getScanHistory, getScansByUrl, getScanById, compareScans, getStats, deleteScan } from './database.js';
 import { generatePDF } from './pdfExport.js';
+import { FunctionalChecks } from './FunctionalChecks.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
@@ -406,6 +407,18 @@ class UltimateWebsiteScanner {
       }
 
       scanData.marketingTags = await this.checkMarketingTagsDeep(page, scanData.requestLog);
+
+      // Run functional checks (only in first scan to avoid duplication)
+      if (consentMode === 'no-consent') {
+        console.log('🔧 Running functional checks...');
+        try {
+          const functionalChecker = new FunctionalChecks(page, context);
+          scanData.functionalChecks = await functionalChecker.runAll();
+        } catch (funcError) {
+          console.error('Functional checks failed:', funcError);
+          scanData.functionalChecks = { error: funcError.message };
+        }
+      }
 
       const cspViolations = await page.evaluate(() => window.__cspViolations.slice());
       scanData.cspViolations = cspViolations.map(v => ({
@@ -848,7 +861,8 @@ class UltimateWebsiteScanner {
           withoutConsent: this.results.withoutConsent?.marketingTags || {},
           withConsent: this.results.withConsent?.marketingTags || {},
           withReject: this.results.withReject?.marketingTags || {}
-        }
+        },
+        functionalChecks: this.results.withoutConsent?.functionalChecks || null
       },
       details: {
         errors: allErrors,
